@@ -1,0 +1,33 @@
+# Sets up upstream submodules after a fresh clone.
+#
+# sparse-checkout is a local-only setting (not persisted in .gitmodules),
+# so this script re-applies it for the emilkowalski-skills submodule.
+# The list of adopted skill paths is recorded in .upstream/sources.yaml;
+# keep the constants below in sync with that file.
+
+$ErrorActionPreference = 'Stop'
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$skillsSubmodule = Join-Path $repoRoot 'upstream/ui-skills/emilkowalski-skills'
+
+# Paths kept in sync with .upstream/sources.yaml (id: emil-ui-skills)
+$sparsePaths = @(
+    '/LICENSE'
+    '/README.md'
+    'skills/emil-design-eng/'
+    'skills/review-animations/'
+)
+
+Write-Host '==> Initializing submodules...'
+git -C $repoRoot submodule update --init --recursive
+if ($LASTEXITCODE -ne 0) { throw 'git submodule update failed' }
+
+Write-Host '==> Applying sparse-checkout to emilkowalski-skills...'
+git -C $skillsSubmodule sparse-checkout set --no-cone @sparsePaths
+if ($LASTEXITCODE -ne 0) { throw 'git sparse-checkout failed' }
+
+Write-Host '==> Checked-out contents:'
+Get-ChildItem -Recurse -File $skillsSubmodule |
+    ForEach-Object { $_.FullName.Substring($skillsSubmodule.Length + 1) }
+
+Write-Host '==> Done.'

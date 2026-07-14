@@ -1,0 +1,12 @@
+# Dependabot handles only the guardrails-kit submodule.
+# The emilkowalski-skills submodule is excluded here because updates for it
+# are created by .github/workflows/update-ui-skills.yml, which only opens a PR
+# when the adopted skill paths actually change (see .upstream/sources.yaml).
+version: 2
+updates:
+  - package-ecosystem: gitsubmodule
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "upstream/ui-skills/emilkowalski-skills"

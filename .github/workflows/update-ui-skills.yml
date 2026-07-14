@@ -1,0 +1,105 @@
+# Watches the adopted skill paths (see .upstream/sources.yaml, id: emil-ui-skills)
+# in emilkowalski/skills and opens a submodule-bump PR only when those paths change.
+# Dependabot intentionally ignores this submodule (.github/dependabot.yml).
+name: Update UI skills
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  SUBMODULE_PATH: upstream/ui-skills/emilkowalski-skills
+  UPSTREAM_URL: https://github.com/emilkowalski/skills.git
+  UPSTREAM_BRANCH: main
+  # Space-separated pathspecs; keep in sync with .upstream/sources.yaml
+  ADOPTED_PATHS: skills/emil-design-eng skills/review-animations
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream for changes in adopted paths
+        id: check
+        run: |
+          CURRENT_SHA=$(git rev-parse "HEAD:${SUBMODULE_PATH}")
+          LATEST_SHA=$(git ls-remote "$UPSTREAM_URL" "refs/heads/${UPSTREAM_BRANCH}" | cut -f1)
+          echo "Current pinned SHA: $CURRENT_SHA"
+          echo "Upstream latest SHA: $LATEST_SHA"
+          echo "current-sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
+          echo "latest-sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+          echo "latest-sha-short=${LATEST_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+          if [ "$CURRENT_SHA" = "$LATEST_SHA" ]; then
+            echo "Submodule already at upstream tip; nothing to do."
+            echo "update-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Partial clone (full history, lazily fetched blobs): a shallow clone
+          # could not diff against the older pinned SHA.
+          git clone --filter=blob:none --no-checkout "$UPSTREAM_URL" /tmp/upstream
+
+          if git -C /tmp/upstream diff --quiet "$CURRENT_SHA" "$LATEST_SHA" -- $ADOPTED_PATHS; then
+            echo "Upstream moved, but adopted skill paths are unchanged; nothing to do."
+            echo "update-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Adopted skill paths changed; a submodule-bump PR is needed."
+          echo "update-needed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "diffstat<<DIFFSTAT_EOF"
+            git -C /tmp/upstream diff --stat "$CURRENT_SHA" "$LATEST_SHA" -- $ADOPTED_PATHS
+            echo "DIFFSTAT_EOF"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "commits<<COMMITS_EOF"
+            git -C /tmp/upstream log --oneline "$CURRENT_SHA..$LATEST_SHA" -- $ADOPTED_PATHS
+            echo "COMMITS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bump submodule to latest SHA
+        if: steps.check.outputs.update-needed == 'true'
+        run: |
+          git submodule update --init -- "$SUBMODULE_PATH"
+          git -C "$SUBMODULE_PATH" fetch origin "${{ steps.check.outputs.latest-sha }}"
+          git -C "$SUBMODULE_PATH" checkout "${{ steps.check.outputs.latest-sha }}"
+
+      - name: Create pull request
+        if: steps.check.outputs.update-needed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: update-ui-skills/${{ steps.check.outputs.latest-sha-short }}
+          title: "chore: bump emilkowalski-skills to ${{ steps.check.outputs.latest-sha-short }}"
+          commit-message: |
+            chore: bump emilkowalski-skills to ${{ steps.check.outputs.latest-sha-short }}
+
+            Adopted skill paths changed upstream:
+            ${{ steps.check.outputs.commits }}
+          body: |
+            Bumps `upstream/ui-skills/emilkowalski-skills` from `${{ steps.check.outputs.current-sha }}` to `${{ steps.check.outputs.latest-sha }}`.
+
+            ### Upstream commits touching adopted paths
+            ```
+            ${{ steps.check.outputs.commits }}
+            ```
+
+            ### Changed files in adopted paths
+            ```
+            ${{ steps.check.outputs.diffstat }}
+            ```
+
+            ---
+            Opened automatically by `update-ui-skills.yml` because the adopted skill paths
+            (`skills/emil-design-eng`, `skills/review-animations`) changed upstream.
+          labels: |
+            dependencies
+            ui-skills
+          delete-branch: true

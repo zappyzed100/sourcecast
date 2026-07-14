@@ -1,0 +1,18 @@
+# Record of upstream source selection and how each one is integrated/updated.
+# When adopting a new upstream (or new skill paths), add it here and keep
+# scripts/setup-upstreams.ps1 and .github/workflows/update-ui-skills.yml in sync.
+
+sources:
+  - id: guardrails-kit
+    repository: zappyzed100/guardrails-kit
+    integration: submodule
+    update: dependabot
+    scope: repository
+
+  - id: emil-ui-skills
+    repository: emilkowalski/skills
+    integration: submodule-sparse-checkout
+    paths:
+      - skills/emil-design-eng
+      - skills/review-animations
+    update: path-filtered-github-action

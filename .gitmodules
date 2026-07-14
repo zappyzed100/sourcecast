@@ -1,0 +1,8 @@
+[submodule "upstream/guardrails-kit"]
+	path = upstream/guardrails-kit
+	url = https://github.com/zappyzed100/guardrails-kit.git
+	branch = master
+[submodule "upstream/ui-skills/emilkowalski-skills"]
+	path = upstream/ui-skills/emilkowalski-skills
+	url = https://github.com/emilkowalski/skills.git
+	branch = main
