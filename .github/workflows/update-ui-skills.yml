@@ -23,7 +23,7 @@ jobs:
   check-and-update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check upstream for changes in adopted paths
         id: check
