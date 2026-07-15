@@ -188,6 +188,7 @@
 - `services/pipeline/src/history_radio/ingest/adapter.py`
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
+- `services/pipeline/src/history_radio/ingest/wikipedia.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
@@ -215,6 +216,7 @@
 - `services/pipeline/tests/ingest/mock_http.py`
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
+- `services/pipeline/tests/ingest/test_wikipedia.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -548,6 +550,10 @@
 - class FetchResponseInfo
 - class FetchedDocument
 
+### `services/pipeline/src/history_radio/ingest/wikipedia.py`
+- class WikipediaFetchError
+- class WikipediaAdapter
+
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
 - def build_rights_decision
@@ -653,6 +659,14 @@
 - def test_storage_and_publication_permissions_are_independent
 - def test_locator_rejects_reversed_offsets
 - def test_response_info_rejects_out_of_range_http_status
+
+### `services/pipeline/tests/ingest/test_wikipedia.py`
+- def test_adapter_satisfies_protocol
+- def test_fetch_builds_document_from_recorded_fixture
+- def test_storage_granted_but_publication_denied
+- def test_missing_page_raises_instead_of_partial_document
+- def test_malformed_api_response_raises_instead_of_partial_document
+- def test_same_content_produces_same_hash
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
