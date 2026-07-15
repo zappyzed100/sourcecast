@@ -110,6 +110,35 @@
   ここまでのワークフローとズレがある——今後PRベースに切り替えるかどうかは
   相談したい）。
 
+## キット更新（Phase 50→53・2026-07-16）で増えたGitHub側の設定作業
+
+ガードレールキットv2.51相当への更新で、required checksの期待構成が変わった
+（`.guardrails/GUARDRAILS.md` Phase 51〜53）。既存rulesetの編集は
+`https://github.com/zappyzed100/sourcecast/settings/rules` → 作成済みの
+`main-required-checks` をクリック → 該当欄を変更 → **Save changes**。
+
+1. **必須ステータスチェックに `workflow-integrity` を追加する**（Phase 52:
+   required contextsは4コア＝`checks`・`red-first`・`commit-msg-history`・
+   `workflow-integrity`）。rulesetの「Require status checks to pass」の
+   チェック一覧に、検索欄から `workflow-integrity` を足すだけ。
+   ※このコンテキストは今回のPRで初めてCIに現れるため、検索候補に出ない場合は
+   PRのチェックが一度走った後に再度試す。
+2. **言語別ジョブも必須チェックへ追加する**（Phase 52「採用した全言語別job」）:
+   `python-test`・`ts-test`・`contracts`・`e2e`。
+   ※`e2e`はフィクスチャ修正済みで現在安定して緑（PR #2）。
+3. **「Require a pull request before merging」を有効化する**（Phase 51:
+   全トピック1コミット=1ブランチ=1PRへ統一。現rulesetはstatus checksのみで、
+   PR自体の必須化が入っていない——直接pushはstrict checksで実質防がれているが、
+   Phase 51の監査はPR必須設定そのものを確認する）。
+4. **CODEOWNERSのplaceholder（判断が必要）**: 新設の `.github/CODEOWNERS` は
+   workflow信頼境界のため `@GUARDRAILS-HUMAN-REVIEWER` というplaceholderを
+   PR作成者とは別の実在の人間へ置き換える設計（Phase 53）。**個人運用で
+   別の人間ownerを用意できない場合、この置換とcode owner review必須化は
+   スキップしてよい**——その場合の帰結はGUARDRAILS.md Phase 53の境界どおり
+   「workflow自己改変の封鎖が不完全なままStep 9を✅にしない」だけで、
+   他の門は全て機能する。どうするか決めたら実装側に伝えてほしい
+   （placeholderのままでも検査はbase/headバイト一致のみなので日常作業は通る）。
+
 ## Phase 4〜5（収集・題材選出）は追加の外部アカウント不要
 
 Wikipedia・Wikimedia Commons・Wikidata・NDLデジタルコレクション・NDL次世代
