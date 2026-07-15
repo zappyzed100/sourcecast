@@ -51,3 +51,21 @@ class AuditEventRow(Base):
     actor: Mapped[str] = mapped_column(String, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(nullable=False)
     detail: Mapped[str] = mapped_column(String, nullable=False, default="")
+
+
+class RightsDecisionRow(Base):
+    """`rights_records`（仕様書§5A・Phase 3）: 資料単位の権利判定結果。
+
+    主キーは `document_id` ではなく `decision_id`——同じ資料を新ルールで再判定しても
+    行を上書きせず追記する（append-only。store/rights.py に更新・削除関数を置かない
+    ことで構造的に保証する）。
+    """
+
+    __tablename__ = "rights_records"
+
+    decision_id: Mapped[str] = mapped_column(String, primary_key=True)
+    document_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    decision: Mapped[str] = mapped_column(String, nullable=False)
+    rule_version: Mapped[str] = mapped_column(String, nullable=False)
+    reasons_json: Mapped[str] = mapped_column(String, nullable=False)
+    computed_at: Mapped[datetime] = mapped_column(nullable=False)
