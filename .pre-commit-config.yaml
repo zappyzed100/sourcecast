@@ -23,8 +23,13 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # .claude/skills/ はベンダーコピー（AGENTS.md §6「手で編集しない」）——このフックの
+      # 自動整形で書き換えてしまうと出所SHAとの対応が崩れるため、生成物と同様に除外する
+      # （scripts/repo_scan.py の GENERATED_PATTERNS と同じ理由付け）。
       - id: trailing-whitespace
+        exclude: ^\.claude/skills/
       - id: end-of-file-fixer
+        exclude: ^\.claude/skills/
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: check-yaml

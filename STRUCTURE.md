@@ -14,6 +14,7 @@
 - `AGENTS.md.template`
 - `CLAUDE.md`
 - `CLAUDE.md.template`
+- `HUMAN_TASKS.md`
 - `PLAN.md`
 - `README.md`
 - `alembic.ini`
@@ -115,6 +116,7 @@
 
 ## `docs/`
 
+- `docs/plans/PLAN_FORMAT.md`
 - `docs/plans/development-plan.md`
 
 ## `e2e/`
@@ -188,6 +190,9 @@
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/rights/__init__.py`
+- `services/pipeline/src/history_radio/rights/engine.py`
+- `services/pipeline/src/history_radio/rights/license_normalization.py`
+- `services/pipeline/src/history_radio/rights/screening.py`
 - `services/pipeline/src/history_radio/script/__init__.py`
 - `services/pipeline/src/history_radio/select/__init__.py`
 - `services/pipeline/src/history_radio/store/__init__.py`
@@ -196,15 +201,21 @@
 - `services/pipeline/src/history_radio/store/db.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
 - `services/pipeline/src/history_radio/store/orm.py`
+- `services/pipeline/src/history_radio/store/rights.py`
 - `services/pipeline/tests/__init__.py`
 - `services/pipeline/tests/api/__init__.py`
 - `services/pipeline/tests/api/test_main.py`
 - `services/pipeline/tests/domain/__init__.py`
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
+- `services/pipeline/tests/rights/__init__.py`
+- `services/pipeline/tests/rights/test_engine.py`
+- `services/pipeline/tests/rights/test_license_normalization.py`
+- `services/pipeline/tests/rights/test_screening.py`
 - `services/pipeline/tests/store/__init__.py`
 - `services/pipeline/tests/store/test_config_loader.py`
 - `services/pipeline/tests/store/test_episodes.py`
+- `services/pipeline/tests/store/test_rights.py`
 - `services/pipeline/tests/test_smoke.py`
 
 ## `tests/`
@@ -515,6 +526,26 @@
 - class Job
 - class AuditEvent
 
+### `services/pipeline/src/history_radio/rights/engine.py`
+- def decide_from_license
+- def build_rights_decision
+
+### `services/pipeline/src/history_radio/rights/license_normalization.py`
+- def normalize_license_id
+- def normalize_custom_terms
+
+### `services/pipeline/src/history_radio/rights/screening.py`
+- class RuleOutcome
+- def personal_authorship_outcome
+- def anonymous_or_corporate_outcome
+- def film_outcome
+- def photo_outcome
+- def government_work_outcome
+- def gov_standard_terms_outcome
+- def foreign_wartime_outcome
+- def neighboring_rights_outcome
+- def translation_outcome
+
 ### `services/pipeline/src/history_radio/store/config_loader.py`
 - class ConfigValidationError
 - def load_source_registry
@@ -545,6 +576,12 @@
 - class EpisodeRow
 - class JobRow
 - class AuditEventRow
+- class RightsDecisionRow
+
+### `services/pipeline/src/history_radio/store/rights.py`
+- def save_rights_decision
+- def list_rights_decisions_for_document
+- def latest_rights_decision_for_document
 
 ### `services/pipeline/tests/api/test_main.py`
 - def test_dashboard_returns_summary
@@ -564,6 +601,34 @@
 - def test_unknown_extra_field_rejected
 - def test_models_are_frozen
 
+### `services/pipeline/tests/rights/test_engine.py`
+- def test_named_auto_approvable_licenses_allow_public_use_without_exception
+- def test_unknown_license_is_internal_research_only_not_public
+- def test_third_party_exception_downgrades_auto_approvable_license_to_manual_review
+- def test_terms_fetch_failure_denies_regardless_of_license
+- def test_government_work_allows_even_with_unknown_license_field
+- def test_custom_site_terms_require_manual_review
+- def test_missing_or_undeterminable_inputs_never_yield_allow_public_use
+- def test_build_rights_decision_stamps_rule_version_and_computed_at
+
+### `services/pipeline/tests/rights/test_license_normalization.py`
+- def test_known_license_texts_normalize_to_expected_id
+- def test_case_and_whitespace_variants_normalize_the_same
+- def test_unrecognized_or_missing_texts_fall_back_to_unknown_or_named_reject
+- def test_completely_unknown_text_is_unknown
+- def test_custom_site_terms_are_scoped_per_source_id
+
+### `services/pipeline/tests/rights/test_screening.py`
+- class TestPersonalAuthorshipOutcome
+- class TestAnonymousOrCorporateOutcome
+- class TestFilmOutcome
+- class TestPhotoOutcome
+- def test_government_work_is_always_expired_under_article_13
+- class TestGovStandardTermsOutcome
+- def test_foreign_wartime_outcome_never_auto_approves
+- def test_neighboring_rights_never_auto_approves
+- class TestTranslationOutcome
+
 ### `services/pipeline/tests/store/test_config_loader.py`
 - def test_real_source_registry_loads
 - def test_real_license_rules_loads
@@ -578,6 +643,13 @@
 - def engine
 - def test_writer_commits_while_two_readers_hold_open_transactions
 - def test_concurrent_update_with_stale_revision_is_rejected
+
+### `services/pipeline/tests/store/test_rights.py`
+- def engine
+- def test_re_judging_the_same_document_keeps_the_old_decision
+- def test_latest_decision_returns_the_most_recent_computation
+- def test_no_decision_returns_none
+- def test_saving_a_decision_also_appends_an_audit_event
 
 ### `services/pipeline/tests/test_smoke.py`
 - def test_package_imports
