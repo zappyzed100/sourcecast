@@ -36,33 +36,28 @@ import repo_scan as rs  # noqa: E402
 ARGS_TOKEN = "{args}"
 
 COMMANDS: dict[str, list[list[str]] | None] = {
-    "up": None,  # ローカル環境の起動（例: supabase start / docker compose up -d）
-    "reset": None,  # 既知状態への復帰（DB reset + seed まで含めて1コマンド — §12.2）
-    "seed": None,  # シードデータ投入のみ（reset に含まれるなら同じ配線でよい）
-    "time": None,  # 時刻の凍結/解除（例: dev.py time 2026-02-28T23:59 / dev.py time clear）
-    "test": None,  # 単体テスト一式
-    "e2e": None,  # E2E（実UI貫通）テスト一式
-    "fmt": None,  # 整形（冪等）
-    "check": [
-        ["uv", "run", "scripts/check_structure.py"],
-        ["uv", "run", "scripts/check_codex_hooks.py"],
-    ],  # 構造・Codexフック検査
+    "up":    None,   # ローカル環境の起動（例: supabase start / docker compose up -d）
+    "reset": None,   # 既知状態への復帰（DB reset + seed まで含めて1コマンド — §12.2）
+    "seed":  None,   # シードデータ投入のみ（reset に含まれるなら同じ配線でよい）
+    "time":  None,   # 時刻の凍結/解除（例: dev.py time 2026-02-28T23:59 / dev.py time clear）
+    "test":  None,   # 単体テスト一式
+    "e2e":   None,   # E2E（実UI貫通）テスト一式
+    "fmt":   None,   # 整形（冪等）
+    "check": [["uv", "run", "scripts/check_structure.py"],
+              ["uv", "run", "scripts/check_codex_hooks.py"]],  # 構造・Codexフック検査
     "probe": [["uv", "run", "scripts/check_guard_corpus.py", "--probe", "{args}"]],
-    # ↑ 迂回防止の事前照会（言語なしで即動く — §2。「試して exit 2」の1周を削る）
-    #   `probe --live` は実ホスト経路の発火確認（§2・Phase 44——main で分岐）
-    "db": None,  # ローカルDBへの読み取りクエリ（例: dev.py db "select count(*) from x"）
-    "selftest": [
-        ["uv", "run", "scripts/check_guard_corpus.py"],
-        ["uv", "run", "scripts/check_ownership_guard.py"],
-        ["uv", "run", "scripts/check_codex_hooks.py"],
-        ["uv", "run", "scripts/check_fill_bindings.py"],
-        ["uv", "run", "scripts/check_rule_dod.py"],
-    ],
-    # ↑ 門の違反注入コーパス一括（門のテスト — §2。言語なしで即動く・Phase 44）
-    "dod": [["uv", "run", "scripts/check_rule_dod.py", "{args}"]],
-    # ↑ 列の違反注入コーパス再生（規則DoDの機械化 — §11 Step 2・Phase 47。
-    #   採用列のコーパス未同梱は未完了としてexit 1）
-    "build": None,  # 全パッケージの型検査＋ビルド（plan.md Phase 0。CIのartifact生成と同じ経路）
+             # ↑ 迂回防止の事前照会（言語なしで即動く — §2。「試して exit 2」の1周を削る）
+             #   `probe --live` は実ホスト経路の発火確認（§2・Phase 44——main で分岐）
+    "db":    None,   # ローカルDBへの読み取りクエリ（例: dev.py db "select count(*) from x"）
+    "selftest": [["uv", "run", "scripts/check_guard_corpus.py"],
+                  ["uv", "run", "scripts/check_ownership_guard.py"],
+                  ["uv", "run", "scripts/check_codex_hooks.py"],
+                  ["uv", "run", "scripts/check_fill_bindings.py"],
+                  ["uv", "run", "scripts/check_rule_dod.py"]],
+             # ↑ 門の違反注入コーパス一括（門のテスト — §2。言語なしで即動く・Phase 44）
+    "dod":   [["uv", "run", "scripts/check_rule_dod.py", "{args}"]],
+             # ↑ 列の違反注入コーパス再生（規則DoDの機械化 — §11 Step 2・Phase 47。
+             #   採用列のコーパス未同梱は未完了としてexit 1）
 }
 
 # >>> GUARDRAILS BINDING >>>
@@ -129,10 +124,8 @@ def _gates(root: Path) -> int:
     手書きの機能一覧を持たないための機構。台帳と検査器コードの一致は
     check_structure の gates-registry-drift（hard）が別途機械検査する。
     """
-    print(
-        "[dev] gates: 門と機能の一覧（このリポジトリの実状態。契約の正本は "
-        ".guardrails/GUARDRAILS.md の各節）"
-    )
+    print("[dev] gates: 門と機能の一覧（このリポジトリの実状態。契約の正本は "
+          ".guardrails/GUARDRAILS.md の各節）")
     settings_text = ""
     sp = root / ".claude" / "settings.json"
     if sp.is_file():
@@ -145,26 +138,19 @@ def _gates(root: Path) -> int:
         if act == "always":
             status = "有効"
         elif act.startswith("var:"):
-            status = (
-                "有効（充填済み）"
-                if getattr(rs, act[4:], None)
-                else "未充填（列充填で有効化 — Step 0）"
-            )
+            status = ("有効（充填済み）" if getattr(rs, act[4:], None)
+                      else "未充填（列充填で有効化 — Step 0）")
         elif act.startswith("vars:"):
-            status = (
-                "有効（充填済み）"
-                if any(getattr(rs, n, None) for n in act[5:].split("|"))
-                else "未充填（列充填で有効化 — Step 0）"
-            )
+            status = ("有効（充填済み）"
+                      if any(getattr(rs, n, None) for n in act[5:].split("|"))
+                      else "未充填（列充填で有効化 — Step 0）")
         elif act.startswith("hook:"):
             status = "配線済み" if act[5:] in settings_text else "未配線（settings.json）"
         else:  # static:
             status = act.split(":", 1)[1]
         print(f"    {gid:<28} {status:<24} {desc}")
-    print(
-        "\n[dev] gates: 逃げ道・DoD・限界の詳細は各節。導入後のカスタム項目は "
-        ".guardrails/CUSTOMIZE.md、保留（トリガー待ち）は §10 保留節"
-    )
+    print("\n[dev] gates: 逃げ道・DoD・限界の詳細は各節。導入後のカスタム項目は "
+          ".guardrails/CUSTOMIZE.md、保留（トリガー待ち）は §10 保留節")
     return 0
 
 
@@ -172,21 +158,16 @@ def _doctor(root: Path) -> int:
     """環境診断の集約フロント（Phase 44）。既存検査の呼び出しと事実の表示に限定——
     新しい検査は作らない（重複実装の禁止 — §7.3。検査の正本は check の2スクリプト）。"""
     import platform
-
     print("[dev] doctor: 環境診断（事実の表示 → check 実行）")
     facts: list[tuple[str, str]] = [("python", platform.python_version())]
     for tool in ("uv", "git", "pre-commit"):
         facts.append((tool, shutil.which(tool) or "見つからない"))
-    facts.append(
-        (
-            "core.hooksPath",
-            rs.git_config_get(root, "core.hooksPath")
-            or "(未設定=正常 — §3.3 hooks-path-overridden)",
-        )
-    )
+    facts.append(("core.hooksPath", rs.git_config_get(root, "core.hooksPath")
+                  or "(未設定=正常 — §3.3 hooks-path-overridden)"))
     try:
         hooks_dir = rs.git_hooks_dir(root)
-        shims = [n for n in ("pre-commit", "commit-msg", "pre-push") if (hooks_dir / n).exists()]
+        shims = [n for n in ("pre-commit", "commit-msg", "pre-push")
+                 if (hooks_dir / n).exists()]
         facts.append(("pre-commit シム", ", ".join(shims) or "無し（Step 3 未実施 — §0）"))
     except rs.ScanError as exc:
         facts.append(("pre-commit シム", f"判定不能: {exc}"))
@@ -195,8 +176,9 @@ def _doctor(root: Path) -> int:
         try:
             with open(settings, encoding="utf-8") as f:
                 hooks = json.load(f).get("hooks", {})
-            facts.append((".claude/settings.json hooks", ", ".join(sorted(hooks)) or "配線なし"))
-        except ValueError, OSError:
+            facts.append((".claude/settings.json hooks",
+                          ", ".join(sorted(hooks)) or "配線なし"))
+        except (ValueError, OSError):
             facts.append((".claude/settings.json hooks", "JSON 解釈不能"))
     else:
         facts.append((".claude/settings.json", "無し"))
@@ -227,35 +209,24 @@ def _probe_live(root: Path) -> int:
         nonce = nonce_file.read_text(encoding="utf-8").strip()
         if ledger.is_file() and nonce in ledger.read_text(encoding="utf-8", errors="replace"):
             nonce_file.unlink()
-            print(
-                f"[dev] probe --live: PASS — sentinel（{nonce}）のブロックが違反ログに"
-                "記録済み＝実ホスト経路でフックが発火している（§2・Step 4/8b DoD）"
-            )
+            print(f"[dev] probe --live: PASS — sentinel（{nonce}）のブロックが違反ログに"
+                  "記録済み＝実ホスト経路でフックが発火している（§2・Step 4/8b DoD）")
             return 0
-        print(
-            "[dev] probe --live: 未記録。エージェントの**セッション内**で次を実行してから"
-            "再実行する（ブロックされるのが正）:",
-            file=sys.stderr,
-        )
+        print("[dev] probe --live: 未記録。エージェントの**セッション内**で次を実行してから"
+              "再実行する（ブロックされるのが正）:", file=sys.stderr)
         print(f'  git commit --no-verify --allow-empty -m "{nonce}"', file=sys.stderr)
-        print(
-            "  ※人間の端末では実行しない（フックが無いため空コミットが実際に作られる）",
-            file=sys.stderr,
-        )
+        print("  ※人間の端末では実行しない（フックが無いため空コミットが実際に作られる）",
+              file=sys.stderr)
         return 1
     nonce = f"GUARDRAILS-LIVE-PROBE-{uuid.uuid4().hex[:12]}"
     session_dir.mkdir(parents=True, exist_ok=True)
     with open(nonce_file, "w", encoding="utf-8", newline="\n") as f:
         f.write(nonce + "\n")
-    print(
-        "[dev] probe --live: sentinel を発行した。エージェントの**セッション内**で次を実行"
-        "（PreToolUse がブロックするのが正——実コミットは作られない）:"
-    )
+    print("[dev] probe --live: sentinel を発行した。エージェントの**セッション内**で次を実行"
+          "（PreToolUse がブロックするのが正——実コミットは作られない）:")
     print(f'  git commit --no-verify --allow-empty -m "{nonce}"')
-    print(
-        "[dev] probe --live: 実行後にもう一度 `uv run scripts/dev.py probe --live` で判定"
-        "（PASS が Step 4/8b の DoD — §2）。※人間の端末では実行しない"
-    )
+    print("[dev] probe --live: 実行後にもう一度 `uv run scripts/dev.py probe --live` で判定"
+          "（PASS が Step 4/8b の DoD — §2）。※人間の端末では実行しない")
     return 1
 
 
@@ -272,9 +243,7 @@ def _splice(cmd: list[str], args: list[str]) -> list[str]:
 
 
 def _print_verbs() -> None:
-    print(
-        "[dev] 動詞一覧（意味論は全プロジェクト共通・配線は bindings/catalog.md の採用列 — §12.1）"
-    )
+    print("[dev] 動詞一覧（意味論は全プロジェクト共通・配線は bindings/catalog.md の採用列 — §12.1）")
     for verb in COMMANDS:
         wired = "配線済み" if COMMANDS[verb] else "未配線"
         print(f"  {verb:<8} {wired:<4}  {VERB_HELP.get(verb, '')}")
@@ -295,18 +264,13 @@ def main(argv: list[str]) -> int:
     if verb == "probe" and args == ["--live"]:
         return _probe_live(rs.repo_root())
     if verb not in COMMANDS:
-        print(
-            f"[dev] 不明な動詞: {verb!r}（`uv run scripts/dev.py verbs` で一覧 — §12.1）",
-            file=sys.stderr,
-        )
+        print(f"[dev] 不明な動詞: {verb!r}（`uv run scripts/dev.py verbs` で一覧 — §12.1）",
+              file=sys.stderr)
         return 2
     cmds = COMMANDS[verb]
     if not cmds:
-        print(
-            f"[dev] {verb}: 未配線 — bindings/catalog.md の採用列の値を "
-            "scripts/dev.py の COMMANDS へ充填する（§12.1。静かな不発は禁止）",
-            file=sys.stderr,
-        )
+        print(f"[dev] {verb}: 未配線 — bindings/catalog.md の採用列の値を "
+              "scripts/dev.py の COMMANDS へ充填する（§12.1。静かな不発は禁止）", file=sys.stderr)
         return 1
     root = rs.repo_root()
     for cmd in cmds:
@@ -318,21 +282,17 @@ def main(argv: list[str]) -> int:
         if "/" not in final[0] and "\\" not in final[0]:
             resolved = shutil.which(final[0])
             if resolved is None:
-                print(
-                    f"[dev] {verb}: コマンドが見つからない: {final[0]!r}"
-                    "（導入は README / 採用列の「前提ツール」欄。PATH を確認する）",
-                    file=sys.stderr,
-                )
+                print(f"[dev] {verb}: コマンドが見つからない: {final[0]!r}"
+                      "（導入は README / 採用列の「前提ツール」欄。PATH を確認する）",
+                      file=sys.stderr)
                 return 1
             final = [resolved, *final[1:]]
         started = time.monotonic()
         try:
             proc = subprocess.run(final, cwd=root)
         except OSError as exc:
-            print(
-                f"[dev] {verb}: 起動失敗 {exc}（コマンドの導入は README/採用列の前提ツール欄）",
-                file=sys.stderr,
-            )
+            print(f"[dev] {verb}: 起動失敗 {exc}（コマンドの導入は README/採用列の前提ツール欄）",
+                  file=sys.stderr)
             return 1
         elapsed = int((time.monotonic() - started) * 1000)
         print(f"[dev] {verb}: exit {proc.returncode} (+{elapsed}ms)")
@@ -352,6 +312,5 @@ if __name__ == "__main__":
     except BrokenPipeError:
         # 出力先が先に閉じた（`dev.py verbs | head` 等）。ツール自体のクラッシュ扱いにしない。
         import os
-
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         sys.exit(0)

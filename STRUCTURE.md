@@ -44,8 +44,10 @@
 
 ## `.github/`
 
+- `.github/CODEOWNERS`
 - `.github/dependabot.yml`
 - `.github/workflows/guardrails-ci.yml`
+- `.github/workflows/guardrails-trusted.yml`
 - `.github/workflows/update-upstreams.yml`
 
 ## `.guardrails/`
@@ -159,6 +161,7 @@
 - `scripts/check_red_first.py` — check_red_first.py — red-first 証明: fix の同梱テストが親コミットで赤だったことの機械証明（契約: .guardrails/GUARDRAILS.md §5）
 - `scripts/check_rule_dod.py` — check_rule_dod.py — 列の違反注入コーパスを再生し、各規則が実際に発火することを機械証明する（契約: .guardrails/GUARDRAILS.md §11 Step 2・Phase 47）
 - `scripts/check_structure.py` — check_structure.py — 構造検査: hard違反=exit 1・softは警告のみ exit 0（契約: .guardrails/GUARDRAILS.md §7.5・§3.3）
+- `scripts/check_workflow_integrity.py` — check_workflow_integrity.py — base branch から PR 側 CI workflow の不変条件を検査する
 - `scripts/db_query.py`
 - `scripts/dev.py` — dev.py — ランタイム共通動詞のルーター: 全プロジェクト同名の動詞で環境を操作する（契約: .guardrails/GUARDRAILS.md §12.1）
 - `scripts/fill_bindings.py` — fill_bindings.py — 採用列の paste-block を管理区画へ機械充填する（契約: .guardrails/GUARDRAILS.md §11 前段・Phase 47）
@@ -325,6 +328,8 @@
 - def assert_step_7
 - def assert_step_8
 - def assert_step_8b
+- def codeowners_failures
+- def trusted_check_contexts
 - def verify_required_checks
 - def assert_step_9
 - def run_verify_scenarios
@@ -381,6 +386,7 @@
 
 ### `scripts/check_red_first.py`
 - def resolve_rev
+- def default_base
 - def fix_commits
 - def commit_message
 - def added_test_files
@@ -410,6 +416,7 @@
 - def check_required_content
 - def check_tests
 - def check_gates_registry
+- def check_phase_table
 - def check_property_tests
 - def check_deprecated
 - def check_log_calls
@@ -426,6 +433,12 @@
 - def check_binding_source
 - def check_soft_limits
 - def check_orphans
+- def main
+
+### `scripts/check_workflow_integrity.py`
+- def changed_trust_roots
+- def validate_ci
+- def verify_scenarios
 - def main
 
 ### `scripts/db_query.py`
@@ -486,6 +499,8 @@
 - def repo_root
 - def list_tracked_files
 - def read_text
+- def yaml_top_block
+- def workflow_job_blocks
 - def append_violations
 - def git_config_get
 - def git_hooks_dir

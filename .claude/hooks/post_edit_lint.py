@@ -83,22 +83,16 @@ def main() -> int:
         try:
             proc = subprocess.run(argv, capture_output=True, timeout=30)
         except OSError:
-            print(
-                f"[post-edit-lint] {argv[0]} を実行できない——ツール未導入の可能性。"
-                "素通し: push 段の CI で回収される",
-                file=sys.stderr,
-            )
+            print(f"[post-edit-lint] {argv[0]} を実行できない——ツール未導入の可能性。"
+                  "素通し: push 段の CI で回収される", file=sys.stderr)
             return 0
         if proc.returncode == 1:  # 1 = 違反あり（stderr が Claude へ渡り即修正 — §1）
             err = proc.stderr.decode("utf-8", "replace") or proc.stdout.decode("utf-8", "replace")
             sys.stderr.write(err)
             return 2
         if proc.returncode >= 2:  # 2以上 = 実行不能（usage error 等）。ブロックしない
-            print(
-                f"[post-edit-lint] {argv[0]} を実行できない（rc={proc.returncode}）ため"
-                "素通し: push 段で回収される",
-                file=sys.stderr,
-            )
+            print(f"[post-edit-lint] {argv[0]} を実行できない（rc={proc.returncode}）ため"
+                  "素通し: push 段で回収される", file=sys.stderr)
     return 0
 
 

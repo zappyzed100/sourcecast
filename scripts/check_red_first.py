@@ -2,7 +2,7 @@
 #
 # 呼び出し（§7.1: 必ず uv 経由。CI の red-first ジョブとローカルで同じ）:
 #   uv run scripts/check_red_first.py [--soft] [--base <rev>] [--head <rev>]
-#     --base 既定 origin/main（CI は PR の base SHA を渡す）／--head 既定 HEAD
+#     --base 省略時は現在ブランチの upstream → origin/HEAD → origin の単独ブランチから解決
 #     --soft = 表示のみモード: 違反を SOFT: で列挙して exit 0。
 #              決定点③は v2.9 で required に確定——出荷 CI は --soft を付けない（違反は
 #              exit 1 で赤）。--soft はロールバック手段として残置（§5・Phase 21）
@@ -75,6 +75,31 @@ def resolve_rev(root: Path, rev: str, role: str) -> str:
             f"{role} を解決できない: {rev!r}（例: --base origin/main / --base main。"
             "CI では PR の base SHA を渡し、checkout は fetch-depth: 0 で全履歴を取る — §5）")
     return proc.stdout.decode("utf-8", "replace").strip()
+
+
+def default_base(root: Path) -> str:
+    """main/master を仮定せず、ローカルで比較する既定 upstream を決める。"""
+    candidates: list[str] = []
+    for args in (
+        ("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"),
+        ("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"),
+    ):
+        proc = _git(root, *args)
+        if proc.returncode == 0:
+            value = proc.stdout.decode("utf-8", "replace").strip()
+            if value:
+                candidates.append(value)
+    proc = _git(root, "for-each-ref", "--format=%(refname:short)", "refs/remotes/origin")
+    if proc.returncode == 0:
+        refs = [line.strip() for line in proc.stdout.decode("utf-8", "replace").splitlines()
+                if line.strip() and line.strip() != "origin/HEAD"]
+        if len(refs) == 1:
+            candidates.append(refs[0])
+    for candidate in candidates:
+        if _git(root, "rev-parse", "--verify", "-q", f"{candidate}^{{commit}}").returncode == 0:
+            return candidate
+    raise rs.ScanError("比較起点を自動判定できない。--base <既定ブランチのupstream> を指定する"
+                       "（origin/main 固定には倒さない — §5）")
 
 
 def fix_commits(root: Path, base: str, head: str) -> list[str]:
@@ -227,8 +252,8 @@ def main(argv: list[str]) -> int:
     rs.reconfigure_stdio()
     ap = argparse.ArgumentParser(
         description="red-first 証明: fix の同梱テストが親コミットで赤だったか（.guardrails/GUARDRAILS.md §5）")
-    ap.add_argument("--base", default="origin/main",
-                    help="比較の起点リビジョン（既定: origin/main。CI は PR の base SHA を渡す）")
+    ap.add_argument("--base",
+                    help="比較の起点リビジョン（省略時はupstream/remoteから自動判定。CIはPRのbase SHA）")
     ap.add_argument("--head", default="HEAD", help="対象範囲の終点（既定: HEAD）")
     ap.add_argument("--soft", action="store_true",
                     help="表示のみ: 違反を SOFT: で列挙して exit 0（required からのロールバック用 — §5）")
@@ -250,7 +275,8 @@ def main(argv: list[str]) -> int:
             "（採用列の前提ツール欄を確認。CI では red-first ジョブの BINDING で"
             "セットアップする — §5）")
 
-    base = resolve_rev(root, args.base, "--base")
+    base_arg = args.base or default_base(root)
+    base = resolve_rev(root, base_arg, "--base")
     head = resolve_rev(root, args.head, "--head")
 
     log: list[str] = []

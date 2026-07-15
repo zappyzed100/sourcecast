@@ -23,13 +23,8 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      # .claude/skills/ はベンダーコピー（AGENTS.md §6「手で編集しない」）——このフックの
-      # 自動整形で書き換えてしまうと出所SHAとの対応が崩れるため、生成物と同様に除外する
-      # （scripts/repo_scan.py の GENERATED_PATTERNS と同じ理由付け）。
       - id: trailing-whitespace
-        exclude: ^\.claude/skills/
       - id: end-of-file-fixer
-        exclude: ^\.claude/skills/
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: check-yaml
@@ -116,6 +111,22 @@ repos:
         language: system
         pass_filenames: false
         files: ^scripts/check_bootstrap\.py$
+
+      # ---- §5 workflow 自己改変防御。ローカルでは現行workflowの構造、base側の
+      #      pull_request_target ではPR headをデータとして同じ不変条件で検査する ----
+      - id: workflow-integrity
+        name: "workflow-integrity (required workflow 自己改変防御 — §5)"
+        entry: uv run scripts/check_workflow_integrity.py
+        language: system
+        pass_filenames: false
+        files: ^(\.github/(CODEOWNERS|workflows/guardrails-(ci|trusted)\.yml)|scripts/(check_workflow_integrity|repo_scan)\.py)$
+
+      - id: workflow-integrity-scenarios
+        name: "workflow-integrity-scenarios (自己改変の回帰 — §5)"
+        entry: uv run scripts/check_workflow_integrity.py --verify-scenarios
+        language: system
+        pass_filenames: false
+        files: ^(\.github/(CODEOWNERS|workflows/guardrails-ci\.yml)|scripts/check_workflow_integrity\.py)$
 
       # ---- §3.4 コミットメッセージ検査（pass_filenames は既定 true のまま — §7.6 の注意）----
       - id: check-commit-msg

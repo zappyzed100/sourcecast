@@ -178,6 +178,27 @@ def check_gates_registry(root: Path, out: list[Finding]) -> None:
                         "（規則を消したなら台帳からも消す — §12.1 gates）"))
 
 
+def check_phase_table(root: Path, out: list[Finding]) -> None:
+    """§10 の Phase 台帳と実見出しを双方向照合する（Phase 52）。"""
+    rel = ".guardrails/GUARDRAILS.md"
+    text = rs.read_text(root, rel)
+    section = text[text.find("## 10."):]
+    first_heading = section.find("### Phase ")
+    if first_heading < 0:
+        out.append(("HARD", "phase-table-drift", rel, "Phase 見出しが1件も無い"))
+        return
+    table_ids = {int(n) for n in re.findall(r"(?m)^\|\s*(\d+)\s*\|", section[:first_heading])}
+    heading_ids: set[int] = set()
+    for start, end in re.findall(r"(?m)^### Phase (\d+)(?:〜(\d+))?\b", section):
+        lo, hi = int(start), int(end or start)
+        heading_ids.update(range(lo, hi + 1))
+    if table_ids != heading_ids:
+        missing = sorted(heading_ids - table_ids)
+        stale = sorted(table_ids - heading_ids)
+        out.append(("HARD", "phase-table-drift", rel,
+                    f"Phase台帳と見出しが不一致（台帳欠落={missing}・見出し欠落={stale}）"))
+
+
 def check_property_tests(texts: dict[str, str], out: list[Finding]) -> None:
     """性質形テストの存在検査（§9.6 missing-property-test — soft・Phase 43・v2.41）。
 
@@ -619,6 +640,7 @@ def main() -> int:
     check_tests(texts, findings)
     check_property_tests(texts, findings)
     check_gates_registry(root, findings)
+    check_phase_table(root, findings)
     check_deprecated(texts, findings)
     check_log_calls(texts, findings)
     check_log_boundary_coverage(texts, findings)

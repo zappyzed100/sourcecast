@@ -18,12 +18,13 @@ zip のままなら先に:  python3 -m zipfile -e guardrails-kit-*.zip .guardrai
     --check    ドリフト検出: 全ファイルが OK/KEPT/SKIPPED なら exit 0、それ以外は exit 1
                （CI から「導入先が新版に追随しているか」を機械判定できる）
 
-管理区画（v2.42 — Phase 44）: 充填先 Python 4ファイル（MANAGED_FILES）は
+管理区画（v2.42〜v2.51 — Phase 44/49/53）: 充填先 Python 4ファイルと
+`.pre-commit-config.yaml` / `guardrails-ci.yml`（MANAGED_FILES）は
 `# >>> GUARDRAILS BINDING >>>` 〜 `# <<< GUARDRAILS BINDING <<<` 区画を持ち、UPGRADED は
 **区画の中身だけ既存を引き継いで**それ以外を新版にする（列充填の復元作業が消える）。
 区画マーカーが無い旧版は CONFLICT で停止する（充填を黙って失わない — G9）。
-YAML 系（.pre-commit-config.yaml / guardrails-ci.yml）は対象外——ユーザー統合が区画の
-内側に入る構造のため（判断の記録は surveys/SURVEY_HARNESS_TOOLS.md §1）。
+YAML 系は複数の名前付き区画（`GUARDRAILS BINDING: <name>`）を同じ方式で継承する。
+CODEOWNERS は既存の実ownerを新版テンプレート全行へ差し戻して継承する。
 
 ファイルごとの判定（表示ステータス）:
     OK         既存とバイト同一（何もしない・冪等）
@@ -105,6 +106,7 @@ MANAGED_FILES = {
     ".claude/hooks/post_edit_lint.py",
     ".pre-commit-config.yaml",
     ".github/workflows/guardrails-ci.yml",
+    ".github/CODEOWNERS",
 }
 
 
@@ -137,6 +139,12 @@ def named_managed_inner(text: str, name: str) -> tuple[int, int] | None:
 
 def splice_managed(src_text: str, dst_text: str) -> str | None:
     """新版 src の区画の中身を、既存 dst の区画の中身で置き換えた全文を返す。"""
+    codeowner_placeholder = "@GUARDRAILS-HUMAN-REVIEWER"
+    if codeowner_placeholder in src_text:
+        owner = re.search(r"(?m)^/\.github/workflows/\s+(@\S+)\s*$", dst_text)
+        if owner is None or owner.group(1) == codeowner_placeholder:
+            return None
+        return src_text.replace(codeowner_placeholder, owner.group(1))
     names = re.findall(r"# >>> GUARDRAILS BINDING: ([A-Za-z0-9_.-]+) >>>", src_text)
     if names:
         result = src_text
@@ -221,7 +229,7 @@ def detect(target: Path) -> int:
 PRECOMMIT_REQUIRED = [
     "gitleaks", "generate-structure", "check-structure", "check-commit-msg",
     "guard-corpus", "rule-dod", "fill-bindings-corpus", "ownership-guard", "codex-hooks", "check-bootstrap",
-    "bootstrap-verify-scenarios", "default_stages",
+    "bootstrap-verify-scenarios", "workflow-integrity", "workflow-integrity-scenarios", "default_stages",
 ]
 
 
