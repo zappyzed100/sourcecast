@@ -48,13 +48,15 @@ check/probe/selftest/dod のキット既定動詞のみ):
 
 ## §4 ドキュメントの置き場の分担
 - 索引 = `STRUCTURE.md`(自動生成・手編集禁止)
-- 設計根拠 = `plan.md`(無ければ作成時に)。plan は**小さなタスク(目安: 1タスク数分)
-  ＋各タスクの検証コマンド**で書くと、中断・再開とレビューに強くなる(心得)。**レイヤー直下に新規ディレクトリを作る
-  `feat:` は、設計根拠(`plan.md` / `docs/plans/`)の差分を同コミットに含める**
+- 設計根拠 = ルート `PLAN.md`(全体計画・機械可読タスク一覧)＋
+  [docs/plans/development-plan.md](docs/plans/development-plan.md)(フェーズ別詳細タスクと検証コマンド)。
+  plan は**小さなタスク(目安: 1タスク数分)＋各タスクの検証コマンド**で書くと、
+  中断・再開とレビューに強くなる(心得)。**レイヤー直下に新規ディレクトリを作る
+  `feat:` は、設計根拠(`PLAN.md` / `docs/plans/`)の差分を同コミットに含める**
   (hard `feat-without-plan` が exit 1 でブロック — .guardrails/GUARDRAILS.md §3.4 検査5・G14。
   根拠は1行でよい。根拠を書けない構造変更は feat でなく refactor / chore を名乗る)
 - 導入手順 = `README.md`
-- 技術選定理由 = 未定(採用スタック確定時にファイルを作る。例: `docs/tech-choice.md` 相当)
+- 技術選定理由 = [docs/plans/development-plan.md](docs/plans/development-plan.md) §1
 - フォルダ固有知見 = 各フォルダの `CLAUDE.md`
 - 出戻り防止の地図 = `.guardrails/GUARDRAILS.md`
 - 目標の正本 = `.guardrails/GOALS.md`(規約・キットへの変更はGを引用する)

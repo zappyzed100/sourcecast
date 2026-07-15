@@ -1157,4 +1157,8 @@ GENERATED_PATTERNS += [re.compile(r"^packages/contracts/src/generated/")]
 # （generate-types.ts 自体がビルド時コード生成スクリプト）——同じ境界でlog-direct-call
 # の対象外にする（既定のLOG_EXIT_PREFIXESと同じ理由 — §3.3）。
 LOG_EXIT_PREFIXES = (*LOG_EXIT_PREFIXES, "packages/contracts/scripts/", "apps/site/scripts/")
+# このプロジェクトの設計根拠文書はルート `PLAN.md`(大文字)——キット既定の
+# PLAN_DOC_PATTERNS は小文字 `plan.md` のみを見るため、`feat-without-plan` が
+# PLAN.md 単体の差分を正しく認識できるよう明示的に追加する（AGENTS.md §4）。
+PLAN_DOC_PATTERNS += [re.compile(r"(^|/)PLAN\.md$")]
 # <<< GUARDRAILS BINDING <<<

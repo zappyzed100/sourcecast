@@ -6,17 +6,25 @@
 
 - `.gitattributes`
 - `.gitignore`
-- `.guardrails-kit-source`
+- `.gitmodules`
+- `.node-version`
 - `.pre-commit-config.yaml`
 - `.python-version`
+- `AGENTS.md`
 - `AGENTS.md.template`
+- `CLAUDE.md`
 - `CLAUDE.md.template`
-- `PROMPT_claude_code.md`
-- `PROMPT_claude_code_existing.md`
-- `PROMPT_claude_code_update.md`
-- `PROMPT_codex.md`
+- `PLAN.md`
 - `README.md`
-- `README_SETUP.md`
+- `alembic.ini`
+- `biome.jsonc`
+- `history_radio_spec_v0_4.md`
+- `package.json`
+- `playwright.config.ts` — playwright.config.ts — Phase 0 のブラウザ smoke test 設定（plan.md §5 CI必須ゲート「Browser: Playwright smoke」）
+- `pnpm-lock.yaml`
+- `pnpm-workspace.yaml`
+- `pyproject.toml`
+- `uv.lock`
 
 ## `.claude/`
 
@@ -35,7 +43,9 @@
 
 ## `.github/`
 
+- `.github/dependabot.yml`
 - `.github/workflows/guardrails-ci.yml`
+- `.github/workflows/update-upstreams.yml`
 
 ## `.guardrails/`
 
@@ -44,40 +54,154 @@
 - `.guardrails/GOALS.md`
 - `.guardrails/GUARDRAILS.md`
 
+## `.upstream/`
+
+- `.upstream/sources.yaml`
+
+## `apps/`
+
+- `apps/admin/.gitignore`
+- `apps/admin/README.md`
+- `apps/admin/index.html`
+- `apps/admin/package.json`
+- `apps/admin/public/favicon.svg`
+- `apps/admin/src/App.test.tsx` — App.test.tsx — ナビゲーションでダッシュボード/候補一覧/ジョブ画面を切り替えられることを確認する
+- `apps/admin/src/App.tsx`
+- `apps/admin/src/index.css`
+- `apps/admin/src/lib/api.test.ts` — api.test.ts — Phase 2 DoD: API停止・タイムアウト・空データ・壊れた応答の4パターンを固定する
+- `apps/admin/src/lib/api.ts` — api.ts — localhost管理APIのクライアント(plan.md Phase 2)。
+- `apps/admin/src/lib/useAsync.ts` — useAsync.ts — API呼び出し1本の読み込み状態を管理する小さなフック。
+- `apps/admin/src/main.tsx`
+- `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧(仕様書§12.3)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
+- `apps/admin/src/pages/Dashboard.tsx` — Dashboard.tsx — 管理画面ホーム(仕様書§12.1)。API停止・タイムアウト・壊れた応答を安全に表示する。
+- `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
+- `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する
+- `apps/admin/tsconfig.app.json`
+- `apps/admin/tsconfig.json`
+- `apps/admin/tsconfig.node.json`
+- `apps/admin/vite.config.ts` — <reference types="vitest/config" />
+- `apps/site/.gitignore`
+- `apps/site/AGENTS.md`
+- `apps/site/CLAUDE.md`
+- `apps/site/README.md`
+- `apps/site/astro.config.mjs`
+- `apps/site/package.json`
+- `apps/site/public/_headers`
+- `apps/site/public/audio/2026-07-15-first-railway.mp3`
+- `apps/site/public/audio/2026-07-16-can-opener.mp3`
+- `apps/site/public/favicon.ico`
+- `apps/site/public/favicon.svg`
+- `apps/site/public/scripts/pagefind-bridge.js`
+- `apps/site/scripts/check-bundle-budget.ts` — check-bundle-budget.ts — 初期JavaScript予算(gzip後60KB以下 — plan.md §3.3)をビルド済みdistで検査する。
+- `apps/site/src/components/AudioPlayer.astro`
+- `apps/site/src/content.config.ts` — content.config.ts — 公開エピソードのコンテンツコレクション定義（Astro Content Layer API）
+- `apps/site/src/content/episodes/2026-07-15-first-railway.md`
+- `apps/site/src/content/episodes/2026-07-16-can-opener.md`
+- `apps/site/src/layouts/BaseLayout.astro`
+- `apps/site/src/pages/404.astro`
+- `apps/site/src/pages/episodes/[id]/index.astro`
+- `apps/site/src/pages/index.astro`
+- `apps/site/tsconfig.json`
+
 ## `bindings/`
 
 - `bindings/catalog.md`
 
-## `docs/`
+## `config/`
 
-- `docs/plans/2026-07-14-harness-tools-import.md`
+- `config/license_rules.yaml`
+- `config/model_registry.yaml`
+- `config/source_registry.yaml`
+
+## `e2e/`
+
+- `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
+- `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
+- `e2e/site-search.spec.ts` — site-search.spec.ts — Phase 2 DoD: fixtureの固有語を検索し、該当エピソードが返ることを確認する
+- `e2e/site-smoke.spec.ts` — site-smoke.spec.ts — Phase 0のブラウザsmoke test: 公開サイトのホームページが読み込めることだけを確認する
+
+## `migrations/`
+
+- `migrations/README`
+- `migrations/env.py`
+- `migrations/script.py.mako`
+- `migrations/versions/eeb8e039e31c_initial_schema_episodes_jobs_audit_.py`
+
+## `packages/`
+
+- `packages/contracts/package.json`
+- `packages/contracts/schema/AuditEvent.schema.json`
+- `packages/contracts/schema/Candidate.schema.json`
+- `packages/contracts/schema/Claim.schema.json`
+- `packages/contracts/schema/Episode.schema.json`
+- `packages/contracts/schema/Job.schema.json`
+- `packages/contracts/schema/RightsDecision.schema.json`
+- `packages/contracts/schema/SourceRecord.schema.json`
+- `packages/contracts/scripts/generate-types.ts` — generate-types.ts — packages/contracts/schema/*.schema.json からTypeScript型を生成する
+- `packages/contracts/src/index.ts` — index.ts — 生成された型の再輸出エントリポイント（手編集しない部分は generated/ 側）
+- `packages/contracts/tsconfig.json`
 
 ## `scripts/`
 
 - `scripts/check_bootstrap.py` — check_bootstrap.py — ブートストラップ監査: .guardrails/BOOTSTRAP.md の ✅ を再実行検証し、虚偽✅・順序違反を機械検出（契約: .guardrails/GUARDRAILS.md §3.5）
 - `scripts/check_codex_hooks.py` — check_codex_hooks.py — Codex フック設定とアダプタの回帰検査（契約: .guardrails/GUARDRAILS.md §2）
 - `scripts/check_commit_msg.py` — check_commit_msg.py — コミットメッセージ検査: 形式 + fix⇔テスト + G引用 + 依存宣言 + feat⇔plan（契約: .guardrails/GUARDRAILS.md §3.4）
+- `scripts/check_contracts_drift.py`
 - `scripts/check_fill_bindings.py` — check_fill_bindings.py — fill_bindings の失敗時無変更・正常充填を回帰検査する
 - `scripts/check_guard_corpus.py` — check_guard_corpus.py — guard迂回コーパスの再生チェッカ + probe事前照会（契約: .guardrails/GUARDRAILS.md §2）
 - `scripts/check_ownership_guard.py` — check_ownership_guard.py — 所有権ガード(§2c)の回帰シナリオ再生（契約: .guardrails/GUARDRAILS.md §2c）
 - `scripts/check_red_first.py` — check_red_first.py — red-first 証明: fix の同梱テストが親コミットで赤だったことの機械証明（契約: .guardrails/GUARDRAILS.md §5）
 - `scripts/check_rule_dod.py` — check_rule_dod.py — 列の違反注入コーパスを再生し、各規則が実際に発火することを機械証明する（契約: .guardrails/GUARDRAILS.md §11 Step 2・Phase 47）
 - `scripts/check_structure.py` — check_structure.py — 構造検査: hard違反=exit 1・softは警告のみ exit 0（契約: .guardrails/GUARDRAILS.md §7.5・§3.3）
+- `scripts/db_query.py`
 - `scripts/dev.py` — dev.py — ランタイム共通動詞のルーター: 全プロジェクト同名の動詞で環境を操作する（契約: .guardrails/GUARDRAILS.md §12.1）
 - `scripts/fill_bindings.py` — fill_bindings.py — 採用列の paste-block を管理区画へ機械充填する（契約: .guardrails/GUARDRAILS.md §11 前段・Phase 47）
+- `scripts/generate_contracts.py`
 - `scripts/generate_structure.py` — generate_structure.py — STRUCTURE.md を実ツリー・実シンボルから再生成する唯一の主体（契約: .guardrails/GUARDRAILS.md §7.4）
 - `scripts/install_kit.py` — install_kit.py — キットの機械的配置（詳細は直下の docstring と README_SETUP.md §1）
+- `scripts/install_workbench.py` — install_workbench.py — workbench(UIスキル一式+特別対応の充填)を kit 導入済みリポジトリへ機械適用する
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
+- `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
+- `scripts/setup-upstreams.ps1`
 
-## `surveys/`
+## `services/`
 
-- `surveys/SURVEY_COMPANY_GATES.md`
-- `surveys/SURVEY_FAMOUS_KITS.md`
-- `surveys/SURVEY_GATE_ARCHITECTURES.md`
-- `surveys/SURVEY_HARNESS_TOOLS.md`
-- `surveys/SURVEY_LLM_TESTGEN.md`
-- `surveys/SURVEY_MCP_ECOSYSTEM.md`
-- `surveys/SURVEY_ZERO_REVIEW.md`
+- `services/pipeline/src/history_radio/__init__.py`
+- `services/pipeline/src/history_radio/api/__init__.py`
+- `services/pipeline/src/history_radio/api/fixtures.py`
+- `services/pipeline/src/history_radio/api/main.py`
+- `services/pipeline/src/history_radio/api/schemas.py`
+- `services/pipeline/src/history_radio/books/__init__.py`
+- `services/pipeline/src/history_radio/distribute/__init__.py`
+- `services/pipeline/src/history_radio/domain/__init__.py`
+- `services/pipeline/src/history_radio/domain/base.py`
+- `services/pipeline/src/history_radio/domain/episode_state.py`
+- `services/pipeline/src/history_radio/domain/models.py`
+- `services/pipeline/src/history_radio/gate/__init__.py`
+- `services/pipeline/src/history_radio/ingest/__init__.py`
+- `services/pipeline/src/history_radio/llm/__init__.py`
+- `services/pipeline/src/history_radio/media/__init__.py`
+- `services/pipeline/src/history_radio/publish/__init__.py`
+- `services/pipeline/src/history_radio/py.typed`
+- `services/pipeline/src/history_radio/rights/__init__.py`
+- `services/pipeline/src/history_radio/script/__init__.py`
+- `services/pipeline/src/history_radio/select/__init__.py`
+- `services/pipeline/src/history_radio/store/__init__.py`
+- `services/pipeline/src/history_radio/store/config_loader.py`
+- `services/pipeline/src/history_radio/store/config_schemas.py`
+- `services/pipeline/src/history_radio/store/db.py`
+- `services/pipeline/src/history_radio/store/episodes.py`
+- `services/pipeline/src/history_radio/store/orm.py`
+- `services/pipeline/tests/__init__.py`
+- `services/pipeline/tests/api/__init__.py`
+- `services/pipeline/tests/api/test_main.py`
+- `services/pipeline/tests/domain/__init__.py`
+- `services/pipeline/tests/domain/test_episode_state.py`
+- `services/pipeline/tests/domain/test_models.py`
+- `services/pipeline/tests/store/__init__.py`
+- `services/pipeline/tests/store/test_config_loader.py`
+- `services/pipeline/tests/store/test_episodes.py`
+- `services/pipeline/tests/test_smoke.py`
 
 ## `tests/`
 
@@ -128,6 +252,42 @@
 - def edited_paths
 - def main
 
+### `apps/admin/src/lib/api.ts`
+- class ApiError
+- type DashboardSummary
+- type Candidate
+- type Job
+- function getDashboardSummary
+- function getCandidates
+- function getJobs
+
+### `apps/admin/src/lib/useAsync.ts`
+- type AsyncState
+- function useAsync
+
+### `apps/admin/src/pages/Candidates.tsx`
+- function Candidates
+
+### `apps/admin/src/pages/Dashboard.tsx`
+- function Dashboard
+
+### `apps/admin/src/pages/Jobs.tsx`
+- function Jobs
+
+### `apps/site/src/content.config.ts`
+- const collections
+
+### `migrations/env.py`
+- def run_migrations_offline
+- def run_migrations_online
+
+### `migrations/versions/eeb8e039e31c_initial_schema_episodes_jobs_audit_.py`
+- def upgrade
+- def downgrade
+
+### `packages/contracts/src/index.ts`
+- const CONTRACTS_SCHEMA_VERSION
+
 ### `scripts/check_bootstrap.py`
 - def parse_ledger
 - def head_ledger
@@ -167,6 +327,9 @@
 - class CommitWorktree
 - def check_commit
 - def main_history
+- def main
+
+### `scripts/check_contracts_drift.py`
 - def main
 
 ### `scripts/check_fill_bindings.py`
@@ -241,6 +404,9 @@
 - def check_orphans
 - def main
 
+### `scripts/db_query.py`
+- def main
+
 ### `scripts/dev.py`
 - def main
 
@@ -251,6 +417,9 @@
 - def fill_one
 - def validate_target
 - def stamp_primary
+- def main
+
+### `scripts/generate_contracts.py`
 - def main
 
 ### `scripts/generate_structure.py`
@@ -276,6 +445,17 @@
 - def append_gitignore_block
 - def main
 
+### `scripts/install_workbench.py`
+- def read_bytes
+- def read_raw
+- def newline_of
+- def run_git
+- def copy_one
+- def merge_claude_md
+- def ensure_submodules
+- def fill_binding
+- def main
+
 ### `scripts/repo_scan.py`
 - class ScanError
 - def reconfigure_stdio
@@ -296,3 +476,104 @@
 - def import_targets
 - def dart_package_roots
 - def is_kit_source_repo
+
+### `scripts/revendor_uipro.py`
+- def read_raw
+- def render_skill_md
+- def main
+
+### `services/pipeline/src/history_radio/api/fixtures.py`
+- def dashboard_summary
+- def candidates
+- def jobs
+
+### `services/pipeline/src/history_radio/api/main.py`
+- def get_dashboard
+- def get_candidates
+- def get_jobs
+
+### `services/pipeline/src/history_radio/api/schemas.py`
+- class DashboardSummary
+
+### `services/pipeline/src/history_radio/domain/base.py`
+- class SchemaModel
+
+### `services/pipeline/src/history_radio/domain/episode_state.py`
+- class InvalidTransitionError
+- def transition
+
+### `services/pipeline/src/history_radio/domain/models.py`
+- class SourceRecord
+- class RightsDecision
+- class Candidate
+- class Claim
+- class Episode
+- class Job
+- class AuditEvent
+
+### `services/pipeline/src/history_radio/store/config_loader.py`
+- class ConfigValidationError
+- def load_source_registry
+- def load_license_rules
+- def load_model_registry
+
+### `services/pipeline/src/history_radio/store/config_schemas.py`
+- class SourceRegistryEntry
+- class SourceRegistryFile
+- class LicenseRule
+- class LicenseRulesFile
+- class ModelRegistryEntry
+- class ModelRegistryFile
+
+### `services/pipeline/src/history_radio/store/db.py`
+- def create_sqlite_engine
+- def session_factory
+
+### `services/pipeline/src/history_radio/store/episodes.py`
+- class EpisodeConflictError
+- class EpisodeNotFoundError
+- def create_episode
+- def get_episode
+- def update_episode_state
+
+### `services/pipeline/src/history_radio/store/orm.py`
+- class Base
+- class EpisodeRow
+- class JobRow
+- class AuditEventRow
+
+### `services/pipeline/tests/api/test_main.py`
+- def test_dashboard_returns_summary
+- def test_candidates_returns_list
+- def test_jobs_returns_list_with_failed_job_error_detail
+
+### `services/pipeline/tests/domain/test_episode_state.py`
+- def test_allowed_forward_transitions
+- def test_failure_transitions_allowed_from_any_nonterminal_state
+- def test_forbidden_transitions_rejected
+- def test_all_states_covered_by_either_forward_or_failure_or_terminal
+
+### `services/pipeline/tests/domain/test_models.py`
+- def test_valid_payload_constructs
+- def test_missing_required_field_rejected
+- def test_unknown_schema_version_rejected
+- def test_unknown_extra_field_rejected
+- def test_models_are_frozen
+
+### `services/pipeline/tests/store/test_config_loader.py`
+- def test_real_source_registry_loads
+- def test_real_license_rules_loads
+- def test_real_model_registry_loads
+- def test_unknown_key_rejected
+- def test_duplicate_source_id_rejected
+- def test_invalid_url_rejected
+- def test_expired_model_rejected
+- def test_paid_model_rejected
+
+### `services/pipeline/tests/store/test_episodes.py`
+- def engine
+- def test_writer_commits_while_two_readers_hold_open_transactions
+- def test_concurrent_update_with_stale_revision_is_rejected
+
+### `services/pipeline/tests/test_smoke.py`
+- def test_package_imports
