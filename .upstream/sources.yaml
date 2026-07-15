@@ -56,17 +56,27 @@ sources:
     update: manual-revendor
     status: adopted
     special-handling:
+      # All three ride the kit's fill machinery (fill_bindings.py / managed
+      # BINDING sections, preserved across kit upgrades by install_kit.py).
+      # Exact fill lines are recorded in CLAUDE.md; summary:
       - python-via-uv: >-
-          The skill's `python3 scripts/...` instructions are read as
-          `uv run python .claude/skills/ui-ux-pro-max/scripts/...`
-          (kit GUARDRAILS §7.1). Smoke-tested via uv on 2026-07-15.
+          Fill scripts/dev.py COMMANDS (additive) with a `design` verb that
+          runs `uv run python .claude/skills/ui-ux-pro-max/scripts/search.py`
+          (kit GUARDRAILS §7.1 — verb rail instead of a read-and-obey rule).
+          Smoke-tested via uv on 2026-07-15.
       - vendored-exclusion: >-
-          At kit bootstrap time, exclude .claude/skills/ from
-          header/print-ban/structure checks (third-party code is not held to
-          this repo's conventions).
+          Fill scripts/repo_scan.py BINDING with
+          GENERATED_PATTERNS += ^\.claude/skills/ — generated semantics
+          (hand-edit forbidden, excluded from content checks and STRUCTURE.md
+          index; check_structure.py never reads generated files). gitleaks
+          intentionally still applies. Verified against kit source 2026-07-15.
       - generated-artifact: >-
-          `--persist` output design-system/ is committed (design decisions)
-          and registered in GENERATED_PATTERNS at kit bootstrap time.
+          Fill scripts/repo_scan.py BINDING with
+          GENERATED_PATTERNS += ^design-system/ — `--persist` output is
+          committed (design decisions) but exempt from checks/index.
+      - note: >-
+          emil-ui-skills need no handling: upstream/ submodule contents never
+          appear in `git ls-files`, so repo_scan cannot see them.
     rationale: >-
       Adopted into the workbench 2026-07-15 (user decision: accept the three
       special handlings above; merging into the guardrails-kit repo itself was
