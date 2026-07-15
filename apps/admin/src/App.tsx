@@ -24,6 +24,7 @@ function App() {
 				<button
 					type="button"
 					className="counter"
+					data-testid="scaffold-counter-button"
 					onClick={() => setCount((count) => count + 1)}
 				>
 					Count is {count}

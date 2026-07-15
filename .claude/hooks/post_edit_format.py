@@ -29,11 +29,14 @@ from pathlib import Path
 # 例（python-uv 列・直接バイナリ呼び出し）: ".py": [["ruff", "format", "{file}"]]
 # 採用列の paste-block はこの区画内へ。更新はこの区画の中身だけ引き継がれる（Phase 44）。
 DISPATCH: dict[str, list[list[str]]] = {}
-# BINDING-SOURCE: python-uv@10
-# ---- python-uv@10 (fill_bindings) ----
-DISPATCH[".py"] = [["ruff", "format", "{file}"]]
-# ---- ts-react-web@12 (fill_bindings) ----
-DISPATCH[".ts"] = DISPATCH[".tsx"] = [["node_modules/.bin/prettier", "--write", "{file}"]]
+# BINDING-SOURCE: python-uv@10 + ts-react-web@12（手で調整: .py に --force-exclude を
+# 追加——pyproject.tomlのextend-excludeがkit本体/vendorを除外する設定だが、明示パス
+# 引数は既定でそれを無視するため付与。.ts/.tsx/.js/.jsxはprettier+eslintではなく
+# 採用済みのBiome（plan.md §1.4）に統一）
+DISPATCH[".py"] = [["ruff", "format", "--force-exclude", "{file}"]]
+DISPATCH[".ts"] = DISPATCH[".tsx"] = DISPATCH[".js"] = DISPATCH[".jsx"] = [
+    ["node_modules/.bin/biome", "format", "--write", "{file}"]
+]
 # <<< GUARDRAILS BINDING <<<
 
 

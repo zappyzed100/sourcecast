@@ -772,10 +772,13 @@ GATE_REGISTRY_ENFORCED = {"§3.3", "§3.4", "§8.2", "§8.4", "§9.6", "§12.4",
 # 採用列の paste-block は**この区画内**へ貼る（bindings/catalog.md — §12.7）。
 # インストーラの更新（UPGRADED）はこの区画の中身だけを既存から引き継ぐ（§11 前段・Phase 44）。
 # 刻印（BINDING-SOURCE の行 — §12.7）もこの区画内に書く。
-# BINDING-SOURCE: python-uv@10
-# ---- python-uv@10 (fill_bindings) ----
+# BINDING-SOURCE: python-uv@10 + ts-react-web@12（パスはモノレポ構成 — plan.md §2.2 —
+# に合わせて手で調整済み。カタログの生の paste-block は `src/` 直下の単一パッケージ
+# を前提にしており、このリポジトリの実配置（services/pipeline/src・apps/*/src・
+# packages/*/src）とは異なるため、パス依存の行だけ書き換えている）
+# ---- python-uv@10 (fill_bindings, パス調整済み) ----
 CODE_EXTS |= {".py"}
-TEST_PATH_PATTERNS += [re.compile(p) for p in (r"^tests/", r"_test\.py$", r"(^|/)test_[^/]+\.py$")]
+TEST_PATH_PATTERNS += [re.compile(p) for p in (r"_test\.py$", r"(^|/)test_[^/]+\.py$")]
 SLEEP_PATTERNS[".py"] = [(re.compile(r"\btime\.sleep\s*\("), "time.sleep")]
 NONDETERMINISM_PATTERNS[".py"] = [
     (re.compile(r"\bdatetime\.now\s*\(|\btime\.time\s*\("), "現在時刻（Clock/引数で注入する）"),
@@ -791,19 +794,22 @@ LOG_CALL_PATTERN[".py"] = re.compile(r"\blog_op\s*\(")
 DEPRECATED_PATTERNS[".py"] = [
     (re.compile(r"\butcnow\s*\("), "datetime.utcnow()（3.12 で非推奨。datetime.now(timezone.utc) へ）"),
     (re.compile(r"\butcfromtimestamp\s*\("), "datetime.utcfromtimestamp()（3.12 で非推奨。fromtimestamp(ts, timezone.utc) へ）")]
-PLAN_LAYER_ROOTS += ["src"]
-SINGLE_TEST_COMMAND = ["uv", "run", "pytest", "{file}"]   # 単一スロット（併用時はプライマリ列のみ — §5）
-LOG_EXIT_FILES |= {"src/log.py"}   # 実パスへ調整（scripts/ 配下は LOG_EXIT_PREFIXES が既定除外 — §3.3）
+PLAN_LAYER_ROOTS += ["services/pipeline/src"]
+SINGLE_TEST_COMMAND = ["uv", "run", "pytest", "{file}"]   # 単一スロット。python/ts両列とも定義するため
+# こちらをプライマリに採用（判断ごと記録 — §5）: 生成パイプラインの権利判定・選出・ゲート等の
+# ドメインロジックが red-first の主戦場になる見込みで、TS側（vitest）はUI層で構成が薄い。
+# vitestの単一ファイル実行はpnpm workspace越しにcwd指定が要り、この1スロットに同居できない
+# ——TS側の red-first は「その列のCIジョブが通しで再現する」運用に留める。
+LOG_EXIT_FILES |= {"services/pipeline/src/history_radio/log.py"}   # Phase 1で実装予定（§8.2）
 # 確率的コンポーネント有（表B）の場合のみ以下2行を充填（無ければ貼らない——§9.6）:
 # SOLVER_DIRECT_CALL_PATTERNS += [(re.compile(r"\bsolve\s*\("), "ソルバー本体の直呼び")]
 # PROPERTY_TEST_MARKERS += [(re.compile(r"\bfrom hypothesis import|\bimport hypothesis\b"), "hypothesis")]
 # ORPHAN_UNIVERSES は既定のまま不発（Pythonのimport解決は近似が粗い。必要なら列を版上げ）
 # SYMBOL_EXTRACTORS[".py"] は出荷既定で有効（キット自身の索引のため）——追記不要
-# ---- ts-react-web@12 (fill_bindings) ----
+# ---- ts-react-web@12 (fill_bindings, パス調整済み) ----
 CODE_EXTS |= {".ts", ".tsx"}
 HEADER_REQUIRED_EXTS |= {".ts", ".tsx"}
 TEST_PATH_PATTERNS += [re.compile(p) for p in (r"\.test\.tsx?$", r"^e2e/.*\.spec\.ts$")]
-GENERATED_PATTERNS += [re.compile(r"^src/types/supabase\.ts$")]
 _TS_SLEEP = [(re.compile(r"\bsetTimeout\s*\(|\bsleep\s*\("), "setTimeout/sleep")]
 SLEEP_PATTERNS[".ts"] = _TS_SLEEP; SLEEP_PATTERNS[".tsx"] = _TS_SLEEP
 _TS_NONDET = [(re.compile(r"\bDate\.now\s*\("), "Date.now()（Clock抽象で注入する）"),
@@ -814,7 +820,7 @@ _TS_NET = [(re.compile(r"\bfetch\s*\(|\baxios\b|\bXMLHttpRequest\b"), "fetch/axi
 TEST_NETWORK_PATTERNS[".ts"] = _TS_NET; TEST_NETWORK_PATTERNS[".tsx"] = _TS_NET
 _TS_PRINT = [(re.compile(r"\bconsole\.(log|info|debug)\s*\("), "console.*(")]
 PRINT_CALL_PATTERNS[".ts"] = _TS_PRINT; PRINT_CALL_PATTERNS[".tsx"] = _TS_PRINT
-LOG_EXIT_FILES |= {"src/lib/log.ts"}
+LOG_EXIT_FILES |= {"apps/admin/src/lib/log.ts"}   # Phase 11で実装予定（§8.2）
 _TS_LOG_BOUNDARY = [(re.compile(r"\bfetch\s*\("), "外部HTTP呼び出し（fetch）"),
                     (re.compile(r"\bcatch\s*[({]"), "エラーハンドラ（catch）")]
 LOG_BOUNDARY_PATTERNS[".ts"] = _TS_LOG_BOUNDARY; LOG_BOUNDARY_PATTERNS[".tsx"] = _TS_LOG_BOUNDARY
@@ -824,15 +830,19 @@ UI_TESTID_RULES += [(re.compile(r"\.tsx$"),
                      re.compile(r"<(?:button|a|input|select|textarea|[A-Z]\w*)\b[^>]*on(?:Click|Submit|Change)=[^>]*>"),
                      re.compile(r"data-testid\s*="),
                      "React操作要素")]
-ORPHAN_UNIVERSES += [(["src/"], ".ts", [re.compile(r"(^|/)main\.tsx?$"), re.compile(r"vite\.config")]),
-                     (["src/"], ".tsx", [re.compile(r"(^|/)main\.tsx?$")])]
+ORPHAN_UNIVERSES += [(["apps/admin/src/"], ".ts", [re.compile(r"(^|/)main\.tsx?$"), re.compile(r"vite\.config")]),
+                     (["apps/admin/src/"], ".tsx", [re.compile(r"(^|/)main\.tsx?$")])]
 IMPORT_TARGET_EXTRACTORS[".ts"] = _ts_import_targets
 IMPORT_TARGET_EXTRACTORS[".tsx"] = _ts_import_targets
 SYMBOL_EXTRACTORS[".ts"] = _ts_public_symbols
 SYMBOL_EXTRACTORS[".tsx"] = _ts_public_symbols
-_TS_DEPRECATED = [(re.compile(r"@supabase/auth-helpers-nextjs"),
-                   "@supabase/auth-helpers-nextjs（公式非推奨。@supabase/ssr へ移行 — 出典①②）")]
-DEPRECATED_PATTERNS[".ts"] = _TS_DEPRECATED; DEPRECATED_PATTERNS[".tsx"] = _TS_DEPRECATED
-PLAN_LAYER_ROOTS += ["src"]
-SINGLE_TEST_COMMAND = ["npx", "vitest", "run", "{file}"]   # 単一スロット（併用時はプライマリ列のみ — §5）
+# _TS_DEPRECATED（@supabase/auth-helpers-nextjs）は不採用——このプロジェクトはSupabaseを
+# 使わない（plan.md §2.1: SQLite+Git+R2）。該当しない非推奨パターンを持ち込まない。
+PLAN_LAYER_ROOTS += ["apps/site/src", "apps/admin/src", "packages/contracts/src"]
+
+# ---- プロジェクト固有の特別対応（AGENTS.md §6・2026-07-15 決定。本来は
+# scripts/install_workbench.py が適用する契約だが、このリポジトリにはまだ存在しないため
+# 手で適用する。内容はAGENTS.md §6の正本コードブロックと同一）----
+GENERATED_PATTERNS += [re.compile(r"^\.claude/skills/")]
+GENERATED_PATTERNS += [re.compile(r"^design-system/")]
 # <<< GUARDRAILS BINDING <<<

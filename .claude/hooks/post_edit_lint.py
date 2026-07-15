@@ -42,12 +42,15 @@ from pathlib import Path
 # 例（python-uv 列・直接バイナリ呼び出し）: ".py": [["ruff", "check", "{file}"]]
 # 採用列の paste-block はこの区画内へ。更新はこの区画の中身だけ引き継がれる（Phase 44）。
 DISPATCH: dict[str, list[list[str]]] = {}
-# BINDING-SOURCE: python-uv@10
-# ---- python-uv@10 (fill_bindings) ----
-DISPATCH[".py"] = [["ruff", "check", "{file}"]]
-# ---- ts-react-web@12 (fill_bindings) ----
-_ESLINT = [["node_modules/.bin/eslint", "--max-warnings=0", "{file}"]]
-DISPATCH[".ts"] = DISPATCH[".tsx"] = DISPATCH[".js"] = DISPATCH[".jsx"] = _ESLINT
+# BINDING-SOURCE: python-uv@10（--force-exclude追加: pyproject.tomlのextend-excludeで
+# scripts/・.claude/・.codex/・upstream/・.guardrails/ を対象外にしたが、明示パス引数は
+# 既定でexclude設定を無視するため付与——kit本体/vendorへ我々のlint select（T201等）を
+# 適用しない。詳細は pyproject.toml [tool.ruff] のコメント）
+DISPATCH[".py"] = [["ruff", "check", "--force-exclude", "{file}"]]
+# ESLintではなくBiome（plan.md §1.4で採用済み）に統一。rc=1のみブロックの契約に
+# 合わせるため `--max-diagnostics` は既定のままexit codeで判定する。
+_BIOME_LINT = [["node_modules/.bin/biome", "check", "{file}"]]
+DISPATCH[".ts"] = DISPATCH[".tsx"] = DISPATCH[".js"] = DISPATCH[".jsx"] = _BIOME_LINT
 # <<< GUARDRAILS BINDING <<<
 
 
@@ -80,16 +83,22 @@ def main() -> int:
         try:
             proc = subprocess.run(argv, capture_output=True, timeout=30)
         except OSError:
-            print(f"[post-edit-lint] {argv[0]} を実行できない——ツール未導入の可能性。"
-                  "素通し: push 段の CI で回収される", file=sys.stderr)
+            print(
+                f"[post-edit-lint] {argv[0]} を実行できない——ツール未導入の可能性。"
+                "素通し: push 段の CI で回収される",
+                file=sys.stderr,
+            )
             return 0
         if proc.returncode == 1:  # 1 = 違反あり（stderr が Claude へ渡り即修正 — §1）
             err = proc.stderr.decode("utf-8", "replace") or proc.stdout.decode("utf-8", "replace")
             sys.stderr.write(err)
             return 2
         if proc.returncode >= 2:  # 2以上 = 実行不能（usage error 等）。ブロックしない
-            print(f"[post-edit-lint] {argv[0]} を実行できない（rc={proc.returncode}）ため"
-                  "素通し: push 段で回収される", file=sys.stderr)
+            print(
+                f"[post-edit-lint] {argv[0]} を実行できない（rc={proc.returncode}）ため"
+                "素通し: push 段で回収される",
+                file=sys.stderr,
+            )
     return 0
 
 

@@ -35,6 +35,11 @@ testpaths = ["services/pipeline/tests"]
 line-length = 100
 src = ["services/pipeline/src"]
 include = ["services/pipeline/**/*.py"]
+# guardrails-kit本体(scripts/・.claude/hooks/・.codex/hooks/)とvendorコピー/submoduleは
+# 対象外——我々のアプリコードではなくkit/vendor側の規約に従う（AGENTS.md §6）。
+# post_edit_lint フックが編集直後に単一ファイルへ ruff --force-exclude を直呼びする時にも
+# 効くよう、include だけでなく exclude 側にも明示する（--force-exclude は exclude 系にのみ効く）。
+extend-exclude = ["scripts", ".claude", ".codex", "upstream", ".guardrails"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "T201", "E722"]
