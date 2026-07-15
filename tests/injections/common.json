@@ -1,0 +1,53 @@
+{
+  "note": "言語なしで発火する規則の違反注入コーパス（check_rule_dod.py が常に読み込む — Phase 47）。注入先が既存のリポジトリではそのケースは SKIP(exists)。",
+  "cases": [
+    {
+      "rule": "env-file-tracked",
+      "severity": "HARD",
+      "path": ".env",
+      "content": "# DoD注入（自動生成・自動削除）\nDOD_PROBE_SECRET=1\n"
+    },
+    {
+      "rule": "mcp-not-allowed",
+      "severity": "HARD",
+      "path": ".mcp.json",
+      "content": "{\n  \"mcpServers\": {\n    \"dod-probe-server\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"dod-probe\"\n      ]\n    }\n  }\n}\n"
+    },
+    {
+      "rule": "context-doc-too-large",
+      "severity": "SOFT",
+      "path": "dod_probe_ctx/CLAUDE.md",
+      "content": "# CLAUDE.md — DoD注入（自動生成・自動削除）\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\n"
+    },
+    {
+      "rule": "dir-too-crowded",
+      "severity": "SOFT",
+      "files": {
+        "dod_probe_crowd/f1.txt": "x\n",
+        "dod_probe_crowd/f2.txt": "x\n",
+        "dod_probe_crowd/f3.txt": "x\n",
+        "dod_probe_crowd/f4.txt": "x\n",
+        "dod_probe_crowd/f5.txt": "x\n",
+        "dod_probe_crowd/f6.txt": "x\n",
+        "dod_probe_crowd/f7.txt": "x\n",
+        "dod_probe_crowd/f8.txt": "x\n"
+      }
+    },
+    {
+      "rule": "commit-msg-format",
+      "severity": "HARD",
+      "stage": "commit",
+      "msg": "bad message without conventional prefix",
+      "path": "dod_probe_msg.txt",
+      "content": "x\n"
+    },
+    {
+      "rule": "commit-too-large",
+      "severity": "SOFT",
+      "stage": "commit",
+      "msg": "feat: dod probe large commit",
+      "path": "dod_probe_large.txt",
+      "content": "x\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\nx\n"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "column": "python-uv",
+  "note": "check_rule_dod.py が再生する python-uv 列の違反注入コーパス（Phase 47・12規則）。言語なしの規則は tests/injections/common.json 側。path は充填後の列パターンに一致するよう選んである——手で置かない。",
+  "cases": [
+    {
+      "rule": "test-sleep",
+      "severity": "HARD",
+      "path": "tests/test_dod_probe_sleep.py",
+      "content": "# test_dod_probe_sleep.py — DoD注入（check_rule_dod.py が自動生成・自動削除）\nimport time\n\n\ndef test_probe():\n    time.sleep(1)\n"
+    },
+    {
+      "rule": "test-nondeterminism",
+      "severity": "HARD",
+      "path": "tests/test_dod_probe_now.py",
+      "content": "# test_dod_probe_now.py — DoD注入（自動生成・自動削除）\nfrom datetime import datetime\n\n\ndef test_probe():\n    assert datetime.now() is not None\n"
+    },
+    {
+      "rule": "test-network",
+      "severity": "HARD",
+      "path": "tests/test_dod_probe_net.py",
+      "content": "# test_dod_probe_net.py — DoD注入（自動生成・自動削除）\nimport requests\n\n\ndef test_probe():\n    requests.get(\"http://example.invalid\")\n"
+    },
+    {
+      "rule": "log-direct-call",
+      "severity": "HARD",
+      "path": "src/dod_probe_log.py",
+      "content": "# dod_probe_log.py — DoD注入（自動生成・自動削除）\nprint(\"probe\")\n"
+    },
+    {
+      "rule": "deprecated-api",
+      "severity": "HARD",
+      "path": "src/dod_probe_dep.py",
+      "content": "# dod_probe_dep.py — DoD注入（自動生成・自動削除）\nfrom datetime import datetime\n\nX = datetime.utcnow()\n"
+    },
+    {
+      "rule": "missing-log-coverage",
+      "severity": "SOFT",
+      "path": "src/dod_probe_http.py",
+      "content": "# dod_probe_http.py — DoD注入（自動生成・自動削除）\nimport requests\n\n\ndef fetch():\n    return requests.get(\"http://example.invalid\")\n"
+    },
+    {
+      "rule": "file-too-long",
+      "severity": "SOFT",
+      "path": "src/dod_probe_long.py",
+      "content": "# dod_probe_long.py — DoD注入（自動生成・自動削除）\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\nx = 1\n"
+    },
+    {
+      "rule": "test-calls-solver-direct",
+      "severity": "HARD",
+      "requires": [
+        "SOLVER_DIRECT_CALL_PATTERNS"
+      ],
+      "path": "tests/test_dod_probe_solver.py",
+      "content": "# test_dod_probe_solver.py — DoD注入（自動生成・自動削除）\n\n\ndef test_probe():\n    result = solve([1, 2])\n    assert result is not None\n"
+    },
+    {
+      "rule": "fix-without-test",
+      "severity": "HARD",
+      "stage": "commit",
+      "requires": [
+        "TEST_PATH_PATTERNS",
+        "INLINE_TEST_PATTERNS"
+      ],
+      "msg": "fix: dod probe（テスト非同梱の検証用）",
+      "path": "src/dod_probe_fix.py",
+      "content": "# dod_probe_fix.py — DoD注入（自動生成・自動削除）\nX = 1\n"
+    },
+    {
+      "rule": "feat-without-plan",
+      "severity": "HARD",
+      "stage": "commit",
+      "requires": [
+        "PLAN_LAYER_ROOTS"
+      ],
+      "msg": "feat: dod probe（設計根拠非同梱の検証用）",
+      "path": "src/dod_probe_plan/mod.py",
+      "content": "# mod.py — DoD注入（自動生成・自動削除）\nX = 1\n"
+    },
+    {
+      "rule": "feat-without-test",
+      "severity": "SOFT",
+      "stage": "commit",
+      "requires": [
+        "TEST_PATH_PATTERNS",
+        "INLINE_TEST_PATTERNS"
+      ],
+      "msg": "feat: dod probe2（テスト非同梱の検証用）",
+      "path": "src/dod_probe_feat.py",
+      "content": "# dod_probe_feat.py — DoD注入（自動生成・自動削除）\nX = 1\n"
+    },
+    {
+      "rule": "missing-role-header",
+      "severity": "SOFT",
+      "path": "src/dod_probe_hdr.py",
+      "content": "X = 1\n"
+    }
+  ]
+}

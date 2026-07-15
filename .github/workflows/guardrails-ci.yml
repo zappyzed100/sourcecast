@@ -1,0 +1,86 @@
+# guardrails-ci.yml — 最終防衛線: ローカルフックと同一の検査を PR / main push で必ず再実行（正本: .guardrails/GUARDRAILS.md §5）
+#
+# ローカルの git フックは原理的に迂回できる（別マシン・Web エディタ等）ため、
+# checks ジョブは .pre-commit-config.yaml と全く同じ定義をそのまま再実行する
+# （定義元を1つにしてローカルと CI の検査内容がドリフトしない設計）。
+# `pre-commit run` は既定で pre-commit ステージのみ実行するため、
+# stages: [pre-push] のテスト・解析群は BINDING の独立ジョブで明示的に回す。
+#
+# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7）
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read   # 最小権限（検査は読み取りだけで足りる。書き込みが要るジョブは列側で個別に付与）
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # ハング保険（無限に待つ CI ＝最悪の出戻り — §9.1 の思想の CI 版・G11）
+    env:
+      GH_TOKEN: ${{ github.token }}   # check-bootstrap の Step 9 ④ 再監査（gh api——読み取りのみ §3.5・v2.35）
+    steps:
+      - uses: actions/checkout@v4
+      # §7.1: Python 系はすべて uv 経由。Python 自体も .python-version に従い uv が自動解決
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      # フックによるファイル変更（§3.2 の再生成差分を含む）も CI では失敗として現れる
+      - run: uvx pre-commit run --all-files --show-diff-on-failure
+
+  # red-first 証明（§5・Phase 18 — v2.7）: PR 範囲の fix: の同梱テストが親コミットで
+  # 赤だった（＝バグを再現していた）ことを機械証明する。未配線（言語なし出荷）では不発。
+  # 決定点③は v2.9 で required に確定（Phase 21）: 違反は exit 1 でジョブが赤。仕上げに
+  # ブランチ保護の required checks へ本ジョブを登録する（リポジトリ設定——Step 9 ④）。
+  # 表示のみへ戻すロールバックは呼び出しに --soft を足すだけ（§5）。
+  red-first:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20   # ハング保険（checks と同じ — G11。1テストの保険はスクリプト側 300 秒）
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # PR 範囲・親コミット・worktree 復元に全履歴が必要（§5）
+      - uses: astral-sh/setup-uv@v5
+      # ---- BINDING: 採用列のテスト実行環境をここへ（例: setup-node + npm ci。§5・§11 表A）----
+      # >>> GUARDRAILS BINDING: red-first-setup >>>
+      # <<< GUARDRAILS BINDING: red-first-setup <<<
+      # ---------------------------------------------------------------------------------------
+      - run: uv run scripts/check_red_first.py --base "${{ github.event.pull_request.base.sha }}"
+
+  # commit-msg 系ゲートの CI 実効化（v2.30・G9）: `check-commit-msg` は stages:[commit-msg]
+  # のため、上の `checks` ジョブの `pre-commit run --all-files`（--hook-stage 未指定）では
+  # 実行されない——ローカルで `pre-commit install` していない限り、G引用・fix⇔テスト・
+  # 依存宣言・feat⇔plan の全 HARD 検査が誰にも掛からない静かな穴だった（実機で発見）。
+  # PR 範囲の各コミットを一時 worktree で「今まさに作ろうとしている状態」に再現し、
+  # commit-msg 単発形態と同じ検査ロジックをそのまま再実行する（BINDING 不要——git と
+  # python だけで完結。.guardrails/GUARDRAILS.md §3.4 参照）。
+  commit-msg-history:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # ハング保険（他ジョブと同じ — G11。1コミットの保険はスクリプト側 60 秒）
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # PR 範囲・親コミット・worktree 復元に全履歴が必要（red-first と同じ理由 — §5）
+      - uses: astral-sh/setup-uv@v5
+      - run: uv run scripts/check_commit_msg.py --base "${{ github.event.pull_request.base.sha }}"
+
+  # ============ BINDING: 言語別テスト・解析・E2E ジョブ（.guardrails/GUARDRAILS.md §5・§12.4・§11 表A）============
+  # v2キットは言語なしで出荷される。Step 0 で bindings/catalog.md の採用列の
+  # paste-block（テスト/解析ジョブ・E2E ジョブ・ツールチェーン固定）をここへ貼る。
+  # 各ジョブに timeout-minutes を必ず付ける（checks と同じハング保険 — G11）。
+  # E2E ジョブは §12.4 の操作レールの CI 変換（PR の赤/緑に変える）——Step 8b の DoD に含まれる。
+  # >>> GUARDRAILS BINDING: language-jobs >>>
+  # <<< GUARDRAILS BINDING: language-jobs <<<

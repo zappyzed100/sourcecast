@@ -1,0 +1,127 @@
+# .pre-commit-config.yaml — コミット/プッシュ時ゲートの正本（.guardrails/GUARDRAILS.md §3・§4・§7.6）
+#
+# 前工程に行くほど検査が軽く・速く、後工程に行くほど重く・広くなる設計:
+#   commit 時 = 衛生・秘密検出・STRUCTURE.md鮮度・構造検査・メッセージ検査（数秒）
+#   push   時 = テスト・静的解析（重い検査はここへ）
+#
+# 導入（§0）: uv tool install pre-commit → リポジトリで pre-commit install を1回。
+# ※ default_install_hook_types を変えたら `pre-commit install` を再実行すること
+#   ——忘れると新フック種は「静かに」無効なまま（fail-open の典型）。
+# ※ rev の更新は `pre-commit autoupdate` で行い、コミットとして残す。
+#
+# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7）
+
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+# stages 未指定のフックは「インストール済みの全フック種」で走る pre-commit 仕様のため、
+# 既定を pre-commit 段に固定する（無いと衛生〜構造検査がコミット毎に2回・push でさらに1回
+# 走る——実測でコミット毎2回→1回。§7.6・G11）。commit-msg / pre-push のフックは各自の
+# stages 明示が正本（§7.6）。
+default_stages: [pre-commit]
+
+repos:
+  # ---- §3.1 衛生チェック（自動修正あり: 落ちたら該当ファイルを git add → 同じコミットを再実行）----
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+
+  # ---- §3.1 秘密検出（コミット前に止めることが最大の価値。偽陽性は当該行に gitleaks:allow）----
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4  # 導入時に `pre-commit autoupdate` で最新タグへ固定し直す
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      # ---- §3.2 STRUCTURE.md 鮮度（差分が出たら1回だけ失敗 → git add STRUCTURE.md → 再実行）----
+      - id: generate-structure
+        name: "generate-structure (STRUCTURE.md 鮮度 — §3.2)"
+        entry: uv run scripts/generate_structure.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ---- §3.3 構造検査（hard=exit 1 でコミット停止 / soft=警告のみ）----
+      - id: check-structure
+        name: "check-structure (構造検査 — §3.3)"
+        entry: uv run scripts/check_structure.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ---- §2 guard迂回コーパス再生（門番の回帰テスト。files: で門番3点に限定＝
+      #      通常コミットでは走らず、門番に触れた時だけ回る。CI の --all-files では常時回る）----
+      - id: guard-corpus
+        name: "guard-corpus (迂回コーパス再生 — §2)"
+        entry: uv run scripts/check_guard_corpus.py
+        language: system
+        pass_filenames: false
+        files: ^(\.claude/hooks/guard_git_bypass\.py|tests/guard_corpus\.tsv|scripts/check_guard_corpus\.py)$
+
+      - id: rule-dod
+        name: "rule-dod (規則違反注入コーパス再生 — §11)"
+        entry: uv run scripts/check_rule_dod.py
+        language: system
+        pass_filenames: false
+        files: ^(scripts/check_rule_dod\.py|tests/injections/|scripts/repo_scan\.py)$
+
+      - id: fill-bindings-corpus
+        name: "fill-bindings-corpus (充填器の失敗時無変更 — §11)"
+        entry: uv run scripts/check_fill_bindings.py
+        language: system
+        pass_filenames: false
+        files: ^(scripts/fill_bindings\.py|scripts/check_fill_bindings\.py|scripts/install_kit\.py|bindings/catalog\.md)$
+
+      # ---- §2c 所有権ガードの回帰シナリオ再生（files: で門番3点に限定。CI の
+      #      --all-files では常時回る — v2.29・G10「§10保留」の解消）----
+      - id: ownership-guard
+        name: "ownership-guard (所有権ガード回帰シナリオ — §2c)"
+        entry: uv run scripts/check_ownership_guard.py
+        language: system
+        pass_filenames: false
+        files: ^(\.claude/hooks/session_baseline\.py|\.claude/hooks/guard_human_wip\.py|scripts/check_ownership_guard\.py)$
+
+      - id: codex-hooks
+        name: "codex-hooks (Codex フック設定・アダプタ回帰 — §2)"
+        entry: uv run scripts/check_codex_hooks.py
+        language: system
+        pass_filenames: false
+        files: ^(\.codex/hooks\.json|\.codex/hooks/|scripts/check_codex_hooks\.py)$
+
+      # ---- §3.5 ブートストラップ監査（台帳 .guardrails/BOOTSTRAP.md に触れたコミット＝✅ 化の瞬間だけ
+      #      発火し、✅ の主張を再実行検証する。CI の --all-files では常時回る——二重の網）----
+      - id: check-bootstrap
+        name: "check-bootstrap (✅ の再実行検証 — §3.5)"
+        entry: uv run scripts/check_bootstrap.py
+        language: system
+        pass_filenames: false
+        files: ^\.guardrails/BOOTSTRAP\.md$
+
+      # ---- §3.5 Step 9 ④ 検証の回帰シナリオ（全モック・ネットワーク不要。監査器本体に
+      #      触れた時だけ発火＝guard-corpus / ownership-guard と同じ「門番自身の回帰」の型 — v2.36）----
+      - id: bootstrap-verify-scenarios
+        name: "bootstrap-verify-scenarios (Step 9 ④ 検証の回帰 — §3.5)"
+        entry: uv run scripts/check_bootstrap.py --verify-scenarios
+        language: system
+        pass_filenames: false
+        files: ^scripts/check_bootstrap\.py$
+
+      # ---- §3.4 コミットメッセージ検査（pass_filenames は既定 true のまま — §7.6 の注意）----
+      - id: check-commit-msg
+        name: "check-commit-msg (形式 + fix⇔テスト — §3.4)"
+        entry: uv run scripts/check_commit_msg.py
+        language: system
+        stages: [commit-msg]
+
+      # ============ BINDING: 言語別 push 段ゲート（.guardrails/GUARDRAILS.md §4・§11 Step 0 表A）============
+      # v2キットは言語なしで出荷される。Step 0 で bindings/catalog.md の採用列の
+      # paste-block（テスト・静的解析の pre-push フック群）をここへ貼る
+      # （stages: [pre-push] は維持。コードよりゲートが先 — §11 Step 6）。
+      # >>> GUARDRAILS BINDING: pre-push >>>
+      # <<< GUARDRAILS BINDING: pre-push <<<

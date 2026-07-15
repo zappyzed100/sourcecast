@@ -1,0 +1,70 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" direct guard_git_bypass.py",
+            "commandWindows": "$root = git rev-parse --show-toplevel; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" direct guard_git_bypass.py",
+            "timeout": 30,
+            "statusMessage": "Checking command safety"
+          }
+        ]
+      },
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" guarded-files guard_human_wip.py",
+            "commandWindows": "$root = git rev-parse --show-toplevel; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" guarded-files guard_human_wip.py",
+            "timeout": 30,
+            "statusMessage": "Checking human work in progress"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" files post_edit_format.py && uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" files post_edit_lint.py",
+            "commandWindows": "$root = git rev-parse --show-toplevel; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" files post_edit_format.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" files post_edit_lint.py",
+            "timeout": 30,
+            "statusMessage": "Formatting and linting edited files"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" direct session_baseline.py",
+            "commandWindows": "$root = git rev-parse --show-toplevel; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" direct session_baseline.py",
+            "timeout": 30,
+            "statusMessage": "Recording starting worktree state"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$(git rev-parse --show-toplevel)\" python \"$(git rev-parse --show-toplevel)/.codex/hooks/codex_hook_adapter.py\" direct stop_incomplete_guard.py",
+            "commandWindows": "$root = git rev-parse --show-toplevel; uv run --project $root python \"$root/.codex/hooks/codex_hook_adapter.py\" direct stop_incomplete_guard.py",
+            "timeout": 60,
+            "statusMessage": "Checking completion state"
+          }
+        ]
+      }
+    ]
+  }
+}

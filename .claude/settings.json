@@ -1,0 +1,72 @@
+{
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "deny": [
+      "Bash(git commit --no-verify:*)",
+      "Bash(git push --no-verify:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git config core.hooksPath:*)",
+      "Bash(git config --local core.hooksPath:*)",
+      "Bash(git config --global core.hooksPath:*)",
+      "Bash(git -c core.hooksPath:*)",
+      "Bash(pre-commit uninstall:*)",
+      "Edit(STRUCTURE.md)",
+      "Write(STRUCTURE.md)",
+      "MultiEdit(STRUCTURE.md)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_git_bypass.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_human_wip.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_baseline.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'in=$(cat); printf %s \"$in\" | uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/post_edit_format.py\" || exit $?; printf %s \"$in\" | uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/post_edit_lint.py\"'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --project \"$CLAUDE_PROJECT_DIR\" python \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop_incomplete_guard.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

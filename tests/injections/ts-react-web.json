@@ -1,0 +1,14 @@
+{
+  "column": "ts-react-web",
+  "cases": [
+    {"rule":"test-sleep","severity":"HARD","path":"src/dod_probe.test.ts","content":"// dod probe\nsetTimeout(() => {}, 1);\n"},
+    {"rule":"test-nondeterminism","severity":"HARD","path":"src/dod_now.test.ts","content":"// dod probe\nconst now = Date.now();\n"},
+    {"rule":"test-network","severity":"HARD","path":"src/dod_net.test.ts","content":"// dod probe\nfetch('https://example.invalid');\n"},
+    {"rule":"log-direct-call","severity":"HARD","path":"src/dod_log.ts","content":"// dod probe\nconsole.log('probe');\n"},
+    {"rule":"missing-log-coverage","severity":"SOFT","requires":["LOG_BOUNDARY_PATTERNS"],"path":"src/dod_http.ts","content":"// dod probe\nexport async function f() {\n  const res = await fetch('https://example.invalid');\n  return res.ok;\n}\n"},
+    {"rule":"deprecated-api","severity":"HARD","path":"src/dod_dep.ts","content":"// dod probe\nimport x from '@supabase/auth-helpers-nextjs';\n"},
+    {"rule":"ui-missing-testid","severity":"HARD","path":"src/dod_ui.tsx","content":"// dod probe\nexport const X = () => <button onClick={() => 1}>x</button>;\n"},
+    {"rule":"fix-without-test","severity":"HARD","stage":"commit","requires":["TEST_PATH_PATTERNS"],"msg":"fix: dod probe","path":"src/dod_fix.ts","content":"// dod probe\nexport const x = 1;\n"},
+    {"rule":"feat-without-plan","severity":"HARD","stage":"commit","requires":["PLAN_LAYER_ROOTS"],"msg":"feat: dod probe","path":"src/dod_feature/mod.ts","content":"// dod probe\nexport const x = 1;\n"}
+  ]
+}

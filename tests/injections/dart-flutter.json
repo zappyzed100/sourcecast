@@ -1,0 +1,11 @@
+{
+  "column": "dart-flutter",
+  "cases": [
+    {"rule":"test-sleep","severity":"HARD","path":"app/test/dod_sleep_test.dart","content":"// dod probe\nvoid main() { Future.delayed(Duration.zero); }\n"},
+    {"rule":"test-nondeterminism","severity":"HARD","path":"app/test/dod_now_test.dart","content":"// dod probe\nvoid main() { DateTime.now(); }\n"},
+    {"rule":"test-network","severity":"HARD","path":"app/test/dod_net_test.dart","content":"// dod probe\nvoid main() { http.get(Uri()); }\n"},
+    {"rule":"log-direct-call","severity":"HARD","path":"app/lib/dod_log.dart","content":"// dod probe\nvoid f() { print('probe'); }\n"},
+    {"rule":"fix-without-test","severity":"HARD","stage":"commit","requires":["TEST_PATH_PATTERNS"],"msg":"fix: dod probe","path":"app/lib/dod_fix.dart","content":"// dod probe\nconst x = 1;\n"},
+    {"rule":"feat-without-plan","severity":"HARD","stage":"commit","requires":["PLAN_LAYER_ROOTS"],"msg":"feat: dod probe","path":"app/lib/dod_feature/mod.dart","content":"// dod probe\nconst x = 1;\n"}
+  ]
+}

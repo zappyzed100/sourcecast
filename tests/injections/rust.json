@@ -1,0 +1,14 @@
+{
+  "column": "rust",
+  "cases": [
+    {"rule":"test-sleep","severity":"HARD","path":"engine/tests/dod_sleep_test.rs","content":"// dod probe\nfn probe() { std::thread::sleep(std::time::Duration::ZERO); }\n"},
+    {"rule":"test-nondeterminism","severity":"HARD","path":"engine/tests/dod_now_test.rs","content":"// dod probe\nfn probe() { std::time::SystemTime::now(); }\n"},
+    {"rule":"test-network","severity":"HARD","path":"engine/tests/dod_net_test.rs","content":"// dod probe\nfn probe() { reqwest::get(\"https://example.invalid\"); }\n"},
+    {"rule":"log-direct-call","severity":"HARD","path":"engine/src/dod_log.rs","content":"// dod probe\nfn probe() { println!(\"probe\"); }\n"},
+    {"rule":"missing-catch-unwind","severity":"HARD","requires":["FFI_BOUNDARY_FILE_PATTERNS"],"path":"engine/src/api/dod.rs","content":"// dod probe\npub extern \"C\" fn probe() {}\n"},
+    {"rule":"test-calls-solver-direct","severity":"HARD","requires":["SOLVER_DIRECT_CALL_PATTERNS"],"path":"engine/tests/dod_solver_test.rs","content":"// dod probe\nfn probe() { solve(); }\n"},
+    {"rule":"missing-property-test","severity":"SOFT","requires":["SOLVER_DIRECT_CALL_PATTERNS"],"path":"engine/src/dod_solver.rs","content":"// dod probe\npub fn solve() {}\n"},
+    {"rule":"fix-without-test","severity":"HARD","stage":"commit","requires":["TEST_PATH_PATTERNS"],"msg":"fix: dod probe","path":"engine/src/dod_fix.rs","content":"// dod probe\npub const X: i32 = 1;\n"},
+    {"rule":"feat-without-plan","severity":"HARD","stage":"commit","requires":["PLAN_LAYER_ROOTS"],"msg":"feat: dod probe","path":"engine/src/dod_feature/mod.rs","content":"// dod probe\npub const X: i32 = 1;\n"}
+  ]
+}

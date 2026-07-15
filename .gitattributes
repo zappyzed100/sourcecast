@@ -1,0 +1,5 @@
+# .gitattributes — 改行を LF に固定（STRUCTURE.md 鮮度チェックの CRLF 恒常偽陽性を防ぐ — .guardrails/GUARDRAILS.md §7.2 の趣旨）
+* text=auto eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
