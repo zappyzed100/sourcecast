@@ -185,6 +185,8 @@
 - `services/pipeline/src/history_radio/domain/models.py`
 - `services/pipeline/src/history_radio/gate/__init__.py`
 - `services/pipeline/src/history_radio/ingest/__init__.py`
+- `services/pipeline/src/history_radio/ingest/adapter.py`
+- `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
@@ -208,6 +210,8 @@
 - `services/pipeline/tests/domain/__init__.py`
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
+- `services/pipeline/tests/ingest/__init__.py`
+- `services/pipeline/tests/ingest/test_schema.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -526,6 +530,15 @@
 - class Job
 - class AuditEvent
 
+### `services/pipeline/src/history_radio/ingest/adapter.py`
+- class SourceAdapter
+
+### `services/pipeline/src/history_radio/ingest/schema.py`
+- class EvidenceLocator
+- class RightsEvidence
+- class FetchResponseInfo
+- class FetchedDocument
+
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
 - def build_rights_decision
@@ -600,6 +613,16 @@
 - def test_unknown_schema_version_rejected
 - def test_unknown_extra_field_rejected
 - def test_models_are_frozen
+
+### `services/pipeline/tests/ingest/test_schema.py`
+- def test_valid_document_is_accepted
+- def test_missing_required_field_is_rejected
+- def test_unknown_field_is_rejected
+- def test_full_text_without_storage_permission_is_rejected
+- def test_full_text_with_granted_storage_permission_is_accepted
+- def test_storage_and_publication_permissions_are_independent
+- def test_locator_rejects_reversed_offsets
+- def test_response_info_rejects_out_of_range_http_status
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
