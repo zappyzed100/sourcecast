@@ -124,10 +124,20 @@ repos:
       # paste-block（テスト・静的解析の pre-push フック群）をここへ貼る
       # （stages: [pre-push] は維持。コードよりゲートが先 — §11 Step 6）。
       # >>> GUARDRAILS BINDING: pre-push >>>
-      # ---- python-uv@10 (fill_bindings) ----
+      # BINDING-SOURCE: python-uv@10 + ts-react-web@12（コマンドはモノレポ構成 — plan.md
+      # §2.2 —に合わせて手で調整済み。カタログの生の paste-block は単一パッケージ・
+      # npx・eslint前提のため不採用: このプロジェクトはpnpm workspace＋Biome）
+      # ---- python-uv@10 (パス調整済み) ----
       - id: ruff
         name: "ruff check (pre-push — §4)"
-        entry: uvx ruff check .
+        entry: uv run ruff check .
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: basedpyright
+        name: "basedpyright (pre-push — §4)"
+        entry: uv run basedpyright services/pipeline
         language: system
         pass_filenames: false
         always_run: true
@@ -139,24 +149,31 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-push]
-# ---- ts-react-web@12 (fill_bindings) ----
-      - id: tsc
-        name: "tsc --noEmit (pre-push — §4)"
-        entry: bash -c 'npx tsc --noEmit'
+      # ---- ts-react-web@12 (パス調整済み: Biome採用・pnpm workspace) ----
+      - id: typecheck
+        name: "typecheck (pre-push — §4)"
+        entry: bash -c 'pnpm -r run typecheck'
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-push]
-      - id: eslint
-        name: "eslint (pre-push — §4)"
-        entry: bash -c 'npx eslint .'
+      - id: biome
+        name: "biome check (pre-push — §4)"
+        entry: bash -c 'pnpm exec biome check .'
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-push]
       - id: vitest
         name: "vitest run (pre-push — §4)"
-        entry: bash -c 'npx vitest run'
+        entry: bash -c 'pnpm --filter apps-admin run test'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: playwright
+        name: "playwright test (pre-push — §4)"
+        entry: bash -c 'pnpm --filter apps-site run build && pnpm exec playwright test'
         language: system
         pass_filenames: false
         always_run: true

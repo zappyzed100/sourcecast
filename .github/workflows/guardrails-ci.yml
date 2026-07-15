@@ -55,10 +55,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       # ---- BINDING: 採用列のテスト実行環境をここへ（例: setup-node + npm ci。§5・§11 表A）----
       # >>> GUARDRAILS BINDING: red-first-setup >>>
-      # ---- ts-react-web@12 (fill_bindings) ----
+      # BINDING-SOURCE: ts-react-web@12（パス調整済み: npm ではなく pnpm workspace）
+      - uses: pnpm/action-setup@v4
+        with: { version: "11.9.0" }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
 # <<< GUARDRAILS BINDING: red-first-setup <<<
       # ---------------------------------------------------------------------------------------
       - run: uv run scripts/check_red_first.py --base "${{ github.event.pull_request.base.sha }}"
