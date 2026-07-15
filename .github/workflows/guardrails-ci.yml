@@ -6,7 +6,7 @@
 # `pre-commit run` は既定で pre-commit ステージのみ実行するため、
 # stages: [pre-push] のテスト・解析群は BINDING の独立ジョブで明示的に回す。
 #
-# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7）
+# BINDING-SOURCE: python-uv@10
 
 name: CI
 
@@ -55,7 +55,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       # ---- BINDING: 採用列のテスト実行環境をここへ（例: setup-node + npm ci。§5・§11 表A）----
       # >>> GUARDRAILS BINDING: red-first-setup >>>
-      # <<< GUARDRAILS BINDING: red-first-setup <<<
+      # ---- ts-react-web@12 (fill_bindings) ----
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+# <<< GUARDRAILS BINDING: red-first-setup <<<
       # ---------------------------------------------------------------------------------------
       - run: uv run scripts/check_red_first.py --base "${{ github.event.pull_request.base.sha }}"
 
@@ -83,4 +87,36 @@ jobs:
   # 各ジョブに timeout-minutes を必ず付ける（checks と同じハング保険 — G11）。
   # E2E ジョブは §12.4 の操作レールの CI 変換（PR の赤/緑に変える）——Step 8b の DoD に含まれる。
   # >>> GUARDRAILS BINDING: language-jobs >>>
-  # <<< GUARDRAILS BINDING: language-jobs <<<
+  # ---- python-uv@10 (fill_bindings) ----
+  python-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uvx ruff check .
+      - run: uv run pytest
+# ---- ts-react-web@12 (fill_bindings) ----
+  ts-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx eslint .
+      - run: npx vitest run
+
+  e2e:   # §12.4 の操作レールを PR の赤/緑へ変換（Step 8b DoD）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: supabase/setup-cli@v1
+      - run: supabase start
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+# <<< GUARDRAILS BINDING: language-jobs <<<

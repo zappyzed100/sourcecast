@@ -9,7 +9,7 @@
 #   ——忘れると新フック種は「静かに」無効なまま（fail-open の典型）。
 # ※ rev の更新は `pre-commit autoupdate` で行い、コミットとして残す。
 #
-# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7）
+# BINDING-SOURCE: python-uv@10
 
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
 # stages 未指定のフックは「インストール済みの全フック種」で走る pre-commit 仕様のため、
@@ -124,4 +124,41 @@ repos:
       # paste-block（テスト・静的解析の pre-push フック群）をここへ貼る
       # （stages: [pre-push] は維持。コードよりゲートが先 — §11 Step 6）。
       # >>> GUARDRAILS BINDING: pre-push >>>
-      # <<< GUARDRAILS BINDING: pre-push <<<
+      # ---- python-uv@10 (fill_bindings) ----
+      - id: ruff
+        name: "ruff check (pre-push — §4)"
+        entry: uvx ruff check .
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: pytest
+        name: "pytest (pre-push — §4)"
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+# ---- ts-react-web@12 (fill_bindings) ----
+      - id: tsc
+        name: "tsc --noEmit (pre-push — §4)"
+        entry: bash -c 'npx tsc --noEmit'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: eslint
+        name: "eslint (pre-push — §4)"
+        entry: bash -c 'npx eslint .'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: vitest
+        name: "vitest run (pre-push — §4)"
+        entry: bash -c 'npx vitest run'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+# <<< GUARDRAILS BINDING: pre-push <<<

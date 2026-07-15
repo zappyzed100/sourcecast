@@ -64,7 +64,24 @@ COMMANDS: dict[str, list[list[str]] | None] = {
 # 採用列の充填は**この区画内**で行う（例: COMMANDS.update({"up": [["supabase", "start"]]})
 # ——全置換 `COMMANDS = {...}` は既定配線（check/probe/selftest）を消すため禁止・加算形のみ）。
 # インストーラの更新（UPGRADED）はこの区画の中身だけを既存から引き継ぐ（Phase 44）。
-# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7）
+# BINDING-SOURCE: python-uv@10
+# ---- python-uv@10 (fill_bindings) ----
+COMMANDS.update({
+    "test": [["uv", "run", "pytest", "-q"]],
+    "fmt":  [["uvx", "ruff", "format", "."]],
+})
+# up/reset/seed/time/e2e/db は構成依存で充填（DB を持たないなら「該当なし」のまま）
+# ---- ts-react-web@12 (fill_bindings) ----
+COMMANDS.update({
+    "up":    [["supabase", "start"]],
+    "reset": [["supabase", "db", "reset"]],
+    "seed":  [["supabase", "db", "reset"]],
+    "time":  [["uv", "run", "scripts/set_time.py", "{args}"]],  # .env.local の VITE_TIME_FREEZE を書く小物（Step 8b で作成）
+    "test":  [["npx", "vitest", "run"]],
+    "e2e":   [["npx", "playwright", "test"]],
+    "fmt":   [["npx", "prettier", "--write", "."]],
+    "db":    [["psql", "postgresql://postgres:postgres@127.0.0.1:54322/postgres", "-c", "{args}"]],
+})
 # <<< GUARDRAILS BINDING <<<
 
 VERB_HELP: dict[str, str] = {

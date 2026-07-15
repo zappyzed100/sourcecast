@@ -1,0 +1,14 @@
+{
+  "name": "history-radio",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "playwright": "1.61.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

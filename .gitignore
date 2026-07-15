@@ -13,6 +13,24 @@ Thumbs.db
 # Python bytecode
 __pycache__/
 
+# Python (uv)
+.venv/
+*.egg-info/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Web build output
+dist/
+apps/site/.astro/
+apps/*/node_modules/.tmp/
+
+# ローカル運用データ（plan.md §2.1: SQLite・生成物はGit対象外）
+artifacts/
+*.sqlite3
+*.sqlite3-*
+
 # >>> guardrails-kit >>>（この区画はキットの正本。既存 .gitignore がある場合、
 # install_kit.py はこの区画ごと末尾へ追記する——区画外は各プロジェクトの自由領域）
 __pycache__/

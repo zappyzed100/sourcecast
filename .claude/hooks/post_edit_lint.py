@@ -42,7 +42,12 @@ from pathlib import Path
 # 例（python-uv 列・直接バイナリ呼び出し）: ".py": [["ruff", "check", "{file}"]]
 # 採用列の paste-block はこの区画内へ。更新はこの区画の中身だけ引き継がれる（Phase 44）。
 DISPATCH: dict[str, list[list[str]]] = {}
-# BINDING-SOURCE: <列ID@版をここに>   ← Step 0 で刻印（§12.7・区画内=更新で消えない）
+# BINDING-SOURCE: python-uv@10
+# ---- python-uv@10 (fill_bindings) ----
+DISPATCH[".py"] = [["ruff", "check", "{file}"]]
+# ---- ts-react-web@12 (fill_bindings) ----
+_ESLINT = [["node_modules/.bin/eslint", "--max-warnings=0", "{file}"]]
+DISPATCH[".ts"] = DISPATCH[".tsx"] = DISPATCH[".js"] = DISPATCH[".jsx"] = _ESLINT
 # <<< GUARDRAILS BINDING <<<
 
 
