@@ -100,9 +100,8 @@ COMMANDS.update(
         ],
     }
 )
-# up/reset/seed/time/db: SQLiteはファイルベースで常駐サービスが無い（Phase 1でAlembic
-# migrationsを導入した時点で reset を `uv run alembic upgrade head` 等へ配線する）。
-# 現時点は「該当なし」のまま——静かな不発ではなく dev.py 側の明示エラーで可視化される。
+# seed/time: Phase 1時点でシードデータ・時刻凍結の仕組みはまだ無い（配線が要る
+# フェーズで追加する。静かな不発ではなく dev.py 側の明示エラーで可視化される）。
 # <<< GUARDRAILS BINDING <<<
 
 VERB_HELP: dict[str, str] = {
