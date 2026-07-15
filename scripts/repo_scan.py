@@ -1153,4 +1153,8 @@ GENERATED_PATTERNS += [re.compile(r"^design-system/")]
 # packages/contracts/src/generated/ はPydanticモデルからの自動生成物（手編集禁止・
 # scripts/generate_contracts.py + packages/contracts/scripts/generate-types.ts の出力）
 GENERATED_PATTERNS += [re.compile(r"^packages/contracts/src/generated/")]
+# packages/contracts/scripts/ もPythonの scripts/ と同じ「印字前提のCLIツール」置き場
+# （generate-types.ts 自体がビルド時コード生成スクリプト）——同じ境界でlog-direct-call
+# の対象外にする（既定のLOG_EXIT_PREFIXESと同じ理由 — §3.3）。
+LOG_EXIT_PREFIXES = (*LOG_EXIT_PREFIXES, "packages/contracts/scripts/")
 # <<< GUARDRAILS BINDING <<<
