@@ -185,6 +185,10 @@
 - `services/pipeline/src/history_radio/domain/models.py`
 - `services/pipeline/src/history_radio/gate/__init__.py`
 - `services/pipeline/src/history_radio/ingest/__init__.py`
+- `services/pipeline/src/history_radio/ingest/adapter.py`
+- `services/pipeline/src/history_radio/ingest/crawl_control.py`
+- `services/pipeline/src/history_radio/ingest/schema.py`
+- `services/pipeline/src/history_radio/ingest/wikipedia.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
@@ -208,6 +212,11 @@
 - `services/pipeline/tests/domain/__init__.py`
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
+- `services/pipeline/tests/ingest/__init__.py`
+- `services/pipeline/tests/ingest/mock_http.py`
+- `services/pipeline/tests/ingest/test_crawl_control.py`
+- `services/pipeline/tests/ingest/test_schema.py`
+- `services/pipeline/tests/ingest/test_wikipedia.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -526,6 +535,25 @@
 - class Job
 - class AuditEvent
 
+### `services/pipeline/src/history_radio/ingest/adapter.py`
+- class SourceAdapter
+
+### `services/pipeline/src/history_radio/ingest/crawl_control.py`
+- class Clock
+- class SystemClock
+- class FetchBlockedError
+- class PoliteFetcher
+
+### `services/pipeline/src/history_radio/ingest/schema.py`
+- class EvidenceLocator
+- class RightsEvidence
+- class FetchResponseInfo
+- class FetchedDocument
+
+### `services/pipeline/src/history_radio/ingest/wikipedia.py`
+- class WikipediaFetchError
+- class WikipediaAdapter
+
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
 - def build_rights_decision
@@ -600,6 +628,45 @@
 - def test_unknown_schema_version_rejected
 - def test_unknown_extra_field_rejected
 - def test_models_are_frozen
+
+### `services/pipeline/tests/ingest/mock_http.py`
+- class Reply
+- class Timeout
+- class Disconnect
+- class RecordedRequest
+- class FakeClock
+- def scripted_fetcher
+
+### `services/pipeline/tests/ingest/test_crawl_control.py`
+- def test_success_returns_response_and_sends_user_agent
+- def test_conditional_get_sends_etag_and_last_modified
+- def test_same_domain_requests_wait_at_least_min_interval
+- def test_429_respects_retry_after_then_succeeds
+- def test_429_over_retry_limit_stops_safely
+- def test_5xx_over_retry_limit_stops_safely
+- def test_timeout_over_retry_limit_stops_safely
+- def test_mid_transfer_disconnect_over_retry_limit_stops_safely
+- def test_transient_5xx_then_success_retries_with_backoff
+- def test_oversized_content_length_is_rejected_without_reading_body
+- def test_oversized_actual_body_is_rejected
+
+### `services/pipeline/tests/ingest/test_schema.py`
+- def test_valid_document_is_accepted
+- def test_missing_required_field_is_rejected
+- def test_unknown_field_is_rejected
+- def test_full_text_without_storage_permission_is_rejected
+- def test_full_text_with_granted_storage_permission_is_accepted
+- def test_storage_and_publication_permissions_are_independent
+- def test_locator_rejects_reversed_offsets
+- def test_response_info_rejects_out_of_range_http_status
+
+### `services/pipeline/tests/ingest/test_wikipedia.py`
+- def test_adapter_satisfies_protocol
+- def test_fetch_builds_document_from_recorded_fixture
+- def test_storage_granted_but_publication_denied
+- def test_missing_page_raises_instead_of_partial_document
+- def test_malformed_api_response_raises_instead_of_partial_document
+- def test_same_content_produces_same_hash
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
