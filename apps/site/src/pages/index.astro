@@ -38,12 +38,8 @@ const episodes = (await getCollection("episodes")).sort(
 
 <script>
 	// 検索UI・索引は検索を使い始めた時だけ読み込む（plan.md §3.1「検索開始時に遅延読み込み」）。
-	const input = document.getElementById("site-search-input") as HTMLInputElement | null;
+	const input = document.querySelector<HTMLInputElement>('[data-testid="site-search-input"]');
 	const resultsEl = document.getElementById("site-search-results");
-
-	let pagefindPromise: Promise<{
-		search: (term: string) => Promise<{ results: { id: string; data: () => Promise<PagefindResult> }[] }>;
-	}> | null = null;
 
 	interface PagefindResult {
 		url: string;
@@ -51,10 +47,24 @@ const episodes = (await getCollection("episodes")).sort(
 		excerpt: string;
 	}
 
+	interface PagefindApi {
+		search: (term: string) => Promise<{ results: { id: string; data: () => Promise<PagefindResult> }[] }>;
+	}
+
+	let pagefindPromise: Promise<PagefindApi> | null = null;
+
+	// Viteの静的解析を完全に避ける: `@vite-ignore` を付けても import() 呼び出し自体は
+	// Viteのプリロードヘルパー(`__VITE_PRELOAD__`参照)でラップされてしまい、ビルド外の
+	// /pagefind/pagefind.js を読む際に「__VITE_PRELOAD__ is not defined」で例外になる
+	// (実機で確認済み)。Function経由の動的importはVite/esbuildの構文解析対象そのものに
+	// ならないため、ラップされずに済む。
+	const dynamicImport = new Function("specifier", "return import(specifier);") as (
+		specifier: string,
+	) => Promise<PagefindApi>;
+
 	function loadPagefind() {
 		if (!pagefindPromise) {
-			// @ts-expect-error ビルド後にのみ /pagefind/pagefind.js が生成される（開発時は型解決不能で正常）
-			pagefindPromise = import(/* @vite-ignore */ "/pagefind/pagefind.js");
+			pagefindPromise = dynamicImport("/pagefind/pagefind.js");
 		}
 		return pagefindPromise;
 	}
