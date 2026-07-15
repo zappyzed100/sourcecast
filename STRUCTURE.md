@@ -113,6 +113,10 @@
 - `config/model_registry.yaml`
 - `config/source_registry.yaml`
 
+## `docs/`
+
+- `docs/plans/development-plan.md`
+
 ## `e2e/`
 
 - `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)

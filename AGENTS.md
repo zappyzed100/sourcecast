@@ -50,6 +50,11 @@ check/probe/selftest/dod のキット既定動詞のみ):
 - 索引 = `STRUCTURE.md`(自動生成・手編集禁止)
 - 設計根拠 = ルート `PLAN.md`(全体計画・機械可読タスク一覧)＋
   [docs/plans/development-plan.md](docs/plans/development-plan.md)(フェーズ別詳細タスクと検証コマンド)。
+  **`PLAN.md` を編集する時は、必ず
+  [docs/plans/PLAN_FORMAT.md](docs/plans/PLAN_FORMAT.md) の節構成・タスク記法(機械可読
+  チェックリストの書式)に従うこと**——別プロジェクト(Progress Proof)が本リポジトリの
+  `PLAN.md` を正規表現でパースして横断ダッシュボードに使うため、節見出しやタスク行の
+  書式(チェックボックス＋行末の状態タグ)を崩すと収集側が解釈できなくなる。
   plan は**小さなタスク(目安: 1タスク数分)＋各タスクの検証コマンド**で書くと、
   中断・再開とレビューに強くなる(心得)。**レイヤー直下に新規ディレクトリを作る
   `feat:` は、設計根拠(`PLAN.md` / `docs/plans/`)の差分を同コミットに含める**
