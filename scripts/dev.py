@@ -76,6 +76,12 @@ COMMANDS: dict[str, list[list[str]] | None] = {
 # 複数コマンドを列挙できる COMMANDS の仕様（§12.1）を使い、両言語を1動詞へ束ねた）
 COMMANDS.update(
     {
+        "up": [["uv", "run", "alembic", "upgrade", "head"]],
+        "reset": [
+            ["uv", "run", "alembic", "downgrade", "base"],
+            ["uv", "run", "alembic", "upgrade", "head"],
+        ],
+        "db": [["uv", "run", "python", "scripts/db_query.py", "{args}"]],
         "test": [
             ["uv", "run", "pytest", "-q"],
             ["pnpm", "--filter", "apps-admin", "run", "test"],

@@ -36,7 +36,7 @@ line-length = 100
 src = ["services/pipeline/src"]
 # scripts/ はkit本体とプロジェクト固有スクリプト(generate_contracts.py等)が同居する
 # ため、ディレクトリ丸ごとではなくkit所有ファイルだけを個別に除外する（下記）。
-include = ["services/pipeline/**/*.py", "scripts/*.py"]
+include = ["services/pipeline/**/*.py", "scripts/*.py", "migrations/**/*.py"]
 # guardrails-kit本体(.claude/hooks/・.codex/hooks/)とvendorコピー/submoduleは対象外
 # ——我々のアプリコードではなくkit/vendor側の規約に従う（AGENTS.md §6）。
 # post_edit_lint フックが編集直後に単一ファイルへ ruff --force-exclude を直呼びする時にも
@@ -79,6 +79,6 @@ select = ["E", "F", "I", "T201", "E722"]
 "scripts/*.py" = ["T201"]
 
 [tool.basedpyright]
-include = ["services/pipeline/src", "services/pipeline/tests"]
+include = ["services/pipeline/src", "services/pipeline/tests", "migrations"]
 pythonVersion = "3.14"
 typeCheckingMode = "strict"
