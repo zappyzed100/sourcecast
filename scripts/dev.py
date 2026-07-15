@@ -62,6 +62,7 @@ COMMANDS: dict[str, list[list[str]] | None] = {
     "dod": [["uv", "run", "scripts/check_rule_dod.py", "{args}"]],
     # ↑ 列の違反注入コーパス再生（規則DoDの機械化 — §11 Step 2・Phase 47。
     #   採用列のコーパス未同梱は未完了としてexit 1）
+    "build": None,  # 全パッケージの型検査＋ビルド（plan.md Phase 0。CIのartifact生成と同じ経路）
 }
 
 # >>> GUARDRAILS BINDING >>>
