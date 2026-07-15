@@ -5,13 +5,13 @@ description = "歴史スライド動画・自動生成ツール — 生成パイ
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "pydantic>=2.10",
-    "httpx>=0.28",
     "sqlalchemy>=2.0",
     "alembic>=1.14",
     "typer>=0.15",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "pyyaml>=6.0.3",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]

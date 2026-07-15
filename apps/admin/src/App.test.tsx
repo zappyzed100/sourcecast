@@ -1,16 +1,41 @@
-// App.test.tsx — Phase 0のvitestスモークテスト: レンダリングとカウンターの基本動作だけを確認する
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+// App.test.tsx — ナビゲーションでダッシュボード/候補一覧/ジョブ画面を切り替えられることを確認する
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
 import App from "./App";
+import * as api from "./lib/api";
 
 describe("App", () => {
-	it("カウンターボタンを押すと表示が増える", () => {
-		render(<App />);
-		const button = screen.getByTestId("scaffold-counter-button");
-		expect(button).toHaveTextContent("Count is 0");
+	it("既定でダッシュボードが表示される", () => {
+		vi.spyOn(api, "getDashboardSummary").mockReturnValue(new Promise(() => {}));
+		render(
+			<MemoryRouter initialEntries={["/"]}>
+				<App />
+			</MemoryRouter>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "history-radio 管理画面" }),
+		).toBeInTheDocument();
+		expect(screen.getByTestId("dashboard-loading")).toBeInTheDocument();
+	});
 
-		fireEvent.click(button);
+	it("候補一覧へのリンクで画面が切り替わる", () => {
+		vi.spyOn(api, "getCandidates").mockReturnValue(new Promise(() => {}));
+		render(
+			<MemoryRouter initialEntries={["/candidates"]}>
+				<App />
+			</MemoryRouter>,
+		);
+		expect(screen.getByTestId("candidates-loading")).toBeInTheDocument();
+	});
 
-		expect(button).toHaveTextContent("Count is 1");
+	it("ジョブ画面へのリンクで画面が切り替わる", () => {
+		vi.spyOn(api, "getJobs").mockReturnValue(new Promise(() => {}));
+		render(
+			<MemoryRouter initialEntries={["/jobs"]}>
+				<App />
+			</MemoryRouter>,
+		);
+		expect(screen.getByTestId("jobs-loading")).toBeInTheDocument();
 	});
 });
