@@ -14,7 +14,9 @@ const schemaDir = path.join(contractsRoot, "schema");
 const generatedDir = path.join(contractsRoot, "src", "generated");
 
 async function main(): Promise<void> {
-	const entries = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
+	const entries = (await readdir(schemaDir))
+		.filter((name) => name.endsWith(".schema.json"))
+		.sort();
 
 	const exportLines: string[] = [];
 	for (const entry of entries) {
@@ -27,7 +29,9 @@ async function main(): Promise<void> {
 		});
 		const outPath = path.join(generatedDir, `${modelName}.ts`);
 		await writeFile(outPath, ts, "utf-8");
-		exportLines.push(`export type { ${modelName} } from "./generated/${modelName}.ts";`);
+		exportLines.push(
+			`export type { ${modelName} } from "./generated/${modelName}.ts";`,
+		);
 		console.log(`[generate-types] src/generated/${modelName}.ts`);
 	}
 
@@ -38,7 +42,7 @@ async function main(): Promise<void> {
 		"",
 		...exportLines,
 		"",
-		'export const CONTRACTS_SCHEMA_VERSION = 1 as const;',
+		"export const CONTRACTS_SCHEMA_VERSION = 1 as const;",
 		"",
 	].join("\n");
 	await writeFile(indexPath, indexBody, "utf-8");

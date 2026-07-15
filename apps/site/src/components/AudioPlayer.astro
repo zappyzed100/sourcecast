@@ -1,0 +1,147 @@
+---
+// AudioPlayer.astro — 再生速度・章移動・位置保存に対応した音声プレイヤー(plan.md Phase 2)。
+// キーボード操作のみで再生・停止・章移動ができることをPlaywrightで検証する。
+interface Chapter {
+	title: string;
+	startSeconds: number;
+}
+
+interface Props {
+	episodeId: string;
+	audioUrl: string;
+	chapters: Chapter[];
+}
+
+const { episodeId, audioUrl, chapters } = Astro.props;
+---
+
+<div class="audio-player" data-testid="audio-player" data-episode-id={episodeId} data-audio-url={audioUrl}>
+	<button type="button" data-testid="audio-play-pause" aria-pressed="false">再生</button>
+	<label>
+		速度
+		<select data-testid="audio-speed">
+			<option value="0.75">0.75x</option>
+			<option value="1" selected>1x</option>
+			<option value="1.25">1.25x</option>
+			<option value="1.5">1.5x</option>
+			<option value="2">2x</option>
+		</select>
+	</label>
+	<button type="button" data-testid="audio-seek-back">10秒戻る</button>
+	<button type="button" data-testid="audio-seek-forward">10秒進む</button>
+	{
+		chapters.length > 0 && (
+			<nav aria-label="章一覧">
+				<ol data-testid="audio-chapters">
+					{chapters.map((chapter, i) => (
+						<li>
+							<button type="button" data-testid={`audio-chapter-${i}`} data-start-seconds={chapter.startSeconds}>
+								{chapter.title}
+							</button>
+						</li>
+					))}
+				</ol>
+			</nav>
+		)
+	}
+	<span data-testid="audio-status" role="status">未再生</span>
+</div>
+
+<script>
+	// 音声プレイヤー自体はページ本体の描画をブロックしない——script要素はdeferで
+	// 遅延読み込みされる(Astroの既定)。実際のAudio要素生成もこのスクリプト内で行う。
+	class AudioPlayerController {
+		private audio: HTMLAudioElement;
+		private root: HTMLElement;
+		private storageKey: string;
+
+		constructor(root: HTMLElement) {
+			this.root = root;
+			const audioUrl = root.dataset.audioUrl ?? "";
+			const episodeId = root.dataset.episodeId ?? "unknown";
+			this.storageKey = `history-radio:playback-position:${episodeId}`;
+			this.audio = new Audio(audioUrl);
+			this.audio.preload = "none";
+
+			const savedPosition = Number(localStorage.getItem(this.storageKey) ?? "0");
+			if (Number.isFinite(savedPosition) && savedPosition > 0) {
+				this.audio.currentTime = savedPosition;
+			}
+
+			this.wirePlayPause();
+			this.wireSpeed();
+			this.wireSeek();
+			this.wireChapters();
+			this.wireStatus();
+			this.wirePositionSaving();
+		}
+
+		private wirePlayPause(): void {
+			const button = this.root.querySelector<HTMLButtonElement>('[data-testid="audio-play-pause"]');
+			if (!button) return;
+			button.addEventListener("click", () => {
+				if (this.audio.paused) {
+					void this.audio.play();
+				} else {
+					this.audio.pause();
+				}
+			});
+			this.audio.addEventListener("play", () => {
+				button.textContent = "一時停止";
+				button.setAttribute("aria-pressed", "true");
+			});
+			this.audio.addEventListener("pause", () => {
+				button.textContent = "再生";
+				button.setAttribute("aria-pressed", "false");
+			});
+		}
+
+		private wireSpeed(): void {
+			const select = this.root.querySelector<HTMLSelectElement>('[data-testid="audio-speed"]');
+			select?.addEventListener("change", () => {
+				this.audio.playbackRate = Number(select.value);
+			});
+		}
+
+		private wireSeek(): void {
+			const back = this.root.querySelector<HTMLButtonElement>('[data-testid="audio-seek-back"]');
+			const forward = this.root.querySelector<HTMLButtonElement>('[data-testid="audio-seek-forward"]');
+			back?.addEventListener("click", () => {
+				this.audio.currentTime = Math.max(0, this.audio.currentTime - 10);
+			});
+			forward?.addEventListener("click", () => {
+				this.audio.currentTime = this.audio.currentTime + 10;
+			});
+		}
+
+		private wireChapters(): void {
+			const buttons = this.root.querySelectorAll<HTMLButtonElement>('[data-testid^="audio-chapter-"]');
+			for (const button of buttons) {
+				button.addEventListener("click", () => {
+					const seconds = Number(button.dataset.startSeconds ?? "0");
+					this.audio.currentTime = seconds;
+					void this.audio.play();
+				});
+			}
+		}
+
+		private wireStatus(): void {
+			const status = this.root.querySelector<HTMLElement>('[data-testid="audio-status"]');
+			if (!status) return;
+			this.audio.addEventListener("play", () => (status.textContent = "再生中"));
+			this.audio.addEventListener("pause", () => (status.textContent = "一時停止中"));
+			this.audio.addEventListener("ended", () => (status.textContent = "再生終了"));
+			this.audio.addEventListener("error", () => (status.textContent = "読み込みエラー"));
+		}
+
+		private wirePositionSaving(): void {
+			this.audio.addEventListener("timeupdate", () => {
+				localStorage.setItem(this.storageKey, String(this.audio.currentTime));
+			});
+		}
+	}
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-testid="audio-player"]')) {
+		new AudioPlayerController(root);
+	}
+</script>

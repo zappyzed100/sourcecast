@@ -1,0 +1,59 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"apps/**",
+			"packages/**",
+			"!apps/**/dist",
+			"!apps/**/.astro",
+			"!packages/**/schema",
+			"!packages/contracts/src/generated"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended"
+		}
+	},
+	// .astroファイルはフロントマター(---で囲まれた部分)しか静的解析できず、テンプレート
+	// 側での変数・import使用を認識できない(Biome 2.5時点)。実際は使われているprops/
+	// 変数/importが軒並みnoUnusedVariables/noUnusedImportsの誤検知になるため無効化する。
+	// (拡張子は.json ではなく.jsoncにすること — plain .json はコメント不可でparse失敗する)
+	"overrides": [
+		{
+			"includes": ["**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		}
+	],
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	}
+}

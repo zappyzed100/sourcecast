@@ -1,17 +1,88 @@
 ---
+// index.astro — エピソード一覧（ホームページ）。plan.md Phase 2「一覧」。
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
+const episodes = (await getCollection("episodes")).sort(
+	(a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+	title="歴史スライドラジオ（仮） — エピソード一覧"
+	description="出典付きの日本語台本と音声でお届けする、歴史の小話番組。"
+	canonicalPath="/"
+>
+	<h1>エピソード一覧</h1>
+
+	<p>
+		<label for="site-search">サイト内検索</label>
+		<input id="site-search" type="search" placeholder="キーワードで検索" data-testid="site-search-input" />
+	</p>
+	<div id="site-search-results"></div>
+
+	<ul class="episode-list" data-testid="episode-list">
+		{
+			episodes.map((episode) => (
+				<li>
+					<a href={`/episodes/${episode.data.episodeId}/`}>{episode.data.title}</a>
+					<p>{episode.data.summary}</p>
+					<time datetime={episode.data.publishedAt.toISOString()}>
+						{episode.data.publishedAt.toISOString().slice(0, 10)}
+					</time>
+				</li>
+			))
+		}
+	</ul>
+</BaseLayout>
+
+<script>
+	// 検索UI・索引は検索を使い始めた時だけ読み込む（plan.md §3.1「検索開始時に遅延読み込み」）。
+	const input = document.getElementById("site-search-input") as HTMLInputElement | null;
+	const resultsEl = document.getElementById("site-search-results");
+
+	let pagefindPromise: Promise<{
+		search: (term: string) => Promise<{ results: { id: string; data: () => Promise<PagefindResult> }[] }>;
+	}> | null = null;
+
+	interface PagefindResult {
+		url: string;
+		meta: { title?: string };
+		excerpt: string;
+	}
+
+	function loadPagefind() {
+		if (!pagefindPromise) {
+			// @ts-expect-error ビルド後にのみ /pagefind/pagefind.js が生成される（開発時は型解決不能で正常）
+			pagefindPromise = import(/* @vite-ignore */ "/pagefind/pagefind.js");
+		}
+		return pagefindPromise;
+	}
+
+	input?.addEventListener("focus", () => void loadPagefind(), { once: true });
+
+	input?.addEventListener("input", async () => {
+		const term = input.value.trim();
+		if (!resultsEl) return;
+		if (term.length === 0) {
+			resultsEl.innerHTML = "";
+			return;
+		}
+		const pagefind = await loadPagefind();
+		const search = await pagefind.search(term);
+		const entries = await Promise.all(search.results.slice(0, 10).map((r) => r.data()));
+		resultsEl.innerHTML = entries
+			.map((e) => `<p><a href="${e.url}">${e.meta.title ?? e.url}</a><br>${e.excerpt}</p>`)
+			.join("");
+	});
+</script>
+
+<style>
+	.episode-list {
+		list-style: none;
+		padding: 0;
+	}
+	.episode-list li {
+		margin-bottom: 1.5rem;
+	}
+</style>

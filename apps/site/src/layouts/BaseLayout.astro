@@ -1,0 +1,72 @@
+---
+// BaseLayout.astro — 全ページ共通のhead(OGP・canonical・言語)。plan.md §3.1の表示要件の土台。
+interface Props {
+	title: string;
+	description: string;
+	canonicalPath: string;
+}
+
+const { title, description, canonicalPath } = Astro.props;
+const canonicalUrl = new URL(
+	canonicalPath,
+	Astro.site ?? "https://example.invalid",
+).toString();
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="canonical" href={canonicalUrl} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="generator" content={Astro.generator} />
+	</head>
+	<body>
+		<header class="site-header">
+			<a href="/" class="site-title">歴史スライドラジオ（仮）</a>
+			<nav aria-label="サイト内ナビゲーション">
+				<a href="/">エピソード一覧</a>
+			</nav>
+		</header>
+		<main>
+			<slot />
+		</main>
+		<footer class="site-footer">
+			<p>音声合成: VOICEVOX:ずんだもん</p>
+		</footer>
+	</body>
+</html>
+
+<style>
+	.site-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem;
+		border-bottom: 1px solid #ddd;
+	}
+	.site-title {
+		font-weight: bold;
+		text-decoration: none;
+		color: inherit;
+	}
+	main {
+		max-width: 720px;
+		margin: 0 auto;
+		padding: 1rem;
+	}
+	.site-footer {
+		text-align: center;
+		padding: 1rem;
+		color: #666;
+		font-size: 0.875rem;
+	}
+</style>

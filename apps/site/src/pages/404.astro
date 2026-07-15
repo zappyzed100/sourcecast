@@ -1,0 +1,13 @@
+---
+// 404.astro — カスタム404。検索・一覧・RSSへ戻れる導線を必ず出す(plan.md §3.1)。
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="ページが見つかりません — 歴史スライドラジオ（仮）" description="お探しのページは見つかりませんでした。" canonicalPath="/404/">
+	<h1>ページが見つかりません</h1>
+	<p>お探しのページは移動または削除された可能性があります。</p>
+	<ul>
+		<li><a href="/">エピソード一覧・検索へ戻る</a></li>
+	</ul>
+	<!-- Podcast RSSへの導線はPhase 9でfeed.xmlを実装した時点で追加する（今リンクすると壊れたリンクになる） -->
+</BaseLayout>
