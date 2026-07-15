@@ -85,6 +85,12 @@ COMMANDS.update(
             ["uv", "run", "ruff", "format", "."],
             ["pnpm", "exec", "biome", "format", "--write", "."],
         ],
+        "build": [
+            ["uv", "run", "basedpyright", "services/pipeline"],
+            ["pnpm", "-r", "run", "typecheck"],
+            ["pnpm", "--filter", "apps-admin", "run", "build"],
+            ["pnpm", "--filter", "apps-site", "run", "build"],
+        ],
     }
 )
 # up/reset/seed/time/db: SQLiteはファイルベースで常駐サービスが無い（Phase 1でAlembic

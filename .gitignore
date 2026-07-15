@@ -26,6 +26,11 @@ dist/
 apps/site/.astro/
 apps/*/node_modules/.tmp/
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
 # ローカル運用データ（plan.md §2.1: SQLite・生成物はGit対象外）
 artifacts/
 *.sqlite3
