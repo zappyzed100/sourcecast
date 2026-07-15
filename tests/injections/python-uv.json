@@ -73,7 +73,7 @@
         "PLAN_LAYER_ROOTS"
       ],
       "msg": "feat: dod probe（設計根拠非同梱の検証用）",
-      "path": "src/dod_probe_plan/mod.py",
+      "path": "services/pipeline/src/dod_probe_plan/mod.py",
       "content": "# mod.py — DoD注入（自動生成・自動削除）\nX = 1\n"
     },
     {

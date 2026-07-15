@@ -89,36 +89,42 @@ jobs:
   # 各ジョブに timeout-minutes を必ず付ける（checks と同じハング保険 — G11）。
   # E2E ジョブは §12.4 の操作レールの CI 変換（PR の赤/緑に変える）——Step 8b の DoD に含まれる。
   # >>> GUARDRAILS BINDING: language-jobs >>>
-  # ---- python-uv@10 (fill_bindings) ----
+  # BINDING-SOURCE: python-uv@10 + ts-react-web@12（パス調整済み: pnpm workspace・Biome
+  # 採用のため、カタログの生の npm/eslint/supabase 前提ジョブは書き換えている）
+  # ---- python-uv@10 (パス調整済み) ----
   python-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen
-      - run: uvx ruff check .
+      - run: uv run ruff check .
+      - run: uv run basedpyright services/pipeline
       - run: uv run pytest
-# ---- ts-react-web@12 (fill_bindings) ----
+# ---- ts-react-web@12 (パス調整済み) ----
   ts-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "11.9.0" }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npx eslint .
-      - run: npx vitest run
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r run typecheck
+      - run: pnpm exec biome check .
+      - run: pnpm --filter apps-admin run test
 
   e2e:   # §12.4 の操作レールを PR の赤/緑へ変換（Step 8b DoD）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "11.9.0" }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - uses: supabase/setup-cli@v1
-      - run: supabase start
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter apps-site run build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test
 # <<< GUARDRAILS BINDING: language-jobs <<<

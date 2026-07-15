@@ -9,6 +9,6 @@
     {"rule":"deprecated-api","severity":"HARD","path":"src/dod_dep.ts","content":"// dod probe\nimport x from '@supabase/auth-helpers-nextjs';\n"},
     {"rule":"ui-missing-testid","severity":"HARD","path":"src/dod_ui.tsx","content":"// dod probe\nexport const X = () => <button onClick={() => 1}>x</button>;\n"},
     {"rule":"fix-without-test","severity":"HARD","stage":"commit","requires":["TEST_PATH_PATTERNS"],"msg":"fix: dod probe","path":"src/dod_fix.ts","content":"// dod probe\nexport const x = 1;\n"},
-    {"rule":"feat-without-plan","severity":"HARD","stage":"commit","requires":["PLAN_LAYER_ROOTS"],"msg":"feat: dod probe","path":"src/dod_feature/mod.ts","content":"// dod probe\nexport const x = 1;\n"}
+    {"rule":"feat-without-plan","severity":"HARD","stage":"commit","requires":["PLAN_LAYER_ROOTS"],"msg":"feat: dod probe","path":"apps/admin/src/dod_feature/mod.ts","content":"// dod probe\nexport const x = 1;\n"}
   ]
 }
