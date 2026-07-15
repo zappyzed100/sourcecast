@@ -1,0 +1,25 @@
+# model_registry.yaml — 使用許可モデル・実プロバイダー・データ方針(仕様書§8.1)
+#
+# openrouter/free のような実モデルがランダムに変わるルーターは本番禁止——
+# モデルIDとプロバイダーを固定する。price_prompt/price_completionは0でなければ
+# config_loader.load_model_registry が起動時に拒否する(無料モデル限定 — §2)。
+# expires_atを過ぎたエントリも同様に拒否する(毎日の確認を怠って古い設定のまま
+# 動かし続けることを防ぐ)。
+models:
+  - model_id: "meta-llama/llama-3.1-8b-instruct:free"
+    provider: "openrouter"
+    endpoint: "https://openrouter.ai/api/v1/chat/completions"
+    price_prompt: 0
+    price_completion: 0
+    context_length: 128000
+    expires_at: 2026-12-31
+    data_policy: "no_training_no_retention"
+
+  - model_id: "qwen/qwen-2.5-7b-instruct:free"
+    provider: "openrouter"
+    endpoint: "https://openrouter.ai/api/v1/chat/completions"
+    price_prompt: 0
+    price_completion: 0
+    context_length: 32000
+    expires_at: 2026-12-31
+    data_policy: "no_training_no_retention"

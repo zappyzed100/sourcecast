@@ -1,0 +1,53 @@
+# license_rules.yaml — ライセンス正規化表（仕様書§5.2）
+#
+# 権利表示の原文 → normalized_license_id の変換先。source_registry.yaml の
+# normalized_license_id はここに列挙したIDのいずれかを指す（参照整合性の相互検査は
+# Phase 1では未実装——将来フェーズで source_registry 側から検査する）。
+licenses:
+  - license_id: cc0
+    label: "CC0 (Public Domain Dedication)"
+    default_use_class: A
+    requires_attribution: false
+    notes: "公式提供元の資料単位表示であり、第三者権利例外がない場合に区分A候補"
+
+  - license_id: pdm
+    label: "Public Domain Mark"
+    default_use_class: A
+    requires_attribution: false
+    notes: "ライセンスではなく状態表示。提供元・対象地域・第三者権利・規約を確認後に区分A候補"
+
+  - license_id: cc-by
+    label: "CC BY"
+    default_use_class: A
+    requires_attribution: true
+    notes: "採用。クレジット必須"
+
+  - license_id: cc-by-sa
+    label: "CC BY-SA"
+    default_use_class: B
+    requires_attribution: true
+    notes: "SA(継承)は文章・画像を翻案して取り込んだ場合にのみ及ぶ。台本は事実ベースで独自作成する"
+
+  - license_id: gov-jp-2.0
+    label: "政府標準利用規約(第2.0版)"
+    default_use_class: A
+    requires_attribution: true
+    notes: "CC BY 4.0互換として採用。第三者著作物・ロゴ等の例外表示を除外"
+
+  - license_id: ogl
+    label: "Open Government Licence(英)"
+    default_use_class: A
+    requires_attribution: true
+    notes: "CC BY相当として採用"
+
+  - license_id: noc-us
+    label: "No Copyright - United States"
+    default_use_class: B
+    requires_attribution: false
+    notes: "自動採用しない。§5Aのスクリーニング後も原則人手確認"
+
+  - license_id: unknown
+    label: "権利表示なし・不明"
+    default_use_class: B
+    requires_attribution: false
+    notes: "不採用(区分Bとしての事実調査利用のみ検討可)"

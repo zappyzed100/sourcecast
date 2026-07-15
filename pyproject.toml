@@ -11,6 +11,7 @@ dependencies = [
     "typer>=0.15",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -19,6 +20,7 @@ dev = [
     "basedpyright>=1.23",
     "pytest>=8.3",
     "pytest-cov>=6.0",
+    "types-pyyaml>=6.0.12.20260518",
 ]
 
 [build-system]

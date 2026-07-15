@@ -1,0 +1,81 @@
+# source_registry.yaml — 本番許可レジストリ（仕様書§5.14・§16 MVP範囲）
+#
+# ここに載るのは status: approved になった資料だけを本番収集の対象にする
+# （§5「本番処理が参照する唯一の許可情報」）。MVPは§16の4〜5件に限定する。
+# 形式検証は history_radio.store.config_schemas.SourceRegistryFile、
+# 重複source_id検査は config_loader.load_source_registry が行う。
+sources:
+  - source_id: wikipedia_ja
+    status: approved
+    use_class: B
+    normalized_license_id: cc-by-sa
+    commercial_use: conditional
+    modification: conditional
+    redistribution: conditional
+    attribution: required
+    share_alike: preserve_per_asset
+    third_party_exception: deny
+    territory: global
+    terms_url: "https://ja.wikipedia.org/wiki/Wikipedia:%E5%85%88%E4%BA%88%E7%9F%A5%E8%AD%98"
+    terms_checked_at: 2026-07-16
+    recheck_days: 90
+
+  - source_id: wikimedia_commons
+    status: approved
+    use_class: A
+    normalized_license_id: cc0
+    commercial_use: conditional
+    modification: conditional
+    redistribution: conditional
+    attribution: required_if_not_cc0
+    share_alike: preserve_per_asset
+    third_party_exception: deny
+    territory: global
+    terms_url: "https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia"
+    terms_checked_at: 2026-07-16
+    recheck_days: 90
+
+  - source_id: ndl_digital_collection
+    status: approved
+    use_class: A
+    normalized_license_id: pdm
+    commercial_use: allow
+    modification: allow
+    redistribution: allow
+    attribution: not_required
+    share_alike: none
+    third_party_exception: deny
+    territory: jp
+    terms_url: "https://www.ndl.go.jp/use/reproduction"
+    terms_checked_at: 2026-07-16
+    recheck_days: 90
+
+  - source_id: colbase
+    status: approved
+    use_class: A
+    normalized_license_id: gov-jp-2.0
+    commercial_use: allow
+    modification: allow
+    redistribution: allow
+    attribution: required
+    share_alike: none
+    third_party_exception: deny
+    territory: jp
+    terms_url: "https://colbase.nich.go.jp/terms_of_use"
+    terms_checked_at: 2026-07-16
+    recheck_days: 90
+
+  - source_id: smithsonian_open_access
+    status: approved
+    use_class: A
+    normalized_license_id: cc0
+    commercial_use: allow
+    modification: allow
+    redistribution: allow
+    attribution: required_if_not_cc0
+    share_alike: none
+    third_party_exception: deny
+    territory: global
+    terms_url: "https://www.si.edu/openaccess"
+    terms_checked_at: 2026-07-16
+    recheck_days: 90
