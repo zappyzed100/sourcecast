@@ -6,3 +6,7 @@
 	path = upstream/ui-skills/emilkowalski-skills
 	url = https://github.com/emilkowalski/skills.git
 	branch = main
+[submodule "upstream/design-md/awesome-design-md"]
+	path = upstream/design-md/awesome-design-md
+	url = https://github.com/voltagent/awesome-design-md.git
+	branch = main

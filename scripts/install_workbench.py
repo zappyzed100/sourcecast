@@ -48,6 +48,9 @@ SUBMODULES = [
         "skills/animation-vocabulary/", "skills/apple-design/", "skills/emil-design-eng/",
         "skills/improve-animations/", "skills/review-animations/",
     ]),
+    ("upstream/design-md/awesome-design-md", "https://github.com/voltagent/awesome-design-md.git", "main", [
+        "/README.md", "/LICENSE", "design-md/**/DESIGN.md",
+    ]),
 ]
 
 # --- CLAUDE.md へ追記する UI スキル節(見出しが冪等判定のマーカー) ---

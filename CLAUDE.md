@@ -42,3 +42,12 @@ emilkowalski/skills 由来の5スキル(アニメーション/デザインエン
 `upstream/ui-skills/` の submodule 参照(ベンダーコピーではない)。repo_scan の列挙は
 `git ls-files`(親リポジトリの追跡ファイルのみ)なので submodule の中身は最初から
 検査対象外——特別対応は不要。
+
+## デザイン参照資料
+
+UI の見た目・方向性を検討・実装するときは
+[upstream/design-md/awesome-design-md/design-md/](upstream/design-md/awesome-design-md/design-md/)
+を参照する——74ブランド分の実在デザインシステムの DESIGN.md 集
+(submodule + sparse-checkout。例: `design-md/apple/DESIGN.md`・`design-md/linear.app/DESIGN.md`)。
+ui-ux-pro-max の検索(スタイル・パレットの一般則)と役割が違い、こちらは
+「実在ブランドの具体的なトーン・トークン・原則」を引く時に使う。

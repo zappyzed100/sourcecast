@@ -39,14 +39,23 @@ sources:
 
   - id: awesome-design-md
     repository: voltagent/awesome-design-md
-    integration: none
-    update: none
+    integration: submodule-sparse-checkout
+    paths:
+      - README.md
+      - LICENSE
+      - design-md/**/DESIGN.md
+    update: manual # reference material — `git submodule update --remote` when wanted; Dependabot ignores it
     status: reference
     rationale: >-
-      Kept as a reference, not integrated (user decision 2026-07-15). It is a
-      collection of per-brand DESIGN.md analyses, not Claude skills — useful
-      to consult during implementation. Whether to vendor specific DESIGN.md
-      files can only be decided after the UI direction is chosen; revisit then.
+      Local reference (2026-07-15, revised from remote-link-only the same
+      day): the user pointed out that agents actually consult material that
+      is local and pointed to from CLAUDE.md, not URLs in a record file.
+      74 per-brand DESIGN.md analyses, sparse-checked-out to just the
+      DESIGN.md files (~2.3MB working tree; the parent repo stores only a
+      gitlink, and submodule contents are invisible to git ls-files so no
+      kit-check exclusions are needed). Not Claude skills — consult when
+      choosing/refining the UI's visual direction. No auto-update: content
+      changes rarely and PR noise is not worth it.
 
   - id: ui-ux-pro-max-skill
     repository: nextlevelbuilder/ui-ux-pro-max-skill
