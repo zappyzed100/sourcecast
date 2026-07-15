@@ -1,6 +1,7 @@
 # Record of upstream source selection and how each one is integrated/updated.
 # When adopting a new upstream (or new skill paths), add it here and keep
-# scripts/setup-upstreams.ps1 and .github/workflows/update-ui-skills.yml in sync.
+# scripts/setup-upstreams.ps1 and .github/workflows/update-upstreams.yml in sync.
+# All upstream checks run weekly on the same slot (Mon 06:00 UTC).
 # Each entry records the rationale so the selection can be re-evaluated later
 # without reconstructing the reasoning (lesson from 2026-07-15: the original
 # selection had no recorded rationale).
@@ -23,7 +24,7 @@ sources:
       - skills/emil-design-eng
       - skills/improve-animations
       - skills/review-animations
-    update: path-filtered-github-action
+    update: path-filtered-github-action # update-upstreams.yml, weekly Mon 06:00 UTC
     rationale: >-
       Adopted first among the UI-skill candidates because it is the only one
       whose shape fits submodule + sparse-checkout: small self-contained
@@ -44,7 +45,7 @@ sources:
       - README.md
       - LICENSE
       - design-md/**/DESIGN.md
-    update: manual # reference material — `git submodule update --remote` when wanted; Dependabot ignores it
+    update: path-filtered-github-action # update-upstreams.yml (watch: design-md/), weekly Mon 06:00 UTC; Dependabot ignores it
     status: reference
     rationale: >-
       Local reference (2026-07-15, revised from remote-link-only the same
@@ -54,15 +55,17 @@ sources:
       DESIGN.md files (~2.3MB working tree; the parent repo stores only a
       gitlink, and submodule contents are invisible to git ls-files so no
       kit-check exclusions are needed). Not Claude skills — consult when
-      choosing/refining the UI's visual direction. No auto-update: content
-      changes rarely and PR noise is not worth it.
+      choosing/refining the UI's visual direction. Updated weekly by
+      update-upstreams.yml on the shared Monday slot (user decision
+      2026-07-15, revising the earlier manual-only policy), with a
+      design-md/ path filter so metadata-only upstream commits don't PR.
 
   - id: ui-ux-pro-max-skill
     repository: nextlevelbuilder/ui-ux-pro-max-skill
     integration: vendored-copy
     vendored-to: .claude/skills/
     vendored-from-sha: f8ac5e1266dba8354ea96e19994d9f4345e7ec31 # GitHub main, v2.11.0
-    update: scripts/revendor_uipro.py
+    update: scripts/revendor_uipro.py # run weekly by update-upstreams.yml (PR only when the vendored copy changed); manual run also fine
     status: adopted
     special-handling:
       # All three ride the kit's fill machinery (fill_bindings.py / managed

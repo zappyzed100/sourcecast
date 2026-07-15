@@ -3,7 +3,7 @@
 
 役割: guardrails-kit 導入済みの対象リポジトリへ、workbench の上乗せ分を差分適用する:
   1. `.claude/skills/`(ui-ux-pro-max ベンダーコピー)・`.upstream/sources.yaml`・
-     `scripts/setup-upstreams.ps1`・`.github/workflows/update-ui-skills.yml`・
+     `scripts/setup-upstreams.ps1`・`.github/workflows/update-upstreams.yml`・
      `.github/dependabot.yml` のコピー(既存と差異があれば CONFLICT で停止——黙って上書きしない)
   2. CLAUDE.md への UI スキル節の追記(無ければ新規作成・追記済みなら何もしない)
   3. upstream submodule 2つ(guardrails-kit / emilkowalski-skills + sparse-checkout)の追加
@@ -36,7 +36,7 @@ COPY_TREES = [".claude/skills"]
 COPY_FILES = [
     ".upstream/sources.yaml",
     "scripts/setup-upstreams.ps1",
-    ".github/workflows/update-ui-skills.yml",
+    ".github/workflows/update-upstreams.yml",
     ".github/dependabot.yml",
 ]
 

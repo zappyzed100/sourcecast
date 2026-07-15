@@ -1,0 +1,151 @@
+# Weekly upstream refresh — all upstreams check at the same time (Mon 06:00 UTC;
+# guardrails-kit is covered by Dependabot on the same schedule, see dependabot.yml).
+# - submodules job: path-filtered submodule bumps (emilkowalski-skills, awesome-design-md)
+#   — opens a PR only when the watched paths actually changed upstream.
+# - revendor-uipro job: re-runs scripts/revendor_uipro.py against GitHub main and
+#   opens a PR only when the vendored copy differs.
+# Watched paths / vendor decisions are recorded in .upstream/sources.yaml.
+name: Update upstreams
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  submodules:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: emilkowalski-skills
+            submodule_path: upstream/ui-skills/emilkowalski-skills
+            upstream_url: https://github.com/emilkowalski/skills.git
+            upstream_branch: main
+            # Space-separated pathspecs; keep in sync with .upstream/sources.yaml
+            watch_paths: skills/animation-vocabulary skills/apple-design skills/emil-design-eng skills/improve-animations skills/review-animations
+          - id: awesome-design-md
+            submodule_path: upstream/design-md/awesome-design-md
+            upstream_url: https://github.com/voltagent/awesome-design-md.git
+            upstream_branch: main
+            watch_paths: design-md
+    env:
+      SUBMODULE_PATH: ${{ matrix.submodule_path }}
+      UPSTREAM_URL: ${{ matrix.upstream_url }}
+      UPSTREAM_BRANCH: ${{ matrix.upstream_branch }}
+      WATCH_PATHS: ${{ matrix.watch_paths }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check upstream for changes in watched paths
+        id: check
+        run: |
+          CURRENT_SHA=$(git rev-parse "HEAD:${SUBMODULE_PATH}")
+          LATEST_SHA=$(git ls-remote "$UPSTREAM_URL" "refs/heads/${UPSTREAM_BRANCH}" | cut -f1)
+          echo "Current pinned SHA: $CURRENT_SHA"
+          echo "Upstream latest SHA: $LATEST_SHA"
+          echo "current-sha=$CURRENT_SHA" >> "$GITHUB_OUTPUT"
+          echo "latest-sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+          echo "latest-sha-short=${LATEST_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+          if [ "$CURRENT_SHA" = "$LATEST_SHA" ]; then
+            echo "Submodule already at upstream tip; nothing to do."
+            echo "update-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Partial clone (full history, lazily fetched blobs): a shallow clone
+          # could not diff against the older pinned SHA.
+          git clone --filter=blob:none --no-checkout "$UPSTREAM_URL" /tmp/upstream
+
+          if git -C /tmp/upstream diff --quiet "$CURRENT_SHA" "$LATEST_SHA" -- $WATCH_PATHS; then
+            echo "Upstream moved, but watched paths are unchanged; nothing to do."
+            echo "update-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Watched paths changed; a submodule-bump PR is needed."
+          echo "update-needed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "diffstat<<DIFFSTAT_EOF"
+            git -C /tmp/upstream diff --stat "$CURRENT_SHA" "$LATEST_SHA" -- $WATCH_PATHS
+            echo "DIFFSTAT_EOF"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "commits<<COMMITS_EOF"
+            git -C /tmp/upstream log --oneline "$CURRENT_SHA..$LATEST_SHA" -- $WATCH_PATHS
+            echo "COMMITS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bump submodule to latest SHA
+        if: steps.check.outputs.update-needed == 'true'
+        run: |
+          git submodule update --init -- "$SUBMODULE_PATH"
+          git -C "$SUBMODULE_PATH" fetch origin "${{ steps.check.outputs.latest-sha }}"
+          git -C "$SUBMODULE_PATH" checkout "${{ steps.check.outputs.latest-sha }}"
+
+      - name: Create pull request
+        if: steps.check.outputs.update-needed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: update-upstreams/${{ matrix.id }}-${{ steps.check.outputs.latest-sha-short }}
+          title: "chore: bump ${{ matrix.id }} to ${{ steps.check.outputs.latest-sha-short }}"
+          commit-message: |
+            chore: bump ${{ matrix.id }} to ${{ steps.check.outputs.latest-sha-short }}
+
+            Watched paths changed upstream:
+            ${{ steps.check.outputs.commits }}
+          body: |
+            Bumps `${{ matrix.submodule_path }}` from `${{ steps.check.outputs.current-sha }}` to `${{ steps.check.outputs.latest-sha }}`.
+
+            ### Upstream commits touching watched paths
+            ```
+            ${{ steps.check.outputs.commits }}
+            ```
+
+            ### Changed files in watched paths
+            ```
+            ${{ steps.check.outputs.diffstat }}
+            ```
+
+            ---
+            Opened automatically by `update-upstreams.yml` because the watched paths
+            (see `.upstream/sources.yaml`, id: ${{ matrix.id }}) changed upstream.
+          labels: |
+            dependencies
+            upstreams
+          delete-branch: true
+
+  revendor-uipro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Re-vendor ui-ux-pro-max from GitHub main
+        run: python3 scripts/revendor_uipro.py
+
+      - name: Create pull request (only if the vendored copy changed)
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: update-upstreams/ui-ux-pro-max
+          title: "chore: re-vendor ui-ux-pro-max from upstream main"
+          commit-message: |
+            chore: re-vendor ui-ux-pro-max from upstream main
+
+            Generated by scripts/revendor_uipro.py (renders SKILL.md and
+            replaces the vendored skill dirs; bumps vendored-from-sha).
+          body: |
+            Weekly re-vendor of `nextlevelbuilder/ui-ux-pro-max-skill` into `.claude/skills/`.
+
+            Generated by `scripts/revendor_uipro.py` — the new pinned SHA is in
+            `.upstream/sources.yaml` (`vendored-from-sha`). No PR is opened when
+            the upstream is unchanged (byte-identical re-vendor).
+          labels: |
+            dependencies
+            upstreams
+          delete-branch: true

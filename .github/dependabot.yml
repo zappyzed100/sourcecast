@@ -1,15 +1,19 @@
-# Dependabot handles only the guardrails-kit submodule.
-# - emilkowalski-skills is excluded: updates come from update-ui-skills.yml,
-#   which only opens a PR when the adopted skill paths actually change.
-# - awesome-design-md is excluded: reference material, updated manually
-#   (`git submodule update --remote`) when wanted.
-# (see .upstream/sources.yaml for both decisions)
+# Dependabot handles only the guardrails-kit submodule, on the same weekly
+# slot as update-upstreams.yml (Mon 06:00 UTC) so all upstream checks land together.
+# - emilkowalski-skills / awesome-design-md are excluded: update-upstreams.yml
+#   bumps them with a path filter (PR only when watched paths change).
+# - ui-ux-pro-max is a vendored copy (not a submodule): update-upstreams.yml
+#   re-vendors it weekly via scripts/revendor_uipro.py.
+# (see .upstream/sources.yaml for the decisions)
 version: 2
 updates:
   - package-ecosystem: gitsubmodule
     directory: "/"
     schedule:
       interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
     ignore:
       - dependency-name: "upstream/ui-skills/emilkowalski-skills"
       - dependency-name: "upstream/design-md/awesome-design-md"
