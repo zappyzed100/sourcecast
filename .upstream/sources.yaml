@@ -50,20 +50,36 @@ sources:
 
   - id: ui-ux-pro-max-skill
     repository: nextlevelbuilder/ui-ux-pro-max-skill
-    integration: none
-    update: none
-    status: candidate
+    integration: vendored-copy
+    vendored-to: .claude/skills/
+    vendored-from-sha: f8ac5e1266dba8354ea96e19994d9f4345e7ec31 # GitHub main, v2.11.0
+    update: manual-revendor
+    status: adopted
+    special-handling:
+      - python-via-uv: >-
+          The skill's `python3 scripts/...` instructions are read as
+          `uv run python .claude/skills/ui-ux-pro-max/scripts/...`
+          (kit GUARDRAILS §7.1). Smoke-tested via uv on 2026-07-15.
+      - vendored-exclusion: >-
+          At kit bootstrap time, exclude .claude/skills/ from
+          header/print-ban/structure checks (third-party code is not held to
+          this repo's conventions).
+      - generated-artifact: >-
+          `--persist` output design-system/ is committed (design decisions)
+          and registered in GENERATED_PATTERNS at kit bootstrap time.
     rationale: >-
-      Deferred (2026-07-15; repo inspected at v2.11.0, not just assumed).
-      Verified facts: installs self-contained into .claude/skills/
-      (orchestrator SKILL.md + ~1.7MB CSV databases + Python search scripts +
-      6 sub-skills); for the claude platform it does NOT touch CLAUDE.md,
-      .claude/settings.json, or .mcp.json — so there is no file-level
-      collision with guardrails-kit. Scripts make no network calls (offline
-      BM25 search). Real friction is discipline-level, not file-level:
-      (1) skill instructs `python3 scripts/...` directly, contradicting the
-      kit's Python-via-uv rule (GUARDRAILS §7.1); (2) if the vendored files
-      are committed to a kit-managed repo, the kit's header/print-ban/
-      STRUCTURE.md checks fire on them unless exclusions are recorded in the
-      catalog; (3) `--persist` writes design-system/MASTER.md into the
-      project, which needs a generated-artifact decision.
+      Adopted into the workbench 2026-07-15 (user decision: accept the three
+      special handlings above; merging into the guardrails-kit repo itself was
+      considered and rejected — different layers, double upstream tracking).
+      Verified before adoption (repo inspected at v2.11.0): installs
+      self-contained into .claude/skills/ (orchestrator SKILL.md + CSV
+      databases + Python search scripts + 6 sub-skills); does NOT touch
+      CLAUDE.md, .claude/settings.json, or .mcp.json — no file-level collision
+      with guardrails-kit. Scripts make no network calls (offline BM25
+      search). NOTE the npm package (ui-ux-pro-max-cli) lags GitHub main, so
+      we vendored by reproducing the installer's render+copy from a clone of
+      the pinned SHA instead of `npx ui-ux-pro-max-cli init --ai claude`.
+      To update: clone upstream, re-render SKILL.md from
+      cli/assets/templates/(base/skill-content.md + platforms/claude.json),
+      re-copy cli/assets/{data,scripts} into .claude/skills/ui-ux-pro-max/
+      and cli/assets/skills/* as sibling skills, then bump vendored-from-sha.
