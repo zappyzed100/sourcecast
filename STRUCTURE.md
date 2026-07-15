@@ -186,6 +186,7 @@
 - `services/pipeline/src/history_radio/gate/__init__.py`
 - `services/pipeline/src/history_radio/ingest/__init__.py`
 - `services/pipeline/src/history_radio/ingest/adapter.py`
+- `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
@@ -211,6 +212,8 @@
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
 - `services/pipeline/tests/ingest/__init__.py`
+- `services/pipeline/tests/ingest/mock_http.py`
+- `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
@@ -533,6 +536,12 @@
 ### `services/pipeline/src/history_radio/ingest/adapter.py`
 - class SourceAdapter
 
+### `services/pipeline/src/history_radio/ingest/crawl_control.py`
+- class Clock
+- class SystemClock
+- class FetchBlockedError
+- class PoliteFetcher
+
 ### `services/pipeline/src/history_radio/ingest/schema.py`
 - class EvidenceLocator
 - class RightsEvidence
@@ -613,6 +622,27 @@
 - def test_unknown_schema_version_rejected
 - def test_unknown_extra_field_rejected
 - def test_models_are_frozen
+
+### `services/pipeline/tests/ingest/mock_http.py`
+- class Reply
+- class Timeout
+- class Disconnect
+- class RecordedRequest
+- class FakeClock
+- def scripted_fetcher
+
+### `services/pipeline/tests/ingest/test_crawl_control.py`
+- def test_success_returns_response_and_sends_user_agent
+- def test_conditional_get_sends_etag_and_last_modified
+- def test_same_domain_requests_wait_at_least_min_interval
+- def test_429_respects_retry_after_then_succeeds
+- def test_429_over_retry_limit_stops_safely
+- def test_5xx_over_retry_limit_stops_safely
+- def test_timeout_over_retry_limit_stops_safely
+- def test_mid_transfer_disconnect_over_retry_limit_stops_safely
+- def test_transient_5xx_then_success_retries_with_backoff
+- def test_oversized_content_length_is_rejected_without_reading_body
+- def test_oversized_actual_body_is_rejected
 
 ### `services/pipeline/tests/ingest/test_schema.py`
 - def test_valid_document_is_accepted
