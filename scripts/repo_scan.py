@@ -35,6 +35,7 @@ class ScanError(RuntimeError):
 # 走査ロジック（言語非依存）
 # ----------------------------------------------------------------------------
 
+
 def reconfigure_stdio() -> None:
     """cp932 コンソールへの日本語 print で検査自体が落ちる誤爆を防ぐ（§7.2）。"""
     for stream in (sys.stdout, sys.stderr):
@@ -97,12 +98,25 @@ def append_violations(root: Path, stage: str, findings) -> None:
     try:
         with open(root / VIOLATION_LEDGER_REL, "a", encoding="utf-8", newline="\n") as f:
             for sev, rule, loc, *_ in rows:
-                f.write(json.dumps(
-                    {"ts": ts, "stage": stage, "severity": sev, "rule_id": rule,
-                     "location": loc}, ensure_ascii=False) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            "ts": ts,
+                            "stage": stage,
+                            "severity": sev,
+                            "rule_id": rule,
+                            "location": loc,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
     except OSError as exc:
-        print(f"[violation-ledger] 記録失敗（門の判定には影響しない — "
-              f".guardrails/GUARDRAILS.md §3.6）: {exc}", file=sys.stderr)
+        print(
+            f"[violation-ledger] 記録失敗（門の判定には影響しない — "
+            f".guardrails/GUARDRAILS.md §3.6）: {exc}",
+            file=sys.stderr,
+        )
 
 
 def git_config_get(root: Path, key: str) -> str | None:
@@ -120,7 +134,8 @@ def git_hooks_dir(root: Path) -> Path:
     """git が実際に参照するフックディレクトリ（worktree・core.hooksPath 込みで解決 — §3.3）。"""
     proc = subprocess.run(
         ["git", "-C", str(root), "rev-parse", "--git-path", "hooks"],
-        capture_output=True, check=False,
+        capture_output=True,
+        check=False,
     )
     if proc.returncode != 0:
         raise ScanError("git rev-parse --git-path hooks が失敗")
@@ -174,7 +189,7 @@ def role_header(rel: str, text: str) -> str | None:
         return None
     for p in prefixes:
         if line.startswith(p):
-            body = line[len(p):].lstrip("/!").strip()
+            body = line[len(p) :].lstrip("/!").strip()
             return body or None
     return None
 
@@ -272,7 +287,7 @@ def _dart_import_targets(rel: str, text: str, pkg_roots: dict[str, str]) -> set[
         if target.startswith("dart:"):
             continue
         if target.startswith("package:"):
-            pkg, _, sub = target[len("package:"):].partition("/")
+            pkg, _, sub = target[len("package:") :].partition("/")
             lib_root = pkg_roots.get(pkg)
             if lib_root:
                 out.add(posixpath.normpath(posixpath.join(lib_root, sub)))
@@ -298,7 +313,7 @@ def _rust_public_symbols(text: str) -> list[str]:
     for line in text.splitlines():
         m = _RUST_PUB_DECL.match(line)
         if m:
-            out.append(f'{" ".join(m.group(1).split())} {m.group(2)}')
+            out.append(f"{' '.join(m.group(1).split())} {m.group(2)}")
     return out
 
 
@@ -410,21 +425,27 @@ LINE_COMMENT_PREFIXES: dict[str, tuple[str, ...]] = {
 }
 
 # --- ファイル分類（列充填: CODE_EXTS / HEADER_REQUIRED_EXTS に列の拡張子を足す）---
-CODE_EXTS: set[str] = set()                       # 500行検査・レイヤー検査などの対象
-HEADER_REQUIRED_EXTS: set[str] = {".py", ".sh"}   # 役割一行ヘッダーの必須対象（キット自身の分は常時）
-ROLE_HEADER_SEPARATOR = "—"                       # ヘッダー書式: `<ファイル名> — 役割`
+CODE_EXTS: set[str] = set()  # 500行検査・レイヤー検査などの対象
+HEADER_REQUIRED_EXTS: set[str] = {
+    ".py",
+    ".sh",
+}  # 役割一行ヘッダーの必須対象（キット自身の分は常時）
+ROLE_HEADER_SEPARATOR = "—"  # ヘッダー書式: `<ファイル名> — 役割`
 
 # --- 生成物（手編集禁止・索引/検査から除外 — §2・§7.4。一般則のみ・列が追記する）---
-GENERATED_PATTERNS = [re.compile(p) for p in (
-    r"(^|/)build/",
-    r"(^|/)dist/",
-    r"(^|/)target/",
-    r"(^|/)node_modules/",
-    r"(^|/)\.dart_tool/",
-    r"(^|/)__pycache__/",
-    r"\.pyc$",
-    r"^STRUCTURE\.md$",
-)]
+GENERATED_PATTERNS = [
+    re.compile(p)
+    for p in (
+        r"(^|/)build/",
+        r"(^|/)dist/",
+        r"(^|/)target/",
+        r"(^|/)node_modules/",
+        r"(^|/)\.dart_tool/",
+        r"(^|/)__pycache__/",
+        r"\.pyc$",
+        r"^STRUCTURE\.md$",
+    )
+]
 
 # --- テストファイルの判別（§3.4 検査2・§9 の検査対象の定義。列充填）---
 TEST_PATH_PATTERNS: list[re.Pattern] = []
@@ -446,7 +467,7 @@ INLINE_TEST_PATTERNS: dict[str, list[re.Pattern]] = {}
 # （配線外のテストは対象外として1行表示——境界は §5）。単独実行が構造的に不能な言語は
 # None のまま「該当なし＋代替」をカタログへ判断ごと記録する（空欄不可・該当なし可）。
 SINGLE_TEST_COMMAND: list[str] | None = None
-SINGLE_TEST_CWD = ""   # コマンドを実行する worktree 内の相対ディレクトリ（"" = ルート）
+SINGLE_TEST_CWD = ""  # コマンドを実行する worktree 内の相対ディレクトリ（"" = ルート）
 
 # --- 依存マニフェスト（§3.4 検査4 undeclared-dependency — v2.5）---
 # キー = マニフェストのファイル名（basename 一致——モノレポのネストも対象）。
@@ -471,23 +492,44 @@ LAYER_FORBIDDEN_IMPORTS: list[tuple[str, re.Pattern, str]] = []
 # 正本4文書に加え、防壁の実体ファイル自体も対象——防壁が消えることは静かな fail-open の
 # 最悪形（G7/G9）。列は表Bの必須（例: "app"）をここへ += する。
 REQUIRED_PATHS = [
-    "AGENTS.md", ".guardrails/BOOTSTRAP.md", "CLAUDE.md", ".guardrails/GUARDRAILS.md", ".guardrails/GOALS.md", "bindings/catalog.md",
-    ".pre-commit-config.yaml", ".gitattributes", ".python-version",
+    "AGENTS.md",
+    ".guardrails/BOOTSTRAP.md",
+    "CLAUDE.md",
+    ".guardrails/GUARDRAILS.md",
+    ".guardrails/GOALS.md",
+    "bindings/catalog.md",
+    ".pre-commit-config.yaml",
+    ".gitattributes",
+    ".python-version",
     ".claude/settings.json",
-    ".claude/hooks/guard_git_bypass.py", ".claude/hooks/post_edit_format.py",
-    ".claude/hooks/post_edit_lint.py", ".claude/hooks/stop_incomplete_guard.py",
-    ".claude/hooks/session_baseline.py", ".claude/hooks/guard_human_wip.py",
-    ".codex/hooks.json", ".codex/hooks/codex_hook_adapter.py",
+    ".claude/hooks/guard_git_bypass.py",
+    ".claude/hooks/post_edit_format.py",
+    ".claude/hooks/post_edit_lint.py",
+    ".claude/hooks/stop_incomplete_guard.py",
+    ".claude/hooks/session_baseline.py",
+    ".claude/hooks/guard_human_wip.py",
+    ".codex/hooks.json",
+    ".codex/hooks/codex_hook_adapter.py",
     ".github/workflows/guardrails-ci.yml",
-    "scripts/repo_scan.py", "scripts/generate_structure.py",
-    "scripts/check_structure.py", "scripts/check_commit_msg.py", "scripts/dev.py",
-    "scripts/install_kit.py", "scripts/check_guard_corpus.py",
-    "scripts/check_red_first.py", "scripts/check_bootstrap.py",
+    "scripts/repo_scan.py",
+    "scripts/generate_structure.py",
+    "scripts/check_structure.py",
+    "scripts/check_commit_msg.py",
+    "scripts/dev.py",
+    "scripts/install_kit.py",
+    "scripts/check_guard_corpus.py",
+    "scripts/check_red_first.py",
+    "scripts/check_bootstrap.py",
     "scripts/check_codex_hooks.py",
-    "scripts/fill_bindings.py", "scripts/check_fill_bindings.py", "scripts/check_rule_dod.py",
-    "tests/guard_corpus.tsv", "tests/injections/common.json",
-    "tests/injections/ts-react-web.json", "tests/injections/python-uv.json",
-    "tests/injections/dart-flutter.json", "tests/injections/rust.json",
+    "scripts/fill_bindings.py",
+    "scripts/check_fill_bindings.py",
+    "scripts/check_rule_dod.py",
+    "tests/guard_corpus.tsv",
+    "tests/injections/common.json",
+    "tests/injections/ts-react-web.json",
+    "tests/injections/python-uv.json",
+    "tests/injections/dart-flutter.json",
+    "tests/injections/rust.json",
 ]
 
 # --- キット原本自身の判定（§3.3 kit-source-exempt — v2.14・Phase 27）---
@@ -508,8 +550,8 @@ def is_kit_source_repo(tracked: set[str]) -> bool:
 # 出典: 調査③（2026-07-07。CLAUDE.md は最大200行程度の業界指針）。中立既定値・列上書き可。
 # この警告は Skills 化保留（§10——「常駐が問題化した実測」）のセンサーを兼ねる。
 CONTEXT_DOC_LIMITS: list[tuple[re.Pattern, int]] = [
-    (re.compile(r"(^|/)CLAUDE\.md$"), 200),   # ルート薄層＋フォルダ知見
-    (re.compile(r"^AGENTS\.md$"), 500),       # 全章の正本（列充填で育つ分の余白込み）
+    (re.compile(r"(^|/)CLAUDE\.md$"), 200),  # ルート薄層＋フォルダ知見
+    (re.compile(r"^AGENTS\.md$"), 500),  # 全章の正本（列充填で育つ分の余白込み）
 ]
 
 # --- .env 系の追跡禁止（§3.3 env-file-tracked — v2.18・Phase 29）---
@@ -526,8 +568,15 @@ ENV_FILE_PATTERN = re.compile(r"(^|/)\.env(\.[A-Za-z0-9_.-]+)?$")
 COMMIT_SIZE_SOFT_LIMIT: int = 400
 # 除外する lockfile（基名一致。生成物は GENERATED_PATTERNS が別途除外）
 LOCKFILE_NAMES: set[str] = {
-    "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb",
-    "uv.lock", "poetry.lock", "Cargo.lock", "pubspec.lock", "Gemfile.lock",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "bun.lockb",
+    "uv.lock",
+    "poetry.lock",
+    "Cargo.lock",
+    "pubspec.lock",
+    "Gemfile.lock",
 }
 
 # --- MCP 採用許可リスト（§3.3 mcp-not-allowed — v2.11・Phase 23）---
@@ -546,9 +595,13 @@ MCP_ALLOWED_SERVERS: set[str] = {"playwright"}
 # AGENTS.md（全エージェント共通）で、Claude Code はこの import 経由でのみ到達する（§6）。
 # 同期スクリプトではなく「分割＋存在検査」でドリフトを構造的に封じる（G5）。列は += で追記可。
 REQUIRED_CONTENT_RULES: list[tuple[str, re.Pattern, re.Pattern, str]] = [
-    ("agents-import-missing", re.compile(r"^CLAUDE\.md$"), re.compile(r"^@AGENTS\.md\s*$", re.M),
-     "CLAUDE.md に `@AGENTS.md` インポート行が無い（Claude Code が規約の正本 AGENTS.md に"
-     "到達できない——本文の複製で代替しない — .guardrails/GUARDRAILS.md §6）"),
+    (
+        "agents-import-missing",
+        re.compile(r"^CLAUDE\.md$"),
+        re.compile(r"^@AGENTS\.md\s*$", re.M),
+        "CLAUDE.md に `@AGENTS.md` インポート行が無い（Claude Code が規約の正本 AGENTS.md に"
+        "到達できない——本文の複製で代替しない — .guardrails/GUARDRAILS.md §6）",
+    ),
 ]
 
 # --- テスト内 sleep 系（§3.3 test-sleep: flakyの温床。列充填）---
@@ -587,7 +640,7 @@ PLAN_LAYER_ROOTS: list[str] = []
 
 # --- 確率的コンポーネント（表B）: 有る場合のみ設定（§9.1 test-calls-solver-direct）---
 SOLVER_DIRECT_CALL_PATTERNS: list[tuple[re.Pattern, str]] = []
-SOLVER_TEST_WRAPPER_NAME = "solve_for_test"   # この名前を含む行は許可（ラッパー経由）
+SOLVER_TEST_WRAPPER_NAME = "solve_for_test"  # この名前を含む行は許可（ラッパー経由）
 
 # --- 性質形テストの存在検査（§9.6 missing-property-test — v2.41・Phase 43・soft。列充填）---
 # 確率的コンポーネント有（SOLVER_DIRECT_CALL_PATTERNS 充填）のリポジトリでは、実例
@@ -642,14 +695,14 @@ IMPORT_TARGET_EXTRACTORS: dict[str, object] = {}
 # --- soft 上限（§3.3 soft。言語なしで有効）---
 MAX_FILE_LINES = 500
 MAX_DIR_FILES = 7
-DIR_COUNT_EXEMPT = ("", "scripts", "bindings")   # "" = ルート直下（設定ファイル群が集まるため例外）
+DIR_COUNT_EXEMPT = ("", "scripts", "bindings")  # "" = ルート直下（設定ファイル群が集まるため例外）
 REQUIRED_SOFT_PATHS: list[str] = []
 
 # --- シンボル抽出の言語ディスパッチ（表A: 公開シンボル抽出。列充填。実装は中盤）---
 # 例: {".dart": _dart_public_symbols, ".rs": _rust_public_symbols,
 #      ".ts": _ts_public_symbols, ".tsx": _ts_public_symbols, ".py": _py_public_symbols}
 SYMBOL_EXTRACTORS: dict[str, object] = {
-    ".py": _py_public_symbols,   # キット自身のスクリプト索引のため常時有効
+    ".py": _py_public_symbols,  # キット自身のスクリプト索引のため常時有効
 }
 
 # --- バインディング刻印（§12.7 binding-drift / binding-unstamped）---
@@ -678,88 +731,301 @@ BINDING_STAMP_FILES = [
 #   "static:ラベル" = 状態を計算せずラベルをそのまま表示（CI・キット原本限定 等）
 GATE_REGISTRY: list[tuple[str, str, str, str]] = [
     # --- §1 編集直後（フック層）---
-    ("post-edit-format", "§1 編集直後", "hook:post_edit_format.py",
-     "編集直後の自動整形（第1段。対象拡張子は列充填の DISPATCH）"),
-    ("post-edit-lint", "§1 編集直後", "hook:post_edit_lint.py",
-     "編集直後の単一ファイル lint（第2段・exit 2 で自己修正を要求）"),
+    (
+        "post-edit-format",
+        "§1 編集直後",
+        "hook:post_edit_format.py",
+        "編集直後の自動整形（第1段。対象拡張子は列充填の DISPATCH）",
+    ),
+    (
+        "post-edit-lint",
+        "§1 編集直後",
+        "hook:post_edit_lint.py",
+        "編集直後の単一ファイル lint（第2段・exit 2 で自己修正を要求）",
+    ),
     # --- §2 操作直前（フック層）---
-    ("guard-git-bypass", "§2 操作直前", "hook:guard_git_bypass.py",
-     "--no-verify / force push / hooksPath 付け替え / pre-commit uninstall の技術的ブロック"),
-    ("work-loss-guard", "§2 操作直前", "hook:guard_git_bypass.py",
-     "非可逆な作業消失（rm -rf .git・dirty での reset --hard 等）のブロック"),
-    ("ownership-guard", "§2c 編集直前", "hook:guard_human_wip.py",
-     "人間の未コミット変更への AI の Edit/Write をブロック（commit/stash で自動解除）"),
-    ("stop-gate", "§2b ターン終了", "hook:stop_incomplete_guard.py",
-     "未コミット作業・検査赤のままの「完了しました」を差し戻し"),
+    (
+        "guard-git-bypass",
+        "§2 操作直前",
+        "hook:guard_git_bypass.py",
+        "--no-verify / force push / hooksPath 付け替え / pre-commit uninstall の技術的ブロック",
+    ),
+    (
+        "work-loss-guard",
+        "§2 操作直前",
+        "hook:guard_git_bypass.py",
+        "非可逆な作業消失（rm -rf .git・dirty での reset --hard 等）のブロック",
+    ),
+    (
+        "ownership-guard",
+        "§2c 編集直前",
+        "hook:guard_human_wip.py",
+        "人間の未コミット変更への AI の Edit/Write をブロック（commit/stash で自動解除）",
+    ),
+    (
+        "stop-gate",
+        "§2b ターン終了",
+        "hook:stop_incomplete_guard.py",
+        "未コミット作業・検査赤のままの「完了しました」を差し戻し",
+    ),
     # --- §3.3 構造検査（pre-commit・hard）---
     ("missing-required", "§3.3 コミット時", "always", "必須ファイル・防壁の実体の欠落検出"),
-    ("agents-import-missing", "§3.3 コミット時", "always", "CLAUDE.md の @AGENTS.md インポート欠落"),
+    (
+        "agents-import-missing",
+        "§3.3 コミット時",
+        "always",
+        "CLAUDE.md の @AGENTS.md インポート欠落",
+    ),
     ("mcp-not-allowed", "§3.3 コミット時", "always", "MCP 許可リスト外の常駐サーバー検出"),
     ("mcp-unparseable", "§3.3 コミット時", "always", ".mcp.json が解釈不能（soft）"),
     ("env-file-tracked", "§3.3 コミット時", "always", "実値の入り得る .env 系の追跡拒否"),
-    ("layer-violation", "§3.3 コミット時", "var:LAYER_FORBIDDEN_IMPORTS", "レイヤー逆流 import の検出"),
+    (
+        "layer-violation",
+        "§3.3 コミット時",
+        "var:LAYER_FORBIDDEN_IMPORTS",
+        "レイヤー逆流 import の検出",
+    ),
     ("test-sleep", "§3.3 コミット時", "var:SLEEP_PATTERNS", "テスト内 sleep（flaky の温床）の検出"),
-    ("test-nondeterminism", "§3.3 コミット時", "var:NONDETERMINISM_PATTERNS", "テスト内の時刻・seed なし乱数の検出"),
-    ("test-network", "§3.3 コミット時", "var:TEST_NETWORK_PATTERNS", "テスト内の外部 I/O 直呼びの検出"),
-    ("test-calls-solver-direct", "§3.3 コミット時", "var:SOLVER_DIRECT_CALL_PATTERNS",
-     "ソルバー直呼びテストの拒否（solve_for_test 経由のみ — §9.1）"),
-    ("missing-property-test", "§9.6 コミット時", "var:SOLVER_DIRECT_CALL_PATTERNS",
-     "確率的コンポーネント有なのに性質形テストが無い（soft・オラクル契約）"),
-    ("log-direct-call", "§8.2 コミット時", "var:PRINT_CALL_PATTERNS", "単一出口以外での print 系直呼びの検出"),
-    ("missing-log-coverage", "§8.4 コミット時", "var:LOG_BOUNDARY_PATTERNS",
-     "I/O・エラー境界のログ被覆（soft・NO-LOG: で免除可視化）"),
-    ("missing-catch-unwind", "§8.2 コミット時", "var:FFI_BOUNDARY_FILE_PATTERNS", "FFI 境界の catch_unwind 欠落検出"),
-    ("deprecated-api", "§3.3 コミット時", "var:DEPRECATED_PATTERNS", "世代交代した旧 API の使用検出（全コード走査）"),
-    ("ui-missing-testid", "§12.4 コミット時", "var:UI_TESTID_RULES", "UI 操作要素のテスト ID 欠落検出"),
+    (
+        "test-nondeterminism",
+        "§3.3 コミット時",
+        "var:NONDETERMINISM_PATTERNS",
+        "テスト内の時刻・seed なし乱数の検出",
+    ),
+    (
+        "test-network",
+        "§3.3 コミット時",
+        "var:TEST_NETWORK_PATTERNS",
+        "テスト内の外部 I/O 直呼びの検出",
+    ),
+    (
+        "test-calls-solver-direct",
+        "§3.3 コミット時",
+        "var:SOLVER_DIRECT_CALL_PATTERNS",
+        "ソルバー直呼びテストの拒否（solve_for_test 経由のみ — §9.1）",
+    ),
+    (
+        "missing-property-test",
+        "§9.6 コミット時",
+        "var:SOLVER_DIRECT_CALL_PATTERNS",
+        "確率的コンポーネント有なのに性質形テストが無い（soft・オラクル契約）",
+    ),
+    (
+        "log-direct-call",
+        "§8.2 コミット時",
+        "var:PRINT_CALL_PATTERNS",
+        "単一出口以外での print 系直呼びの検出",
+    ),
+    (
+        "missing-log-coverage",
+        "§8.4 コミット時",
+        "var:LOG_BOUNDARY_PATTERNS",
+        "I/O・エラー境界のログ被覆（soft・NO-LOG: で免除可視化）",
+    ),
+    (
+        "missing-catch-unwind",
+        "§8.2 コミット時",
+        "var:FFI_BOUNDARY_FILE_PATTERNS",
+        "FFI 境界の catch_unwind 欠落検出",
+    ),
+    (
+        "deprecated-api",
+        "§3.3 コミット時",
+        "var:DEPRECATED_PATTERNS",
+        "世代交代した旧 API の使用検出（全コード走査）",
+    ),
+    (
+        "ui-missing-testid",
+        "§12.4 コミット時",
+        "var:UI_TESTID_RULES",
+        "UI 操作要素のテスト ID 欠落検出",
+    ),
     ("binding-drift", "§12.7 コミット時", "always", "バインディング刻印の不一致検出"),
     ("binding-unstamped", "§12.7 コミット時", "always", "刻印未設定の注意喚起（soft）"),
-    ("binding-dead-pattern", "§3.3 コミット時", "always", "充填パターンの拡張子取りこぼし（充填時の不発）検出"),
-    ("binding-dead-path", "§3.3 コミット時", "always", "充填パスのファイル移動ドリフト（充填後の不発）検出（soft）"),
-    ("hook-type-missing", "§3.3 コミット時", "always", "pre-commit シムの部分欠落（install 忘れ）検出"),
-    ("hooks-path-overridden", "§3.3 コミット時", "always", "core.hooksPath による全フック迂回の静的検出"),
-    ("hooks-not-installed", "§3.3 コミット時", "always", "シム未導入の注意喚起（soft・Step 3 前の正常状態）"),
-    ("installer-token-drift", "§3.3 コミット時", "static:キット原本限定",
-     "インストーラ検証条項のフック追随漏れ検出"),
-    ("context-doc-too-large", "§3.3 コミット時", "always", "常時読込文書の肥大警告（soft・Skills 化のセンサー）"),
+    (
+        "binding-dead-pattern",
+        "§3.3 コミット時",
+        "always",
+        "充填パターンの拡張子取りこぼし（充填時の不発）検出",
+    ),
+    (
+        "binding-dead-path",
+        "§3.3 コミット時",
+        "always",
+        "充填パスのファイル移動ドリフト（充填後の不発）検出（soft）",
+    ),
+    (
+        "hook-type-missing",
+        "§3.3 コミット時",
+        "always",
+        "pre-commit シムの部分欠落（install 忘れ）検出",
+    ),
+    (
+        "hooks-path-overridden",
+        "§3.3 コミット時",
+        "always",
+        "core.hooksPath による全フック迂回の静的検出",
+    ),
+    (
+        "hooks-not-installed",
+        "§3.3 コミット時",
+        "always",
+        "シム未導入の注意喚起（soft・Step 3 前の正常状態）",
+    ),
+    (
+        "installer-token-drift",
+        "§3.3 コミット時",
+        "static:キット原本限定",
+        "インストーラ検証条項のフック追随漏れ検出",
+    ),
+    (
+        "context-doc-too-large",
+        "§3.3 コミット時",
+        "always",
+        "常時読込文書の肥大警告（soft・Skills 化のセンサー）",
+    ),
     ("file-too-long", "§3.3 コミット時", "always", "1ファイル500行超の警告（soft）"),
     ("dir-too-crowded", "§3.3 コミット時", "always", "1フォルダ7ファイル超の警告（soft）"),
-    ("missing-role-header", "§3.3 コミット時", "var:HEADER_REQUIRED_EXTS", "役割一行ヘッダーの欠落警告（soft）"),
-    ("missing-folder-claude-md", "§3.3 コミット時", "var:REQUIRED_SOFT_PATHS", "レイヤーCLAUDE.md の欠落警告（soft）"),
-    ("orphan-file", "§3.3 コミット時", "var:ORPHAN_UNIVERSES", "どこからも import されない孤立ファイル警告（soft）"),
-    ("gates-registry-drift", "§3.3 コミット時", "always", "この台帳自体と検査器コードの不一致検出（台帳の門）"),
+    (
+        "missing-role-header",
+        "§3.3 コミット時",
+        "var:HEADER_REQUIRED_EXTS",
+        "役割一行ヘッダーの欠落警告（soft）",
+    ),
+    (
+        "missing-folder-claude-md",
+        "§3.3 コミット時",
+        "var:REQUIRED_SOFT_PATHS",
+        "レイヤーCLAUDE.md の欠落警告（soft）",
+    ),
+    (
+        "orphan-file",
+        "§3.3 コミット時",
+        "var:ORPHAN_UNIVERSES",
+        "どこからも import されない孤立ファイル警告（soft）",
+    ),
+    (
+        "gates-registry-drift",
+        "§3.3 コミット時",
+        "always",
+        "この台帳自体と検査器コードの不一致検出（台帳の門）",
+    ),
     # --- §3.4 commit-msg 検査 ---
-    ("commit-msg-format", "§3.4 コミット時", "always", "コミットメッセージ形式（feat|fix|test|docs|refactor|chore:）"),
-    ("fix-without-test", "§3.4 コミット時", "vars:TEST_PATH_PATTERNS|INLINE_TEST_PATTERNS",
-     "fix: への回帰テスト同梱の機械強制（G10）"),
-    ("governance-without-goal", "§3.4 コミット時", "always", "正本3文書の変更に G 引用が無ければ拒否"),
-    ("undeclared-dependency", "§3.4 コミット時", "always", "依存の黙認追加の拒否（本文に宣言1行を要求）"),
-    ("feat-without-plan", "§3.4 コミット時", "var:PLAN_LAYER_ROOTS", "新規構造への設計根拠同梱の機械強制（G14）"),
-    ("feat-without-test", "§3.4 コミット時", "vars:TEST_PATH_PATTERNS|INLINE_TEST_PATTERNS",
-     "feat: のテスト欠落警告（soft）"),
+    (
+        "commit-msg-format",
+        "§3.4 コミット時",
+        "always",
+        "コミットメッセージ形式（feat|fix|test|docs|refactor|chore:）",
+    ),
+    (
+        "fix-without-test",
+        "§3.4 コミット時",
+        "vars:TEST_PATH_PATTERNS|INLINE_TEST_PATTERNS",
+        "fix: への回帰テスト同梱の機械強制（G10）",
+    ),
+    (
+        "governance-without-goal",
+        "§3.4 コミット時",
+        "always",
+        "正本3文書の変更に G 引用が無ければ拒否",
+    ),
+    (
+        "undeclared-dependency",
+        "§3.4 コミット時",
+        "always",
+        "依存の黙認追加の拒否（本文に宣言1行を要求）",
+    ),
+    (
+        "feat-without-plan",
+        "§3.4 コミット時",
+        "var:PLAN_LAYER_ROOTS",
+        "新規構造への設計根拠同梱の機械強制（G14）",
+    ),
+    (
+        "feat-without-test",
+        "§3.4 コミット時",
+        "vars:TEST_PATH_PATTERNS|INLINE_TEST_PATTERNS",
+        "feat: のテスト欠落警告（soft）",
+    ),
     ("commit-too-large", "§3.4 コミット時", "always", "コミット規模の警告（soft）"),
-    ("test-shrink", "§3.4 コミット時", "var:TEST_PATH_PATTERNS", "既存テストの純減警告（soft・弱体化の可視化）"),
+    (
+        "test-shrink",
+        "§3.4 コミット時",
+        "var:TEST_PATH_PATTERNS",
+        "既存テストの純減警告（soft・弱体化の可視化）",
+    ),
     # --- §5 CI（最終防衛線）---
-    ("red-first", "§5 CI", "static:CI（required・列充填で単一テスト実行）",
-     "fix 同梱テストが親コミットで赤だった（バグを再現した）ことの機械証明"),
-    ("commit-msg-history-mismatch", "§5 CI", "static:CI",
-     "PR 範囲の全コミットへ commit-msg 検査を履歴再実行（ローカルフック未導入でも門が掛かる）"),
+    (
+        "red-first",
+        "§5 CI",
+        "static:CI（required・列充填で単一テスト実行）",
+        "fix 同梱テストが親コミットで赤だった（バグを再現した）ことの機械証明",
+    ),
+    (
+        "commit-msg-history-mismatch",
+        "§5 CI",
+        "static:CI",
+        "PR 範囲の全コミットへ commit-msg 検査を履歴再実行（ローカルフック未導入でも門が掛かる）",
+    ),
     ("ci-rerun-all", "§5 CI", "static:CI", "編集直後〜push の全検査の再実行（迂回の最終防衛線）"),
     # --- §3.5 / §2 門の門（検査の検証）---
-    ("guard-corpus", "§2 門の門", "always", "迂回ブロッカー自身のコーパス回帰再生（門番の回帰テスト）"),
+    (
+        "guard-corpus",
+        "§2 門の門",
+        "always",
+        "迂回ブロッカー自身のコーパス回帰再生（門番の回帰テスト）",
+    ),
     ("ownership-guard-scenarios", "§2c 門の門", "always", "所有権ガードの複数手順シナリオ再生"),
     ("codex-hooks-check", "§2 門の門", "always", "Codex フック設定とアダプタの回帰検査"),
-    ("check-bootstrap", "§3.5 導入時", "always", "進捗台帳の ✅ を再実行検証（虚偽✅・順序スキップの門）"),
-    ("violation-ledger", "§3.6 常時", "always", "門が止めた事象の機械記録（soft→hard 昇格を計数で判断する土台）"),
+    (
+        "check-bootstrap",
+        "§3.5 導入時",
+        "always",
+        "進捗台帳の ✅ を再実行検証（虚偽✅・順序スキップの門）",
+    ),
+    (
+        "violation-ledger",
+        "§3.6 常時",
+        "always",
+        "門が止めた事象の機械記録（soft→hard 昇格を計数で判断する土台）",
+    ),
     # --- §11 前段 / §12 導入・ランタイム ---
-    ("install-detect", "§11 導入", "static:install_kit.py --detect", "採用列の候補をマニフェストから提示"),
-    ("install-diff-check", "§11 導入", "static:install_kit.py --diff/--check",
-     "適用前プレビューと CI 用ドリフト検出"),
-    ("fill-bindings", "§11 導入", "static:fill_bindings.py <列ID@版>",
-     "採用列の paste-block を管理区画へ機械充填＋刻印（Step 0/2 のコピペ作業の機械化）"),
-    ("rule-dod", "§11 導入", "always",
-     "列の違反注入コーパス再生（注入→発火→除去→沈黙の機械証明——dev.py dod）"),
-    ("managed-splice", "§11 更新", "static:UPGRADED 時に自動", "管理区画の充填を保持したままキットを更新"),
-    ("dev-verbs", "§12.1 実行時", "always", "全プロジェクト共通の開発動詞ルーター（未配線は明示エラー）"),
+    (
+        "install-detect",
+        "§11 導入",
+        "static:install_kit.py --detect",
+        "採用列の候補をマニフェストから提示",
+    ),
+    (
+        "install-diff-check",
+        "§11 導入",
+        "static:install_kit.py --diff/--check",
+        "適用前プレビューと CI 用ドリフト検出",
+    ),
+    (
+        "fill-bindings",
+        "§11 導入",
+        "static:fill_bindings.py <列ID@版>",
+        "採用列の paste-block を管理区画へ機械充填＋刻印（Step 0/2 のコピペ作業の機械化）",
+    ),
+    (
+        "rule-dod",
+        "§11 導入",
+        "always",
+        "列の違反注入コーパス再生（注入→発火→除去→沈黙の機械証明——dev.py dod）",
+    ),
+    (
+        "managed-splice",
+        "§11 更新",
+        "static:UPGRADED 時に自動",
+        "管理区画の充填を保持したままキットを更新",
+    ),
+    (
+        "dev-verbs",
+        "§12.1 実行時",
+        "always",
+        "全プロジェクト共通の開発動詞ルーター（未配線は明示エラー）",
+    ),
     ("probe", "§12.1 実行時", "always", "迂回防止への事前照会（実行前に ALLOW/DENY）"),
     ("probe-live", "§12.1 実行時", "always", "実ホスト経路のフック発火を sentinel で実測"),
     ("selftest", "§12.1 実行時", "always", "門の違反注入コーパス一括再生"),
@@ -782,25 +1048,47 @@ TEST_PATH_PATTERNS += [re.compile(p) for p in (r"_test\.py$", r"(^|/)test_[^/]+\
 SLEEP_PATTERNS[".py"] = [(re.compile(r"\btime\.sleep\s*\("), "time.sleep")]
 NONDETERMINISM_PATTERNS[".py"] = [
     (re.compile(r"\bdatetime\.now\s*\(|\btime\.time\s*\("), "現在時刻（Clock/引数で注入する）"),
-    (re.compile(r"\brandom\.(random|randint|choice)\s*\("), "seedなし乱数（Random(seed)を注入する）")]
+    (
+        re.compile(r"\brandom\.(random|randint|choice)\s*\("),
+        "seedなし乱数（Random(seed)を注入する）",
+    ),
+]
 TEST_NETWORK_PATTERNS[".py"] = [
-    (re.compile(r"\brequests\.|\bhttpx\.|\burllib\.request"), "requests/httpx/urllib")]
+    (re.compile(r"\brequests\.|\bhttpx\.|\burllib\.request"), "requests/httpx/urllib")
+]
 PRINT_CALL_PATTERNS[".py"] = [(re.compile(r"(?<![\w.])print\s*\("), "print(")]
 LOG_BOUNDARY_PATTERNS[".py"] = [
-    (re.compile(r"\brequests\.(get|post|put|delete|patch)\s*\(|\bhttpx\.(get|post|put|delete|patch)\s*\("),
-     "外部HTTP呼び出し"),
-    (re.compile(r"^\s*except\b"), "エラーハンドラ")]
+    (
+        re.compile(
+            r"\brequests\.(get|post|put|delete|patch)\s*\(|\bhttpx\.(get|post|put|delete|patch)\s*\("
+        ),
+        "外部HTTP呼び出し",
+    ),
+    (re.compile(r"^\s*except\b"), "エラーハンドラ"),
+]
 LOG_CALL_PATTERN[".py"] = re.compile(r"\blog_op\s*\(")
 DEPRECATED_PATTERNS[".py"] = [
-    (re.compile(r"\butcnow\s*\("), "datetime.utcnow()（3.12 で非推奨。datetime.now(timezone.utc) へ）"),
-    (re.compile(r"\butcfromtimestamp\s*\("), "datetime.utcfromtimestamp()（3.12 で非推奨。fromtimestamp(ts, timezone.utc) へ）")]
+    (
+        re.compile(r"\butcnow\s*\("),
+        "datetime.utcnow()（3.12 で非推奨。datetime.now(timezone.utc) へ）",
+    ),
+    (
+        re.compile(r"\butcfromtimestamp\s*\("),
+        "datetime.utcfromtimestamp()（3.12 で非推奨。fromtimestamp(ts, timezone.utc) へ）",
+    ),
+]
 PLAN_LAYER_ROOTS += ["services/pipeline/src"]
-SINGLE_TEST_COMMAND = ["uv", "run", "pytest", "{file}"]   # 単一スロット。python/ts両列とも定義するため
+SINGLE_TEST_COMMAND = [
+    "uv",
+    "run",
+    "pytest",
+    "{file}",
+]  # 単一スロット。python/ts両列とも定義するため
 # こちらをプライマリに採用（判断ごと記録 — §5）: 生成パイプラインの権利判定・選出・ゲート等の
 # ドメインロジックが red-first の主戦場になる見込みで、TS側（vitest）はUI層で構成が薄い。
 # vitestの単一ファイル実行はpnpm workspace越しにcwd指定が要り、この1スロットに同居できない
 # ——TS側の red-first は「その列のCIジョブが通しで再現する」運用に留める。
-LOG_EXIT_FILES |= {"services/pipeline/src/history_radio/log.py"}   # Phase 1で実装予定（§8.2）
+LOG_EXIT_FILES |= {"services/pipeline/src/history_radio/log.py"}  # Phase 1で実装予定（§8.2）
 # 確率的コンポーネント有（表B）の場合のみ以下2行を充填（無ければ貼らない——§9.6）:
 # SOLVER_DIRECT_CALL_PATTERNS += [(re.compile(r"\bsolve\s*\("), "ソルバー本体の直呼び")]
 # PROPERTY_TEST_MARKERS += [(re.compile(r"\bfrom hypothesis import|\bimport hypothesis\b"), "hypothesis")]
@@ -811,27 +1099,44 @@ CODE_EXTS |= {".ts", ".tsx"}
 HEADER_REQUIRED_EXTS |= {".ts", ".tsx"}
 TEST_PATH_PATTERNS += [re.compile(p) for p in (r"\.test\.tsx?$", r"^e2e/.*\.spec\.ts$")]
 _TS_SLEEP = [(re.compile(r"\bsetTimeout\s*\(|\bsleep\s*\("), "setTimeout/sleep")]
-SLEEP_PATTERNS[".ts"] = _TS_SLEEP; SLEEP_PATTERNS[".tsx"] = _TS_SLEEP
-_TS_NONDET = [(re.compile(r"\bDate\.now\s*\("), "Date.now()（Clock抽象で注入する）"),
-              (re.compile(r"\bnew Date\s*\(\s*\)"), "引数なし new Date()（固定時刻を渡す）"),
-              (re.compile(r"\bMath\.random\s*\("), "Math.random()（seed付き乱数を注入する）")]
-NONDETERMINISM_PATTERNS[".ts"] = _TS_NONDET; NONDETERMINISM_PATTERNS[".tsx"] = _TS_NONDET
+SLEEP_PATTERNS[".ts"] = _TS_SLEEP
+SLEEP_PATTERNS[".tsx"] = _TS_SLEEP
+_TS_NONDET = [
+    (re.compile(r"\bDate\.now\s*\("), "Date.now()（Clock抽象で注入する）"),
+    (re.compile(r"\bnew Date\s*\(\s*\)"), "引数なし new Date()（固定時刻を渡す）"),
+    (re.compile(r"\bMath\.random\s*\("), "Math.random()（seed付き乱数を注入する）"),
+]
+NONDETERMINISM_PATTERNS[".ts"] = _TS_NONDET
+NONDETERMINISM_PATTERNS[".tsx"] = _TS_NONDET
 _TS_NET = [(re.compile(r"\bfetch\s*\(|\baxios\b|\bXMLHttpRequest\b"), "fetch/axios/XHR")]
-TEST_NETWORK_PATTERNS[".ts"] = _TS_NET; TEST_NETWORK_PATTERNS[".tsx"] = _TS_NET
+TEST_NETWORK_PATTERNS[".ts"] = _TS_NET
+TEST_NETWORK_PATTERNS[".tsx"] = _TS_NET
 _TS_PRINT = [(re.compile(r"\bconsole\.(log|info|debug)\s*\("), "console.*(")]
-PRINT_CALL_PATTERNS[".ts"] = _TS_PRINT; PRINT_CALL_PATTERNS[".tsx"] = _TS_PRINT
-LOG_EXIT_FILES |= {"apps/admin/src/lib/log.ts"}   # Phase 11で実装予定（§8.2）
-_TS_LOG_BOUNDARY = [(re.compile(r"\bfetch\s*\("), "外部HTTP呼び出し（fetch）"),
-                    (re.compile(r"\bcatch\s*[({]"), "エラーハンドラ（catch）")]
-LOG_BOUNDARY_PATTERNS[".ts"] = _TS_LOG_BOUNDARY; LOG_BOUNDARY_PATTERNS[".tsx"] = _TS_LOG_BOUNDARY
+PRINT_CALL_PATTERNS[".ts"] = _TS_PRINT
+PRINT_CALL_PATTERNS[".tsx"] = _TS_PRINT
+LOG_EXIT_FILES |= {"apps/admin/src/lib/log.ts"}  # Phase 11で実装予定（§8.2）
+_TS_LOG_BOUNDARY = [
+    (re.compile(r"\bfetch\s*\("), "外部HTTP呼び出し（fetch）"),
+    (re.compile(r"\bcatch\s*[({]"), "エラーハンドラ（catch）"),
+]
+LOG_BOUNDARY_PATTERNS[".ts"] = _TS_LOG_BOUNDARY
+LOG_BOUNDARY_PATTERNS[".tsx"] = _TS_LOG_BOUNDARY
 LOG_CALL_PATTERN[".ts"] = re.compile(r"\blogOp\s*\(")
 LOG_CALL_PATTERN[".tsx"] = re.compile(r"\blogOp\s*\(")
-UI_TESTID_RULES += [(re.compile(r"\.tsx$"),
-                     re.compile(r"<(?:button|a|input|select|textarea|[A-Z]\w*)\b[^>]*on(?:Click|Submit|Change)=[^>]*>"),
-                     re.compile(r"data-testid\s*="),
-                     "React操作要素")]
-ORPHAN_UNIVERSES += [(["apps/admin/src/"], ".ts", [re.compile(r"(^|/)main\.tsx?$"), re.compile(r"vite\.config")]),
-                     (["apps/admin/src/"], ".tsx", [re.compile(r"(^|/)main\.tsx?$")])]
+UI_TESTID_RULES += [
+    (
+        re.compile(r"\.tsx$"),
+        re.compile(
+            r"<(?:button|a|input|select|textarea|[A-Z]\w*)\b[^>]*on(?:Click|Submit|Change)=[^>]*>"
+        ),
+        re.compile(r"data-testid\s*="),
+        "React操作要素",
+    )
+]
+ORPHAN_UNIVERSES += [
+    (["apps/admin/src/"], ".ts", [re.compile(r"(^|/)main\.tsx?$"), re.compile(r"vite\.config")]),
+    (["apps/admin/src/"], ".tsx", [re.compile(r"(^|/)main\.tsx?$")]),
+]
 IMPORT_TARGET_EXTRACTORS[".ts"] = _ts_import_targets
 IMPORT_TARGET_EXTRACTORS[".tsx"] = _ts_import_targets
 SYMBOL_EXTRACTORS[".ts"] = _ts_public_symbols
@@ -841,8 +1146,11 @@ SYMBOL_EXTRACTORS[".tsx"] = _ts_public_symbols
 PLAN_LAYER_ROOTS += ["apps/site/src", "apps/admin/src", "packages/contracts/src"]
 
 # ---- プロジェクト固有の特別対応（AGENTS.md §6・2026-07-15 決定。本来は
-# scripts/install_workbench.py が適用する契約だが、このリポジトリにはまだ存在しないため
-# 手で適用する。内容はAGENTS.md §6の正本コードブロックと同一）----
+# scripts/install_workbench.py の FILLS が適用する契約だが、python-uv/ts-react-web の
+# fill_bindings 実行時に同じ管理区画が上書きされて消えていたため手で再適用した）----
 GENERATED_PATTERNS += [re.compile(r"^\.claude/skills/")]
 GENERATED_PATTERNS += [re.compile(r"^design-system/")]
+# packages/contracts/src/generated/ はPydanticモデルからの自動生成物（手編集禁止・
+# scripts/generate_contracts.py + packages/contracts/scripts/generate-types.ts の出力）
+GENERATED_PATTERNS += [re.compile(r"^packages/contracts/src/generated/")]
 # <<< GUARDRAILS BINDING <<<

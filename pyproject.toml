@@ -34,15 +34,49 @@ testpaths = ["services/pipeline/tests"]
 [tool.ruff]
 line-length = 100
 src = ["services/pipeline/src"]
-include = ["services/pipeline/**/*.py"]
-# guardrails-kit本体(scripts/・.claude/hooks/・.codex/hooks/)とvendorコピー/submoduleは
-# 対象外——我々のアプリコードではなくkit/vendor側の規約に従う（AGENTS.md §6）。
+# scripts/ はkit本体とプロジェクト固有スクリプト(generate_contracts.py等)が同居する
+# ため、ディレクトリ丸ごとではなくkit所有ファイルだけを個別に除外する（下記）。
+include = ["services/pipeline/**/*.py", "scripts/*.py"]
+# guardrails-kit本体(.claude/hooks/・.codex/hooks/)とvendorコピー/submoduleは対象外
+# ——我々のアプリコードではなくkit/vendor側の規約に従う（AGENTS.md §6）。
 # post_edit_lint フックが編集直後に単一ファイルへ ruff --force-exclude を直呼びする時にも
 # 効くよう、include だけでなく exclude 側にも明示する（--force-exclude は exclude 系にのみ効く）。
-extend-exclude = ["scripts", ".claude", ".codex", "upstream", ".guardrails"]
+extend-exclude = [
+    ".claude",
+    ".codex",
+    "upstream",
+    ".guardrails",
+    # kit本体のスクリプト（scripts/REQUIRED_PATHSと同一リスト。プロジェクト固有スクリプト
+    # は除外しない——ここに無いscripts/*.pyは我々のコードとして通常どおり検査する）。
+    "scripts/repo_scan.py",
+    "scripts/generate_structure.py",
+    "scripts/check_structure.py",
+    "scripts/check_commit_msg.py",
+    "scripts/dev.py",
+    "scripts/install_kit.py",
+    "scripts/check_guard_corpus.py",
+    "scripts/check_red_first.py",
+    "scripts/check_bootstrap.py",
+    "scripts/check_codex_hooks.py",
+    "scripts/check_ownership_guard.py",
+    "scripts/fill_bindings.py",
+    "scripts/check_fill_bindings.py",
+    "scripts/check_rule_dod.py",
+    # workbench導入時からある2本（このセッション以前のvendor取り込み用ツール）。
+    # kit REQUIRED_PATHS には無いが、同じ「印字前提のCLIツール」の作法で書かれており、
+    # このPhaseの範囲外——巻き込んで書式修正しない。
+    "scripts/install_workbench.py",
+    "scripts/revendor_uipro.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "T201", "E722"]
+
+[tool.ruff.lint.per-file-ignores]
+# scripts/ はCLIツール置き場（plan.md §2.2「dev・検証・バックアップ」）——print(
+# がそのまま出力契約であり、単一ログ出口(§7)の対象外(kit既定のLOG_EXIT_PREFIXESと
+# 同じ境界の引き方 — .guardrails/GUARDRAILS.md §3.3)。
+"scripts/*.py" = ["T201"]
 
 [tool.basedpyright]
 include = ["services/pipeline/src", "services/pipeline/tests"]

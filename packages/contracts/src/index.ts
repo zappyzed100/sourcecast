@@ -1,6 +1,12 @@
-// index.ts — Python(Pydantic)から生成するJSON Schema/TypeScript型の公開エントリポイント
-//
-// Phase 1で `schema/` へJSON Schemaをコミットし、そこから生成した型をここから再輸出する
-// （手書きの型で二重管理しない — plan.md §2.3）。
+// index.ts — 生成された型の再輸出エントリポイント（手編集しない部分は generated/ 側）
+// 手編集してよいのはこのヘッダーコメントと CONTRACTS_SCHEMA_VERSION の値のみ。
 
-export const CONTRACTS_SCHEMA_VERSION = "unreleased" as const;
+export type { AuditEvent } from "./generated/AuditEvent.ts";
+export type { Candidate } from "./generated/Candidate.ts";
+export type { Claim } from "./generated/Claim.ts";
+export type { Episode } from "./generated/Episode.ts";
+export type { Job } from "./generated/Job.ts";
+export type { RightsDecision } from "./generated/RightsDecision.ts";
+export type { SourceRecord } from "./generated/SourceRecord.ts";
+
+export const CONTRACTS_SCHEMA_VERSION = 1 as const;

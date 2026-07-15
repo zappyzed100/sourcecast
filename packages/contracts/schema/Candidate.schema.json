@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "`topics`（仕様書§6A）: 機械選出の候補点と内訳。LLM不使用。",
+  "properties": {
+    "candidate_id": {
+      "minLength": 1,
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "independent_source_families": {
+      "minimum": 0,
+      "title": "Independent Source Families",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "score": {
+      "title": "Score",
+      "type": "number"
+    },
+    "score_breakdown": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Score Breakdown",
+      "type": "object"
+    },
+    "topic_title": {
+      "minLength": 1,
+      "title": "Topic Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "topic_title",
+    "score",
+    "score_breakdown",
+    "independent_source_families"
+  ],
+  "title": "Candidate",
+  "type": "object"
+}

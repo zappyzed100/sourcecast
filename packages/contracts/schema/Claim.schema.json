@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "`claim_ledger`（仕様書§8.2A）: 台本生成前に確定する公開可能な主張の台帳。",
+  "properties": {
+    "allowed_in_script": {
+      "title": "Allowed In Script",
+      "type": "boolean"
+    },
+    "claim_id": {
+      "minLength": 1,
+      "title": "Claim Id",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "qualification": {
+      "enum": [
+        "断定",
+        "資料帰属",
+        "伝承",
+        "推定"
+      ],
+      "title": "Qualification",
+      "type": "string"
+    },
+    "reliability_score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Reliability Score",
+      "type": "number"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_family_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Family Ids",
+      "type": "array"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "claim_id",
+    "text",
+    "evidence_ids",
+    "source_family_ids",
+    "reliability_score",
+    "allowed_in_script",
+    "qualification"
+  ],
+  "title": "Claim",
+  "type": "object"
+}

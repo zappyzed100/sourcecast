@@ -101,6 +101,20 @@ jobs:
       - run: uv run ruff check .
       - run: uv run basedpyright services/pipeline
       - run: uv run pytest
+
+  # ---- contracts: Pydantic -> JSON Schema -> TypeScript の生成物が最新かを検査（plan.md §2.3/§5）----
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: pnpm/action-setup@v4
+        with: { version: "11.9.0" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: uv sync --frozen
+      - run: pnpm install --frozen-lockfile
+      - run: uv run python scripts/check_contracts_drift.py
 # ---- ts-react-web@12 (パス調整済み) ----
   ts-test:
     runs-on: ubuntu-latest

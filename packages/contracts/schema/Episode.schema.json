@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "`episodes`（仕様書§13・§6.1）: エピソード単位の状態と識別子。",
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "episode_id": {
+      "minLength": 1,
+      "title": "Episode Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "state": {
+      "enum": [
+        "collected",
+        "rights_passed",
+        "topic_selected",
+        "facts_verified",
+        "script_generated",
+        "script_verified",
+        "media_generated",
+        "publish_ready",
+        "approved",
+        "published",
+        "rejected",
+        "blocked"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "episode_id",
+    "state",
+    "revision",
+    "title",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Episode",
+  "type": "object"
+}

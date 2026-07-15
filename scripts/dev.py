@@ -86,6 +86,7 @@ COMMANDS.update(
             ["pnpm", "exec", "biome", "format", "--write", "."],
         ],
         "build": [
+            ["uv", "run", "python", "scripts/check_contracts_drift.py"],
             ["uv", "run", "basedpyright", "services/pipeline"],
             ["pnpm", "-r", "run", "typecheck"],
             ["pnpm", "--filter", "apps-admin", "run", "build"],

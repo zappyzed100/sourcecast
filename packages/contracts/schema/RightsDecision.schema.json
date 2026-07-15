@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "`rights_records`（仕様書§5A）: 資料単位の機械スクリーニング結果。\n\n年数計算は資料取得のたびに現在日付で再計算する契約（§5A冒頭）——computed_at が\nその再計算時点を記録し、判定結果を使い回さないことを保証する。",
+  "properties": {
+    "computed_at": {
+      "format": "date-time",
+      "title": "Computed At",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "allow_public_use",
+        "internal_research_only",
+        "manual_review",
+        "deny"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "decision_id": {
+      "minLength": 1,
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "document_id": {
+      "minLength": 1,
+      "title": "Document Id",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Reasons",
+      "type": "array"
+    },
+    "rule_version": {
+      "minLength": 1,
+      "title": "Rule Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "decision_id",
+    "document_id",
+    "decision",
+    "rule_version",
+    "reasons",
+    "computed_at"
+  ],
+  "title": "RightsDecision",
+  "type": "object"
+}
