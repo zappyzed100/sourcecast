@@ -10,8 +10,9 @@
 出所 SHA と更新手順は [.upstream/sources.yaml](.upstream/sources.yaml)(id: ui-ux-pro-max-skill)が正本。
 
 採用時の特別対応3点(2026-07-15 決定・経緯は sources.yaml の rationale)。
-いずれも kit ブートストラップ時に**管理区画(`>>> GUARDRAILS BINDING >>>`)へ機械充填する**
-(kit の `install_kit.py` は版上げ時に区画の中身を引き継ぐため、充填は更新で消えない):
+いずれも管理区画(`>>> GUARDRAILS BINDING >>>`)への機械充填で、
+**適用は `scripts/install_workbench.py` が行う**(手貼り不要。下のコードは充填内容の正本)。
+kit の `install_kit.py` は版上げ時に区画の中身を引き継ぐため、充填は更新で消えない:
 
 1. **Python 実行**: `scripts/dev.py` の COMMANDS(加算形)へ次を充填し、
    スキル検索は `uv run scripts/dev.py design "<query>"` の動詞で呼ぶ
