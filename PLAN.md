@@ -88,6 +88,7 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [ ] Phase 4 — 収集 `backlog`
 - [ ] Phase 5 — 出典独立性・題材選出 `backlog`
 - [ ] Phase 6 — LLM処理・主張台帳・台本 `backlog`
+- [ ] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。Phase 7の前段） `backlog`
 - [ ] Phase 7 — 音声・スライド動画・関連書籍 `backlog`
 - [ ] Phase 8 — 公開ページ統合・Cloudflare `backlog`
 - [ ] Phase 9 — RSS・配信先 `backlog`
