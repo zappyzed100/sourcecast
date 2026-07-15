@@ -3,7 +3,8 @@
 [guardrails-kit](https://github.com/zappyzed100/guardrails-kit) をベースに、UI 機能を追加していくためのワークベンチです。
 
 - どの UI 機能を実装するかは guardrails-kit のコードを読み込んだうえで検討します(検討中)。
-- UI Skill として [emilkowalski/skills](https://github.com/emilkowalski/skills) から `emil-design-eng` と `review-animations` を採用しています。
+- UI Skill として [emilkowalski/skills](https://github.com/emilkowalski/skills) の全5スキル(`animation-vocabulary`・`apple-design`・`emil-design-eng`・`improve-animations`・`review-animations`)を採用しています。
+- [voltagent/awesome-design-md](https://github.com/voltagent/awesome-design-md) は参照資料、[nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) は評価待ち候補として [.upstream/sources.yaml](.upstream/sources.yaml) に記録しています(選定理由も同ファイルに記載)。
 
 ## 構成
 

@@ -1,6 +1,9 @@
 # Record of upstream source selection and how each one is integrated/updated.
 # When adopting a new upstream (or new skill paths), add it here and keep
 # scripts/setup-upstreams.ps1 and .github/workflows/update-ui-skills.yml in sync.
+# Each entry records the rationale so the selection can be re-evaluated later
+# without reconstructing the reasoning (lesson from 2026-07-15: the original
+# selection had no recorded rationale).
 
 sources:
   - id: guardrails-kit
@@ -8,11 +11,59 @@ sources:
     integration: submodule
     update: dependabot
     scope: repository
+    rationale: >-
+      The whole repository is the product base; nothing to cherry-pick.
 
   - id: emil-ui-skills
     repository: emilkowalski/skills
     integration: submodule-sparse-checkout
     paths:
+      - skills/animation-vocabulary
+      - skills/apple-design
       - skills/emil-design-eng
+      - skills/improve-animations
       - skills/review-animations
     update: path-filtered-github-action
+    rationale: >-
+      Adopted first among the UI-skill candidates because it is the only one
+      whose shape fits submodule + sparse-checkout: small self-contained
+      Markdown skills under skills/<name>/, one recognized author
+      (design engineer; Vercel/Linear background), no runtime or install
+      footprint. 2026-07-15: expanded from 2 skills (emil-design-eng,
+      review-animations) to all 5 — user decision: the extra skills are
+      Markdown-only, cost nothing to carry, and will help once UI work starts.
+      New skills added upstream later remain opt-in (explicit paths, no
+      wildcard).
+
+  # --- Not integrated (recorded so candidates and policy are not lost) ---
+
+  - id: awesome-design-md
+    repository: voltagent/awesome-design-md
+    integration: none
+    update: none
+    status: reference
+    rationale: >-
+      Kept as a reference, not integrated (user decision 2026-07-15). It is a
+      collection of per-brand DESIGN.md analyses, not Claude skills — useful
+      to consult during implementation. Whether to vendor specific DESIGN.md
+      files can only be decided after the UI direction is chosen; revisit then.
+
+  - id: ui-ux-pro-max-skill
+    repository: nextlevelbuilder/ui-ux-pro-max-skill
+    integration: none
+    update: none
+    status: candidate
+    rationale: >-
+      Deferred (2026-07-15; repo inspected at v2.11.0, not just assumed).
+      Verified facts: installs self-contained into .claude/skills/
+      (orchestrator SKILL.md + ~1.7MB CSV databases + Python search scripts +
+      6 sub-skills); for the claude platform it does NOT touch CLAUDE.md,
+      .claude/settings.json, or .mcp.json — so there is no file-level
+      collision with guardrails-kit. Scripts make no network calls (offline
+      BM25 search). Real friction is discipline-level, not file-level:
+      (1) skill instructs `python3 scripts/...` directly, contradicting the
+      kit's Python-via-uv rule (GUARDRAILS §7.1); (2) if the vendored files
+      are committed to a kit-managed repo, the kit's header/print-ban/
+      STRUCTURE.md checks fire on them unless exclusions are recorded in the
+      catalog; (3) `--persist` writes design-system/MASTER.md into the
+      project, which needs a generated-artifact decision.

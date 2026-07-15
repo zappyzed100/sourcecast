@@ -17,7 +17,7 @@ env:
   UPSTREAM_URL: https://github.com/emilkowalski/skills.git
   UPSTREAM_BRANCH: main
   # Space-separated pathspecs; keep in sync with .upstream/sources.yaml
-  ADOPTED_PATHS: skills/emil-design-eng skills/review-animations
+  ADOPTED_PATHS: skills/animation-vocabulary skills/apple-design skills/emil-design-eng skills/improve-animations skills/review-animations
 
 jobs:
   check-and-update:
@@ -98,7 +98,7 @@ jobs:
 
             ---
             Opened automatically by `update-ui-skills.yml` because the adopted skill paths
-            (`skills/emil-design-eng`, `skills/review-animations`) changed upstream.
+            (see `.upstream/sources.yaml`, id: emil-ui-skills) changed upstream.
           labels: |
             dependencies
             ui-skills

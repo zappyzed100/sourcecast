@@ -14,7 +14,10 @@ $skillsSubmodule = Join-Path $repoRoot 'upstream/ui-skills/emilkowalski-skills'
 $sparsePaths = @(
     '/LICENSE'
     '/README.md'
+    'skills/animation-vocabulary/'
+    'skills/apple-design/'
     'skills/emil-design-eng/'
+    'skills/improve-animations/'
     'skills/review-animations/'
 )
 
