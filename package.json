@@ -6,6 +6,7 @@
     "node": ">=24 <25"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
     "@biomejs/biome": "2.5.3",
     "@playwright/test": "1.61.1",
     "typescript": "7.0.2",

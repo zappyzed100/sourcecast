@@ -1,0 +1,12 @@
+# _headers — Cloudflare Pagesが読むレスポンスヘッダー定義（plan.md §3.4）。
+#
+# Content-Security-Policyはここでは設定しない——Astroの`security.csp: true`が
+# インラインscript/styleのハッシュを含む<meta http-equiv>を各HTMLへ埋め込んでおり、
+# ここで別のCSPをヘッダーとして重ねるとブラウザは「両方を満たす」交差適用になり、
+# ビルド後に変わるハッシュをこのファイルだけ手で追随させる二重管理が生まれる（G5）。
+# ヘッダー側では、meta要素のCSPでは表現できない項目だけを補う。
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+  X-Frame-Options: DENY

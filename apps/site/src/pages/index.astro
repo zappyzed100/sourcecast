@@ -53,18 +53,25 @@ const episodes = (await getCollection("episodes")).sort(
 
 	let pagefindPromise: Promise<PagefindApi> | null = null;
 
-	// Viteの静的解析を完全に避ける: `@vite-ignore` を付けても import() 呼び出し自体は
-	// Viteのプリロードヘルパー(`__VITE_PRELOAD__`参照)でラップされてしまい、ビルド外の
-	// /pagefind/pagefind.js を読む際に「__VITE_PRELOAD__ is not defined」で例外になる
-	// (実機で確認済み)。Function経由の動的importはVite/esbuildの構文解析対象そのものに
-	// ならないため、ラップされずに済む。
-	const dynamicImport = new Function("specifier", "return import(specifier);") as (
-		specifier: string,
-	) => Promise<PagefindApi>;
-
-	function loadPagefind() {
+	function loadPagefind(): Promise<PagefindApi> {
 		if (!pagefindPromise) {
-			pagefindPromise = dynamicImport("/pagefind/pagefind.js");
+			// public/scripts/pagefind-bridge.js を <script type="module" src="..."> として
+			// 実行時にDOM挿入する(index.astro内で直接 import() しない)。理由は同ファイルの
+			// 冒頭コメントに書いたとおり: Viteのimport()ラップ(__VITE_PRELOAD__)がビルド
+			// グラフ外のパスで壊れることと、CSP(script-src)がnew Function等を許可しない
+			// (Astro CSPが自動付与するハッシュは静的HTML内のインラインscript用で、実行時に
+			// 挿入するscriptには及ばない——外部src+'self'ならハッシュ無しで許可される)。
+			pagefindPromise = new Promise<PagefindApi>((resolve) => {
+				window.addEventListener(
+					"pagefind-bridge:loaded",
+					(e) => resolve((e as CustomEvent<PagefindApi>).detail),
+					{ once: true },
+				);
+				const script = document.createElement("script");
+				script.type = "module";
+				script.src = "/scripts/pagefind-bridge.js";
+				document.head.appendChild(script);
+			});
 		}
 		return pagefindPromise;
 	}

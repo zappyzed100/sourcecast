@@ -7,7 +7,7 @@
 	},
 	"scripts": {
 		"dev": "astro dev",
-		"build": "astro build && pagefind --site dist",
+		"build": "astro build && pagefind --site dist && node scripts/check-bundle-budget.ts",
 		"preview": "astro preview",
 		"typecheck": "astro check",
 		"astro": "astro"
