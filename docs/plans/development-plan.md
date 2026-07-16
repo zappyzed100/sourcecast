@@ -452,8 +452,24 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   Python生成→実際に`pnpm --filter apps-site run build`で受理されることを
   手動生成した検証用episodeで実地確認済み（二重の網の両層を実証、検証後は
   scratchとして削除）。単体テストは`tests/publish/test_episode_page.py`(22件)。
-* [ ] `/episodes/<ID>/` と `/episodes/<ID>/versions/<revision>/` を生成する。
+* [x] `/episodes/<ID>/` と `/episodes/<ID>/versions/<revision>/` を生成する。
   検証: 再生成が旧版を上書きせず、新版と訂正履歴を追加する。
+  実装メモ: `services/pipeline/src/history_radio/publish/episode_publisher.py`の
+  `publish_episode()`が2段書き込みを行う——`<episodeId>/versions/<revision>.md`へ
+  不変の記録として追加し（既に同一内容で存在するなら冪等・異なる内容なら
+  `EpisodePublishConflictError`でfail closed）、`<episodeId>.md`（現行版ポインタ）
+  だけを新しい内容へ更新する。revisionの後退・据え置きも拒否する。
+  Astro側は`content.config.ts`のスキーマ変更無しで対応: `episodes`コレクションの
+  glob(`**/*.md`)がネストした`versions/`配下も自然に拾うため、
+  `apps/site/src/pages/episodes/[id]/index.astro`のgetStaticPathsを
+  `!entry.id.includes("/versions/")`で現行版ポインタだけに絞り、新設した
+  `apps/site/src/pages/episodes/[id]/versions/[revision]/index.astro`が
+  アーカイブ済みスナップショット側を担当する（同一episodeIdでの静的パス衝突を回避）。
+  共通描画は`apps/site/src/components/EpisodeDetail.astro`に集約。
+  実地検証: `publish_episode`で実際にrevision 1→2を生成し、
+  `pnpm --filter apps-site run build`で両ページが期待どおり出力されることを確認
+  （旧版ページの本文が新版で上書きされていない、現行ページに過去版一覧と
+  今回の訂正履歴が追加される）。単体テストは`tests/publish/test_episode_publisher.py`(7件)。
 * [ ] 主張‐出典対応、コピー、ダウンロード、過去版差分を実データへ接続する。
   検証: 全公開主張から1件以上の有効な出典URLへ到達できる。
 * [ ] R2へハッシュ付きキーでmediaをアップロードし、存在・サイズ・ハッシュを確認する。
