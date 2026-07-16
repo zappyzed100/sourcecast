@@ -220,6 +220,7 @@
 - `services/pipeline/src/history_radio/media/slides.py`
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
+- `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
 - `services/pipeline/src/history_radio/readings/address_registry.py`
@@ -286,6 +287,8 @@
 - `services/pipeline/tests/media/test_slide_render.py`
 - `services/pipeline/tests/media/test_slides.py`
 - `services/pipeline/tests/media/test_voicevox.py`
+- `services/pipeline/tests/publish/__init__.py`
+- `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
 - `services/pipeline/tests/readings/test_context_matching.py`
@@ -749,6 +752,17 @@
 - def inject_readings
 - class VoicevoxClient
 
+### `services/pipeline/src/history_radio/publish/episode_page.py`
+- class EpisodePageError
+- class SourceEntry
+- class ClaimEntry
+- class CorrectionEntry
+- class RelatedBookEntry
+- class ChapterEntry
+- class EpisodePageData
+- def validate_episode_page
+- def render_episode_frontmatter
+
 ### `services/pipeline/src/history_radio/readings/address_registry.py`
 - class AddressColumns
 - def convert_address_rows
@@ -1116,6 +1130,21 @@
 - def test_inject_readings_processes_longer_surfaces_first
 - def test_inject_readings_with_no_resolutions_returns_text_unchanged
 - def test_credit_text_matches_spec_wording
+
+### `services/pipeline/tests/publish/test_episode_page.py`
+- def test_valid_data_passes_validation_and_renders
+- def test_missing_sources_is_rejected_at_schema_level
+- def test_missing_required_field_is_rejected
+- def test_unknown_field_is_rejected
+- def test_unknown_license_is_rejected
+- def test_non_approvable_licenses_are_rejected
+- def test_approvable_licenses_pass
+- def test_claim_referencing_out_of_range_source_index_is_rejected
+- def test_malformed_episode_id_is_rejected
+- def test_all_problems_are_reported_at_once
+- def test_frontmatter_keys_are_camel_case
+- def test_chapters_and_audio_url_are_omitted_when_absent
+- def test_chapters_and_audio_url_are_included_when_present
 
 ### `services/pipeline/tests/readings/test_address_registry.py`
 - def test_rows_convert_to_place_entries_with_katakana_readings

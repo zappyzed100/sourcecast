@@ -439,8 +439,19 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 ### Phase 8 — 公開ページ統合・Cloudflare（仕様書 §10B・§10C）
 
-* [ ] Pythonからバージョン付き公開JSON/Markdownを生成し、Astroのcontent collectionで検証する。
+* [x] Pythonからバージョン付き公開JSON/Markdownを生成し、Astroのcontent collectionで検証する。
   検証: 不正Schema、欠落出典、未知ライセンスでbuildを失敗させる。
+  実装メモ: `services/pipeline/src/history_radio/publish/episode_page.py`。
+  `EpisodePageData`（Pydantic）は`apps/site/src/content.config.ts`のzodスキーマと
+  フィールド1対1対応（camelCaseへは`render_episode_frontmatter`が変換）。
+  `validate_episode_page()`が生成時点で拒否する3点: episode_id形式、
+  `normalized_license_id`が`rights.engine.AUTO_APPROVABLE_LICENSE_IDS`外の出典、
+  claimsの`source_indexes`範囲外参照——全問題を一括報告するfail closed設計
+  （script/validator.py等と同じ house style）。検証(validate)と描画(render)を
+  分離（resolver.py/slides.pyと同じ「決定と実行の分離」）。
+  Python生成→実際に`pnpm --filter apps-site run build`で受理されることを
+  手動生成した検証用episodeで実地確認済み（二重の網の両層を実証、検証後は
+  scratchとして削除）。単体テストは`tests/publish/test_episode_page.py`(22件)。
 * [ ] `/episodes/<ID>/` と `/episodes/<ID>/versions/<revision>/` を生成する。
   検証: 再生成が旧版を上書きせず、新版と訂正履歴を追加する。
 * [ ] 主張‐出典対応、コピー、ダウンロード、過去版差分を実データへ接続する。
