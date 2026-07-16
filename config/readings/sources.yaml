@@ -1,0 +1,77 @@
+# sources.yaml — 読み辞書のデータソース登録（development-plan.md §8.1・§8.4）
+#
+# ここに登録の無い source_id を持つ ReadingEntry は読み込み時に拒否される。
+# attribution_text は THIRD_PARTY_NOTICES.md と公開サイトの表記の正本——
+# 変更したら `uv run scripts/readings/generate_third_party_notices.py` で再生成する
+# （ドリフトは tests/readings/test_notices.py が検出する）。
+#
+# 辞書データ本体はコミットしない（§8.3）——取得スクリプトが artifacts/readings/
+# （Git対象外）へ保存し、取得日・件数・ハッシュを記録する。
+sources:
+  - source_id: sudachidict
+    name: "SudachiDict (full)"
+    license: "Apache-2.0"
+    license_url: "https://www.apache.org/licenses/LICENSE-2.0"
+    url: "https://github.com/WorksApplications/SudachiDict"
+    attribution_text: "SudachiDict © Works Applications Co., Ltd. (Apache License 2.0)"
+    redistribution_allowed: true
+    first_party: false
+    notes: "一般語・基本固有名詞。ライセンス文・著作権表示を保持する"
+
+  - source_id: jmnedict
+    name: "JMnedict (Japanese Multilingual Named Entity Dictionary)"
+    license: "CC BY-SA 4.0"
+    license_url: "https://creativecommons.org/licenses/by-sa/4.0/"
+    url: "https://www.edrdg.org/enamdict/enamdict_doc.html"
+    attribution_text: "JMnedict © Electronic Dictionary Research and Development Group (CC BY-SA 4.0)"
+    redistribution_allowed: true
+    first_party: false
+    notes: "人名・地名の読み補完。SA継承が派生辞書へ及ぶため専用テーブルで分離管理し、他ソースと混ぜて再配布しない（§8.3）"
+
+  - source_id: wikidata-kana
+    name: "Wikidata (P1814: name in kana)"
+    license: "CC0 1.0"
+    license_url: "https://creativecommons.org/publicdomain/zero/1.0/"
+    url: "https://www.wikidata.org/"
+    attribution_text: "Wikidata (CC0 1.0)"
+    redistribution_allowed: true
+    first_party: false
+    notes: "歴史人物・歴史地名・官職の読み補完。読み未登録の項目も多い"
+
+  - source_id: ndl-web-authorities
+    name: "Web NDL Authorities（国立国会図書館典拠データ）"
+    license: "国立国会図書館の利用条件に従う（出典明示で利用可）"
+    license_url: "https://id.ndl.go.jp/information/policy/"
+    url: "https://id.ndl.go.jp/auth/ndla"
+    attribution_text: "Web NDL Authoritiesから取得（国立国会図書館）"
+    redistribution_allowed: false
+    first_party: false
+    notes: "重要人物の読み・別名・生没年。出典明示が条件——attribution_textの文言を変えない"
+
+  - source_id: digital-agency-abr
+    name: "デジタル庁 アドレス・ベース・レジストリ"
+    license: "PDL 1.0（パブリック・ドメイン・ライセンス）"
+    license_url: "https://www.digital.go.jp/policies/base_registry_address"
+    url: "https://catalog.registries.digital.go.jp/"
+    attribution_text: "アドレス・ベース・レジストリ（デジタル庁）を加工して作成"
+    redistribution_allowed: true
+    first_party: false
+    notes: "現代地名の読み。出典と加工した旨の表示が条件（attribution_textが両方を含む）"
+
+  - source_id: era-dictionary
+    name: "元号読み辞書（自作・約250件）"
+    license: "本プロジェクトの資産"
+    url: "config/readings/eras.yaml"
+    attribution_text: "元号読み辞書（history-radio自作。Wikidata・国立国会図書館資料を基に人手検証）"
+    redistribution_allowed: true
+    first_party: true
+    notes: "Wikidata・NDL資料を基に一度人手で検証して自作する（§8.4の独立タスク）"
+
+  - source_id: manual-dictionary
+    name: "手動修正辞書（自作）"
+    license: "本プロジェクトの資産"
+    url: "config/readings/manual.yaml"
+    attribution_text: "手動修正辞書（history-radio自作）"
+    redistribution_allowed: true
+    first_party: true
+    notes: "人間が検証した正。文脈依存の複数読みを表現する（例: 判官=ホウガン/ハンガン）。外部由来と混ぜない（§8.3）。NDL「ヨミガナ辞書」PDFは確認資料としてのみ使い、由来エントリには出典コメントを残す"
