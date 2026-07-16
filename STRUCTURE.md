@@ -227,6 +227,7 @@
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/media/ffmpeg_audio.py`
 - `services/pipeline/src/history_radio/media/media_manifest.py`
+- `services/pipeline/src/history_radio/media/r2_upload.py`
 - `services/pipeline/src/history_radio/media/slide_render.py`
 - `services/pipeline/src/history_radio/media/slides.py`
 - `services/pipeline/src/history_radio/media/voicevox.py`
@@ -296,6 +297,7 @@
 - `services/pipeline/tests/media/__init__.py`
 - `services/pipeline/tests/media/test_ffmpeg_audio.py`
 - `services/pipeline/tests/media/test_media_manifest.py`
+- `services/pipeline/tests/media/test_r2_upload.py`
 - `services/pipeline/tests/media/test_slide_render.py`
 - `services/pipeline/tests/media/test_slides.py`
 - `services/pipeline/tests/media/test_voicevox.py`
@@ -764,6 +766,14 @@
 - def validate_media_manifest
 - def credits_for_section
 
+### `services/pipeline/src/history_radio/media/r2_upload.py`
+- class R2UploadError
+- def content_hash
+- def object_key
+- class ExistingObject
+- class UploadResult
+- class R2Client
+
 ### `services/pipeline/src/history_radio/media/slide_render.py`
 - class SlideRenderError
 - def render_slide_image
@@ -1123,6 +1133,20 @@
 - def test_duplicate_asset_id_is_rejected
 - def test_all_problems_are_reported_at_once
 - def test_credits_for_section_filters_by_usage
+
+### `services/pipeline/tests/media/test_r2_upload.py`
+- def test_content_hash_matches_sha256
+- def test_object_key_depends_only_on_content_and_extension
+- def test_object_key_changes_with_content
+- def test_object_key_changes_with_extension
+- def test_upload_of_new_content_puts_object
+- def test_reupload_of_identical_content_is_idempotent_and_skips_put
+- def test_size_mismatch_on_existing_key_is_rejected
+- def test_unexpected_existence_check_status_is_rejected
+- def test_put_failure_is_rejected
+- def test_network_error_during_existence_check_is_rejected
+- def test_find_existing_returns_none_for_missing_object
+- def test_authorization_header_uses_bearer_token
 
 ### `services/pipeline/tests/media/test_slide_render.py`
 - def test_self_drawn_fallback_renders_a_valid_image
