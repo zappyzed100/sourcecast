@@ -470,8 +470,23 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   `pnpm --filter apps-site run build`で両ページが期待どおり出力されることを確認
   （旧版ページの本文が新版で上書きされていない、現行ページに過去版一覧と
   今回の訂正履歴が追加される）。単体テストは`tests/publish/test_episode_publisher.py`(7件)。
-* [ ] 主張‐出典対応、コピー、ダウンロード、過去版差分を実データへ接続する。
+* [x] 主張‐出典対応、コピー、ダウンロード、過去版差分を実データへ接続する。
   検証: 全公開主張から1件以上の有効な出典URLへ到達できる。
+  実装メモ: `apps/site/src/components/EpisodeDetail.astro`に4機能を集約。
+  (1) 主張‐出典対応: 主張ごとに出典番号リンク`[1][2]`を`#source-N`アンカーへ張り、
+  出典リストの各`<li>`に`id="source-N"`を付与——名前の羅列でなく番号リンクで
+  実データを指す。(2)(3) コピー・ダウンロード: `episode.body`（rawmarkdown）を
+  `<textarea hidden>`へ埋め込み、Clipboard APIでコピー、`episodes/[id]/script.md.ts`
+  静的エンドポイント（current・versions両方）でMarkdownダウンロードを提供。
+  (4) 過去版差分: `apps/site/src/lib/line-diff.ts`（自前のLCS行差分・新規依存無し、
+  vitest単体テスト6件）で直前revisionとの行差分を`versions/[revision]/`ページに表示。
+  実フィクスチャ`2026-07-18-tokyo-tower-color`（revision 1→2、
+  `publish_episode`で実生成・常時コミット）でPlaywright e2e 6件
+  （`e2e/episode-publish.spec.ts`）と既存a11yスイートを実データに対して実行し、
+  番号リンクのジャンプ・クリップボードへの実コピー・ダウンロードした
+  Markdownの内容一致・追加行のdiff表示を確認済み。Python側は
+  `test_every_claim_reaches_at_least_one_valid_source_url`
+  （`tests/publish/test_episode_page.py`）でDoDのハッピーパスを明示的に固定。
 * [ ] R2へハッシュ付きキーでmediaをアップロードし、存在・サイズ・ハッシュを確認する。
   検証: 同じ入力の再実行が重複オブジェクトを作らない。
 * [ ] Cloudflare Pagesへ独自ドメイン、HTTPS、キャッシュ、セキュリティヘッダー、404を設定する。

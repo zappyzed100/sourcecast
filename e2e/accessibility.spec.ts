@@ -2,7 +2,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/episodes/2026-07-16-can-opener/", "/episodes/2026-07-15-first-railway/", "/404"];
+const PAGES = [
+	"/",
+	"/episodes/2026-07-16-can-opener/",
+	"/episodes/2026-07-15-first-railway/",
+	"/episodes/2026-07-18-tokyo-tower-color/",
+	"/episodes/2026-07-18-tokyo-tower-color/versions/1/",
+	"/episodes/2026-07-18-tokyo-tower-color/versions/2/",
+	"/404",
+];
 
 for (const path of PAGES) {
 	test(`${path} に重大なアクセシビリティ違反が無い`, async ({ page }) => {

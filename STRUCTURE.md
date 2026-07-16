@@ -101,12 +101,20 @@
 - `apps/site/src/content.config.ts` — content.config.ts — 公開エピソードのコンテンツコレクション定義（Astro Content Layer API）
 - `apps/site/src/content/episodes/2026-07-15-first-railway.md`
 - `apps/site/src/content/episodes/2026-07-16-can-opener.md`
+- `apps/site/src/content/episodes/2026-07-18-tokyo-tower-color.md`
+- `apps/site/src/content/episodes/2026-07-18-tokyo-tower-color/versions/1.md`
+- `apps/site/src/content/episodes/2026-07-18-tokyo-tower-color/versions/2.md`
 - `apps/site/src/layouts/BaseLayout.astro`
+- `apps/site/src/lib/line-diff.test.ts` — line-diff.test.ts — diffLines()の行単位差分ロジックを固定する(Phase 8タスク3)
+- `apps/site/src/lib/line-diff.ts` — line-diff.ts — 台本本文の行単位差分(過去版差分表示・development-plan.md Phase 8タスク3)
 - `apps/site/src/pages/404.astro`
 - `apps/site/src/pages/episodes/[id]/index.astro`
+- `apps/site/src/pages/episodes/[id]/script.md.ts` — script.md.ts — 原稿本文のMarkdownダウンロード用静的エンドポイント(仕様書§10B「原稿のMarkdownダウンロード」)
 - `apps/site/src/pages/episodes/[id]/versions/[revision]/index.astro`
+- `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts` — script.md.ts — 過去バージョンの原稿本文Markdownダウンロード用静的エンドポイント(仕様書§10B)
 - `apps/site/src/pages/index.astro`
 - `apps/site/tsconfig.json`
+- `apps/site/vitest.config.ts` — <reference types="vitest/config" />
 
 ## `bindings/`
 
@@ -131,6 +139,7 @@
 
 - `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
 - `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
+- `e2e/episode-publish.spec.ts` — episode-publish.spec.ts — Phase 8タスク3 DoD: 主張‐出典対応・コピー・ダウンロード・過去版差分が
 - `e2e/site-search.spec.ts` — site-search.spec.ts — Phase 2 DoD: fixtureの固有語を検索し、該当エピソードが返ることを確認する
 - `e2e/site-smoke.spec.ts` — site-smoke.spec.ts — Phase 0のブラウザsmoke test: 公開サイトのホームページが読み込めることだけを確認する
 
@@ -399,6 +408,19 @@
 
 ### `apps/site/src/content.config.ts`
 - const collections
+
+### `apps/site/src/lib/line-diff.ts`
+- type DiffOp
+- interface DiffLine
+- function diffLines
+
+### `apps/site/src/pages/episodes/[id]/script.md.ts`
+- function getStaticPaths
+- const GET
+
+### `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts`
+- function getStaticPaths
+- const GET
 
 ### `migrations/env.py`
 - def run_migrations_offline
@@ -1149,6 +1171,7 @@
 - def test_non_approvable_licenses_are_rejected
 - def test_approvable_licenses_pass
 - def test_claim_referencing_out_of_range_source_index_is_rejected
+- def test_every_claim_reaches_at_least_one_valid_source_url
 - def test_malformed_episode_id_is_rejected
 - def test_all_problems_are_reported_at_once
 - def test_frontmatter_keys_are_camel_case
