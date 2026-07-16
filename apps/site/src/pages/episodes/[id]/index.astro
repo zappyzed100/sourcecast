@@ -39,7 +39,7 @@ const pastVersions = (
 ---
 
 <BaseLayout title={`${data.title} — 歴史スライドラジオ（仮）`} description={data.summary} canonicalPath={`/episodes/${data.episodeId}/`}>
-	<EpisodeDetail data={data}>
+	<EpisodeDetail data={data} scriptText={episode.body ?? ""} downloadHref={`/episodes/${data.episodeId}/script.md`}>
 		<Content />
 		<Fragment slot="versions">
 			{

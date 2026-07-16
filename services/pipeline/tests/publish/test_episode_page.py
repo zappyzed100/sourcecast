@@ -107,6 +107,28 @@ def test_claim_referencing_out_of_range_source_index_is_rejected() -> None:
         validate_episode_page(data)
 
 
+def test_every_claim_reaches_at_least_one_valid_source_url() -> None:
+    """Phase 8タスク3 DoD: 全公開主張から1件以上の有効な出典URLへ到達できる。"""
+    data = EpisodePageData.model_validate(
+        _data(
+            sources=[
+                _source(name="出典A", url="https://ja.wikipedia.org/wiki/a"),
+                _source(name="出典B", url="https://ja.wikipedia.org/wiki/b"),
+            ],
+            claims=[
+                {"text": "出典Aのみに基づく主張", "source_indexes": [0]},
+                {"text": "出典A・Bの両方に基づく主張", "source_indexes": [0, 1]},
+            ],
+        )
+    )
+    validate_episode_page(data)  # 例外なし
+
+    for claim in data.claims:
+        reachable_urls = [data.sources[i].url for i in claim.source_indexes]
+        assert len(reachable_urls) >= 1
+        assert all(url.startswith(("http://", "https://")) for url in reachable_urls)
+
+
 def test_malformed_episode_id_is_rejected() -> None:
     data = EpisodePageData.model_validate(_data(episode_id="not-a-valid-id!!"))
     with pytest.raises(EpisodePageError, match="形式が不正"):

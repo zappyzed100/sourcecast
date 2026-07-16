@@ -4,6 +4,7 @@
 import { getCollection, getEntry, render } from "astro:content";
 import EpisodeDetail from "../../../../../components/EpisodeDetail.astro";
 import BaseLayout from "../../../../../layouts/BaseLayout.astro";
+import { diffLines } from "../../../../../lib/line-diff";
 
 export async function getStaticPaths() {
 	const versions = await getCollection("episodes", (entry) =>
@@ -36,6 +37,18 @@ const { data } = version;
 const current = await getEntry("episodes", data.episodeId);
 const isLatest =
 	current !== undefined && current.data.revision === data.revision;
+
+// 過去版差分(development-plan.md Phase 8タスク3): 同じepisodeIdのアーカイブ済み版のうち、
+// この版より小さいrevisionで最大のものと比較する(revisionが連番でなくても直前の実版と比較する)。
+const siblingVersions = await getCollection("episodes", (entry) =>
+	entry.id.startsWith(`${data.episodeId}/versions/`),
+);
+const previousVersion = siblingVersions
+	.filter((v) => v.data.revision < data.revision)
+	.sort((a, b) => b.data.revision - a.data.revision)[0];
+const diff = previousVersion
+	? diffLines(previousVersion.body ?? "", version.body ?? "")
+	: null;
 ---
 
 <BaseLayout
@@ -43,7 +56,11 @@ const isLatest =
 	description={data.summary}
 	canonicalPath={`/episodes/${data.episodeId}/versions/${data.revision}/`}
 >
-	<EpisodeDetail data={data}>
+	<EpisodeDetail
+		data={data}
+		scriptText={version.body ?? ""}
+		downloadHref={`/episodes/${data.episodeId}/versions/${data.revision}/script.md`}
+	>
 		<Content />
 		<Fragment slot="banner">
 			<p data-testid="version-banner" role="note">
@@ -53,6 +70,29 @@ const isLatest =
 					</>
 				)}
 			</p>
+		</Fragment>
+		<Fragment slot="diff">
+			{
+				diff && (
+					<section data-testid="version-diff">
+						<h2>revision {previousVersion?.data.revision} からの変更点</h2>
+						<ul class="diff-lines">
+							{diff.map((line) => (
+								<li data-diff-op={line.op}>
+									{line.op === "added" && "+ "}
+									{line.op === "removed" && "− "}
+									{line.text}
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
+			{
+				!diff && (
+					<p data-testid="version-diff-none">これは最初の公開版です（比較できる前版がありません）。</p>
+				)
+			}
 		</Fragment>
 	</EpisodeDetail>
 </BaseLayout>

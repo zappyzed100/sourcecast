@@ -10,7 +10,8 @@
 		"build": "astro build && pagefind --site dist && node scripts/check-bundle-budget.ts",
 		"preview": "astro preview",
 		"typecheck": "astro check",
-		"astro": "astro"
+		"astro": "astro",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"astro": "7.0.9"

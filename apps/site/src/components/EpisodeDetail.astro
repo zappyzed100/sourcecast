@@ -45,9 +45,11 @@ interface EpisodeData {
 
 interface Props {
 	data: EpisodeData;
+	scriptText: string;
+	downloadHref: string;
 }
 
-const { data } = Astro.props;
+const { data, scriptText, downloadHref } = Astro.props;
 ---
 
 <article data-testid="episode-detail" data-revision={data.revision}>
@@ -67,8 +69,16 @@ const { data } = Astro.props;
 
 	<section>
 		<h2>台本</h2>
+		<div class="script-actions">
+			<button type="button" data-testid="copy-script-button">原稿をコピー</button>
+			<a data-testid="download-script-link" href={downloadHref} download>原稿をダウンロード（Markdown）</a>
+			<span data-testid="copy-script-status" role="status" aria-live="polite"></span>
+		</div>
+		<textarea data-testid="script-raw-text" hidden readonly>{scriptText}</textarea>
 		<slot />
 	</section>
+
+	<slot name="diff" />
 
 	{
 		data.claims.length > 0 && (
@@ -86,10 +96,16 @@ const { data } = Astro.props;
 							<tr>
 								<td>{claim.text}</td>
 								<td>
-									{claim.sourceIndexes
-										.map((i) => data.sources[i]?.name)
-										.filter(Boolean)
-										.join(" / ")}
+									{claim.sourceIndexes.map((i, position) => (
+										<>
+											{position > 0 && " "}
+											{data.sources[i] && (
+												<a data-testid="claim-source-link" href={`#source-${i}`}>
+													[{i + 1}]
+												</a>
+											)}
+										</>
+									))}
 								</td>
 							</tr>
 						))}
@@ -102,9 +118,9 @@ const { data } = Astro.props;
 	<section data-testid="sources-list">
 		<h2>出典・クレジット</h2>
 		<ul>
-			{data.sources.map((source) => (
-				<li>
-					<a href={source.url}>{source.name}</a>（{source.license}・{source.credit}・閲覧日{" "}
+			{data.sources.map((source, i) => (
+				<li id={`source-${i}`}>
+					[{i + 1}] <a href={source.url}>{source.name}</a>（{source.license}・{source.credit}・閲覧日{" "}
 					{source.accessedAt.toISOString().slice(0, 10)}）
 				</li>
 			))}
@@ -147,3 +163,21 @@ const { data } = Astro.props;
 
 	<slot name="versions" />
 </article>
+
+<script>
+	// クリップボードAPIで原稿全文をコピーする(仕様書§10B「コピー可能な原稿全文」)。
+	const article = document.querySelector('[data-testid="episode-detail"]');
+	const button = article?.querySelector('[data-testid="copy-script-button"]');
+	const status = article?.querySelector('[data-testid="copy-script-status"]');
+	const rawText = article?.querySelector<HTMLTextAreaElement>('[data-testid="script-raw-text"]');
+
+	button?.addEventListener("click", async () => {
+		if (!rawText || !status) return;
+		try {
+			await navigator.clipboard.writeText(rawText.value);
+			status.textContent = "コピーしました";
+		} catch {
+			status.textContent = "コピーに失敗しました";
+		}
+	});
+</script>
