@@ -24,7 +24,7 @@ def save_document(
     """資料を保存し、(行, 新スナップショットを作ったか) を返す。
 
     - 同じ document_id が既にあれば行は更新しない（版が同じ＝内容が同じ契約。
-      新しい版は新しい document_id で来る — ingest/wikipedia.py の oldid 等）。
+      新しい版は新しい document_id で来る — ingest/adapters/wikipedia.py の oldid 等）。
     - 同じ content_hash のスナップショットが既にあれば追加しない
       （§7.3「同一内容はハッシュで再取得を抑制する」の保存面）。
     """

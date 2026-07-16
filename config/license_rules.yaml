@@ -40,6 +40,12 @@ licenses:
     requires_attribution: true
     notes: "CC BY相当として採用"
 
+  - license_id: ndl-internet-pd
+    label: "NDLデジタルコレクション インターネット公開(保護期間満了)"
+    default_use_class: A
+    requires_attribution: false
+    notes: "§5A冒頭が自動採用対象に挙げる公式メタデータ区分。他区分(個人送信・館内限定)は取得対象外"
+
   - license_id: noc-us
     label: "No Copyright - United States"
     default_use_class: B

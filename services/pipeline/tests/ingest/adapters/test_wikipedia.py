@@ -5,7 +5,7 @@ import json
 import pytest
 
 from history_radio.ingest.adapter import SourceAdapter
-from history_radio.ingest.wikipedia import WikipediaAdapter, WikipediaFetchError
+from history_radio.ingest.adapters.wikipedia import WikipediaAdapter, WikipediaFetchError
 from tests.ingest.mock_http import Reply, scripted_fetcher
 
 # MediaWiki API (formatversion=2) の記録済み応答の縮約版

@@ -189,10 +189,14 @@
 - `services/pipeline/src/history_radio/gate/__init__.py`
 - `services/pipeline/src/history_radio/ingest/__init__.py`
 - `services/pipeline/src/history_radio/ingest/adapter.py`
+- `services/pipeline/src/history_radio/ingest/adapters/__init__.py`
+- `services/pipeline/src/history_radio/ingest/adapters/colbase.py`
+- `services/pipeline/src/history_radio/ingest/adapters/ndl_digital.py`
+- `services/pipeline/src/history_radio/ingest/adapters/wikimedia_commons.py`
+- `services/pipeline/src/history_radio/ingest/adapters/wikipedia.py`
 - `services/pipeline/src/history_radio/ingest/collector.py`
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
-- `services/pipeline/src/history_radio/ingest/wikipedia.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
@@ -218,11 +222,15 @@
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
 - `services/pipeline/tests/ingest/__init__.py`
+- `services/pipeline/tests/ingest/adapters/__init__.py`
+- `services/pipeline/tests/ingest/adapters/test_colbase.py`
+- `services/pipeline/tests/ingest/adapters/test_ndl_digital.py`
+- `services/pipeline/tests/ingest/adapters/test_wikimedia_commons.py`
+- `services/pipeline/tests/ingest/adapters/test_wikipedia.py`
 - `services/pipeline/tests/ingest/mock_http.py`
 - `services/pipeline/tests/ingest/test_collector.py`
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
-- `services/pipeline/tests/ingest/test_wikipedia.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -557,6 +565,23 @@
 ### `services/pipeline/src/history_radio/ingest/adapter.py`
 - class SourceAdapter
 
+### `services/pipeline/src/history_radio/ingest/adapters/colbase.py`
+- class ColBaseFetchError
+- class ColBaseAdapter
+
+### `services/pipeline/src/history_radio/ingest/adapters/ndl_digital.py`
+- class NdlFetchError
+- class NdlRestrictedError
+- class NdlDigitalAdapter
+
+### `services/pipeline/src/history_radio/ingest/adapters/wikimedia_commons.py`
+- class CommonsFetchError
+- class WikimediaCommonsAdapter
+
+### `services/pipeline/src/history_radio/ingest/adapters/wikipedia.py`
+- class WikipediaFetchError
+- class WikipediaAdapter
+
 ### `services/pipeline/src/history_radio/ingest/collector.py`
 - class SourceNotApprovedError
 - class CollectOutcome
@@ -573,10 +598,6 @@
 - class RightsEvidence
 - class FetchResponseInfo
 - class FetchedDocument
-
-### `services/pipeline/src/history_radio/ingest/wikipedia.py`
-- class WikipediaFetchError
-- class WikipediaAdapter
 
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
@@ -662,6 +683,36 @@
 - def test_unknown_extra_field_rejected
 - def test_models_are_frozen
 
+### `services/pipeline/tests/ingest/adapters/test_colbase.py`
+- def test_adapter_satisfies_protocol
+- def test_item_is_collected_as_cc_by_with_museum_attribution
+- def test_missing_required_metadata_raises_instead_of_partial_document
+- def test_same_item_produces_same_content_hash
+
+### `services/pipeline/tests/ingest/adapters/test_ndl_digital.py`
+- def test_adapter_satisfies_protocol
+- def test_internet_pd_item_is_collected_with_granted_permissions
+- def test_non_pd_rights_categories_are_rejected_before_document_creation
+- def test_missing_rights_metadata_raises
+- def test_empty_result_raises
+- def test_broken_xml_raises_parse_error_not_partial_document
+
+### `services/pipeline/tests/ingest/adapters/test_wikimedia_commons.py`
+- def test_adapter_satisfies_protocol
+- def test_cc0_file_is_free_and_permissions_granted
+- def test_unknown_license_file_falls_back_to_unknown_permissions
+- def test_public_domain_maps_to_pdm_not_auto_free_class_a
+- def test_missing_license_metadata_raises_instead_of_partial_document
+- def test_missing_file_raises
+
+### `services/pipeline/tests/ingest/adapters/test_wikipedia.py`
+- def test_adapter_satisfies_protocol
+- def test_fetch_builds_document_from_recorded_fixture
+- def test_storage_granted_but_publication_denied
+- def test_missing_page_raises_instead_of_partial_document
+- def test_malformed_api_response_raises_instead_of_partial_document
+- def test_same_content_produces_same_hash
+
 ### `services/pipeline/tests/ingest/mock_http.py`
 - class Reply
 - class Timeout
@@ -704,14 +755,6 @@
 - def test_storage_and_publication_permissions_are_independent
 - def test_locator_rejects_reversed_offsets
 - def test_response_info_rejects_out_of_range_http_status
-
-### `services/pipeline/tests/ingest/test_wikipedia.py`
-- def test_adapter_satisfies_protocol
-- def test_fetch_builds_document_from_recorded_fixture
-- def test_storage_granted_but_publication_denied
-- def test_missing_page_raises_instead_of_partial_document
-- def test_malformed_api_response_raises_instead_of_partial_document
-- def test_same_content_produces_same_hash
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
