@@ -18,9 +18,13 @@ from history_radio.domain.models import RightsDecision, RightsDecisionValue
 
 RULE_VERSION = "5a-v1"
 
-# §5.2表: 公式メタデータの時点で自動採用してよいライセンスID
-# （第三者著作物の例外表示が無いことが条件）。
-AUTO_APPROVABLE_LICENSE_IDS = frozenset({"cc0", "cc-by", "cc-by-sa", "gov-jp-2.0", "ogl"})
+# §5.2表＋§5A冒頭: 公式メタデータの時点で自動採用してよいライセンスID
+# （第三者著作物の例外表示が無いことが条件）。ndl-internet-pd はNDLデジタルコレクションの
+# 「インターネット公開（保護期間満了）」区分——§5A冒頭が明示的に自動採用対象へ挙げる
+# 公式メタデータ（区分のフィルタはアダプター側 ingest/adapters/ndl_digital.py が行う）。
+AUTO_APPROVABLE_LICENSE_IDS = frozenset(
+    {"cc0", "cc-by", "cc-by-sa", "gov-jp-2.0", "ogl", "ndl-internet-pd"}
+)
 
 # §5.2表: 不採用だが事実調査目的の利用は検討可（区分Bとしての内部利用のみ）。
 RESEARCH_ONLY_LICENSE_IDS = frozenset({"nc", "nd", "inc", "unknown"})

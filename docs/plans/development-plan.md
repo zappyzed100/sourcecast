@@ -318,10 +318,14 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   検証: 必須フィールド欠落を型検査と実行時検証で拒否する
   （`ingest/schema.py`・`ingest/adapter.py`。storage/publication権限の分離と
   保存許可なしfull_textの実行時拒否を含む）。
-* [ ] ソースごとに独立アダプターを実装する。APIを優先し、robots.txt、規約、レート制限に従う。
-  検証: 記録済みfixtureを用いた統合テストを実ネットワークなしで通す。
-  （Wikipedia実装済み — `ingest/wikipedia.py`。残り: Wikimedia Commons・
-  NDLデジタルコレクション利用可能区分・ColBase）
+* [x] ソースごとに独立アダプターを実装する。APIを優先し、robots.txt、規約、レート制限に従う。
+  検証: 記録済みfixtureを用いた統合テストを実ネットワークなしで通す
+  （`ingest/adapters/` — Wikipedia・Wikimedia Commons（ファイル単位ライセンスの
+  資料単位判定）・NDLデジタルコレクション（「インターネット公開（保護期間満了）」
+  区分のみ収集し他区分は例外で拒否）・ColBase（規約ベースCC BY相当）。
+  実APIの応答形は2026-07時点の記録fixtureが正——形が変わればパース例外で
+  fail closedに止まる。ライセンス正規化へ `ndl-internet-pd` を追加し、
+  §5A冒頭の明示列挙に基づき自動採用対象へ組み入れた — config/license_rules.yaml）。
 * [x] ドメイン別セマフォ、接続プール、タイムアウト、条件付きGET、指数バックオフを実装する。
   検証: 429、5xx、タイムアウト、途中切断を注入し、上限後に安全に停止する
   （`ingest/crawl_control.py`。Retry-After遵守・過大レスポンス拒否・Clock注入込み）。

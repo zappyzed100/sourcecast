@@ -16,6 +16,12 @@ _KNOWN_LICENSE_TEXTS: dict[str, str] = {
     "public domain dedication": "cc0",
     "public domain mark": "pdm",
     "pdm": "pdm",
+    "public domain": "pdm",
+    # NDLデジタルコレクションの権利区分（§5.3・§5A冒頭: 公式メタデータが明示する
+    # 「インターネット公開（保護期間満了）」は自動採用の対象——他の区分（個人送信・
+    # 館内限定等）はアダプター側で取得自体を拒否する）
+    "インターネット公開（保護期間満了）": "ndl-internet-pd",
+    "インターネット公開(保護期間満了)": "ndl-internet-pd",
     "cc by": "cc-by",
     "cc-by": "cc-by",
     "cc by 4.0": "cc-by",
