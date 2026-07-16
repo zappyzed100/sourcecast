@@ -52,12 +52,13 @@ jobs:
         with:
           fetch-depth: 0   # PR 範囲・親コミット・worktree 復元に全履歴が必要（§5）
       - uses: astral-sh/setup-uv@v5
-      # >>> GUARDRAILS BINDING: red-first-setup >>>
-      # BINDING-SOURCE: python-uv@10（Phase 52 の workflow-integrity が red-first の steps を
-      # checkout + setup-uv + check_red_first.py に固定。このリポジトリの SINGLE_TEST_COMMAND
+      # BINDING-SOURCE: python-uv@10（この区画は空が正: このリポジトリの SINGLE_TEST_COMMAND
       # は `uv run pytest {file}`（Python列採用 — repo_scan.py の BINDING 区画に判断記録）で
-      # Node/pnpm セットアップは元々不要。TS側の red-first は ts-test ジョブが通しで再現する運用）
-# <<< GUARDRAILS BINDING: red-first-setup <<<
+      # Node/pnpm セットアップは不要。TS側の red-first は ts-test ジョブが通しで再現する運用。
+      # 区画マーカー対は verify_scenarios の充填シナリオがテンプレートとして使うため、
+      # コメントも含めて区画の外に置き、対を空のまま維持する — guardrails-kit@7f9ceb8）
+      # >>> GUARDRAILS BINDING: red-first-setup >>>
+      # <<< GUARDRAILS BINDING: red-first-setup <<<
       - run: uv run scripts/check_red_first.py --base "${{ github.event.pull_request.base.sha }}"
 
   # commit-msg 系ゲートの CI 実効化（v2.30・G9）: `check-commit-msg` は stages:[commit-msg]
