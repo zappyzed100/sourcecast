@@ -114,6 +114,8 @@
 
 - `config/license_rules.yaml`
 - `config/model_registry.yaml`
+- `config/readings/README.md`
+- `config/readings/eras.yaml`
 - `config/readings/sources.yaml`
 - `config/source_registry.yaml`
 
@@ -214,8 +216,12 @@
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
 - `services/pipeline/src/history_radio/readings/entry.py`
+- `services/pipeline/src/history_radio/readings/era_dictionary.py`
+- `services/pipeline/src/history_radio/readings/jmnedict.py`
 - `services/pipeline/src/history_radio/readings/notices.py`
 - `services/pipeline/src/history_radio/readings/sources_config.py`
+- `services/pipeline/src/history_radio/readings/store_jsonl.py`
+- `services/pipeline/src/history_radio/readings/wikidata_kana.py`
 - `services/pipeline/src/history_radio/rights/__init__.py`
 - `services/pipeline/src/history_radio/rights/engine.py`
 - `services/pipeline/src/history_radio/rights/license_normalization.py`
@@ -259,8 +265,11 @@
 - `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_entry.py`
+- `services/pipeline/tests/readings/test_era_dictionary.py`
+- `services/pipeline/tests/readings/test_jmnedict.py`
 - `services/pipeline/tests/readings/test_notices.py`
 - `services/pipeline/tests/readings/test_sources_config.py`
+- `services/pipeline/tests/readings/test_wikidata_kana.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -673,6 +682,17 @@
 ### `services/pipeline/src/history_radio/readings/entry.py`
 - class ReadingEntry
 
+### `services/pipeline/src/history_radio/readings/era_dictionary.py`
+- class EraDictionaryError
+- class EraRecord
+- def load_era_dictionary
+- def to_reading_entries
+
+### `services/pipeline/src/history_radio/readings/jmnedict.py`
+- class JmnedictParseError
+- def hiragana_to_katakana
+- def parse_jmnedict
+
 ### `services/pipeline/src/history_radio/readings/notices.py`
 - def build_notices
 
@@ -682,6 +702,15 @@
 - class ReadingSourcesFile
 - def load_reading_sources
 - def validate_entries_against_sources
+
+### `services/pipeline/src/history_radio/readings/store_jsonl.py`
+- class SourceMixingError
+- def path_for_source
+- def save_entries
+- def load_entries
+
+### `services/pipeline/src/history_radio/readings/wikidata_kana.py`
+- def fetch_kana_readings
 
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
@@ -918,6 +947,24 @@
 - def test_non_katakana_reading_is_rejected
 - def test_out_of_range_confidence_is_rejected
 
+### `services/pipeline/tests/readings/test_era_dictionary.py`
+- def test_real_eras_yaml_loads_about_250_eras
+- def test_real_eras_all_convert_to_valid_reading_entries
+- def test_unverified_era_has_lower_confidence
+- def test_duplicate_era_name_is_rejected
+- def test_end_before_start_is_rejected
+- def test_gap_after_701_is_rejected
+- def test_multiple_open_ended_eras_are_rejected
+
+### `services/pipeline/tests/readings/test_jmnedict.py`
+- def test_sample_xml_parses_to_person_and_place_entries
+- def test_non_target_name_types_and_kana_only_entries_are_dropped
+- def test_broken_xml_raises
+- def test_hiragana_to_katakana_covers_small_kana_and_long_vowel
+- def test_jmnedict_entries_cannot_be_written_into_another_sources_table
+- def test_loading_detects_contaminated_table
+- def test_round_trip_preserves_entries
+
 ### `services/pipeline/tests/readings/test_notices.py`
 - def test_committed_notices_match_regeneration
 - def test_adding_a_source_adds_its_attribution_line
@@ -931,6 +978,14 @@
 - def test_duplicate_source_id_is_rejected
 - def test_entry_with_unregistered_source_id_is_rejected
 - def test_registered_entries_pass_validation
+
+### `services/pipeline/tests/readings/test_wikidata_kana.py`
+- def test_kana_reading_is_fetched_and_katakanized
+- def test_query_failure_returns_empty_instead_of_raising
+- def test_http_error_returns_empty
+- def test_malformed_payload_returns_empty
+- def test_no_kana_results_returns_empty
+- def test_non_kana_value_is_skipped
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
