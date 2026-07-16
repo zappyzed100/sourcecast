@@ -41,6 +41,17 @@ def test_malformed_response_raises() -> None:
         caller(model_id="vendor/model:free", prompt="x")
 
 
+def test_null_content_raises_instead_of_returning_none() -> None:
+    """reasoning系モデルのcontent=null応答をNoneのまま流さない（実APIで実測した形）。"""
+    null_content = json.dumps(
+        {"choices": [{"message": {"content": None, "reasoning": "thinking..."}}], "usage": {}}
+    )
+    client, _requests = scripted_client([Reply(text=null_content)])
+    caller = OpenRouterCaller(client=client, api_key="sk-test")
+    with pytest.raises(OpenRouterError, match="contentが空"):
+        caller(model_id="vendor/reasoning:free", prompt="x")
+
+
 def test_from_env_requires_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     client, _requests = scripted_client([Reply()])
