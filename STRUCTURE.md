@@ -114,6 +114,7 @@
 
 - `config/license_rules.yaml`
 - `config/model_registry.yaml`
+- `config/readings/sources.yaml`
 - `config/source_registry.yaml`
 
 ## `docs/`
@@ -127,6 +128,10 @@
 - `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
 - `e2e/site-search.spec.ts` — site-search.spec.ts — Phase 2 DoD: fixtureの固有語を検索し、該当エピソードが返ることを確認する
 - `e2e/site-smoke.spec.ts` — site-smoke.spec.ts — Phase 0のブラウザsmoke test: 公開サイトのホームページが読み込めることだけを確認する
+
+## `licenses/`
+
+- `licenses/README.md`
 
 ## `migrations/`
 
@@ -170,6 +175,7 @@
 - `scripts/install_kit.py` — install_kit.py — キットの機械的配置（詳細は直下の docstring と README_SETUP.md §1）
 - `scripts/install_workbench.py` — install_workbench.py — workbench(UIスキル一式+特別対応の充填)を kit 導入済みリポジトリへ機械適用する
 - `scripts/llm_quality_probe.py` — llm_quality_probe.py — 無料LLMの出力品質を実測する検証ハーネス（仕様書§8.1の回帰前段）
+- `scripts/readings/generate_third_party_notices.py` — generate_third_party_notices.py — sources.yaml から THIRD_PARTY_NOTICES.md を再生成する
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
@@ -206,6 +212,10 @@
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
+- `services/pipeline/src/history_radio/readings/__init__.py`
+- `services/pipeline/src/history_radio/readings/entry.py`
+- `services/pipeline/src/history_radio/readings/notices.py`
+- `services/pipeline/src/history_radio/readings/sources_config.py`
 - `services/pipeline/src/history_radio/rights/__init__.py`
 - `services/pipeline/src/history_radio/rights/engine.py`
 - `services/pipeline/src/history_radio/rights/license_normalization.py`
@@ -247,6 +257,10 @@
 - `services/pipeline/tests/llm/test_extraction.py`
 - `services/pipeline/tests/llm/test_ledger.py`
 - `services/pipeline/tests/llm/test_openrouter.py`
+- `services/pipeline/tests/readings/__init__.py`
+- `services/pipeline/tests/readings/test_entry.py`
+- `services/pipeline/tests/readings/test_notices.py`
+- `services/pipeline/tests/readings/test_sources_config.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -534,6 +548,9 @@
 - def registry_model_ids
 - def main
 
+### `scripts/readings/generate_third_party_notices.py`
+- def main
+
 ### `scripts/repo_scan.py`
 - class ScanError
 - def reconfigure_stdio
@@ -652,6 +669,19 @@
 ### `services/pipeline/src/history_radio/llm/openrouter.py`
 - class OpenRouterError
 - class OpenRouterCaller
+
+### `services/pipeline/src/history_radio/readings/entry.py`
+- class ReadingEntry
+
+### `services/pipeline/src/history_radio/readings/notices.py`
+- def build_notices
+
+### `services/pipeline/src/history_radio/readings/sources_config.py`
+- class ReadingSourcesError
+- class ReadingSourceMeta
+- class ReadingSourcesFile
+- def load_reading_sources
+- def validate_entries_against_sources
 
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
@@ -877,6 +907,28 @@
 - def test_from_env_requires_key
 - def test_from_env_reads_key
 - def test_request_disables_training_providers
+
+### `services/pipeline/tests/readings/test_entry.py`
+- def test_valid_entry_is_accepted
+- def test_context_dependent_readings_are_distinct_rows
+- def test_missing_required_field_is_rejected
+- def test_unknown_field_is_rejected
+- def test_non_katakana_reading_is_rejected
+- def test_out_of_range_confidence_is_rejected
+
+### `services/pipeline/tests/readings/test_notices.py`
+- def test_committed_notices_match_regeneration
+- def test_adding_a_source_adds_its_attribution_line
+- def test_generation_is_deterministic
+- def test_first_party_and_third_party_are_separated
+
+### `services/pipeline/tests/readings/test_sources_config.py`
+- def test_real_sources_yaml_loads_with_all_expected_ids
+- def test_every_source_has_attribution_text
+- def test_missing_attribution_is_rejected
+- def test_duplicate_source_id_is_rejected
+- def test_entry_with_unregistered_source_id_is_rejected
+- def test_registered_entries_pass_validation
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
