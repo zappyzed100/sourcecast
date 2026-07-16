@@ -1,4 +1,4 @@
-# guardrails-ci.yml — 最終防衛線: ローカルフックと同一の検査を PR / main push で必ず再実行（正本: .guardrails/GUARDRAILS.md §5）
+# guardrails-ci.yml — 最終防衛線: ローカルフックと同一の検査を PR / push で必ず再実行（正本: .guardrails/GUARDRAILS.md §5）
 #
 # ローカルの git フックは原理的に迂回できる（別マシン・Web エディタ等）ため、
 # checks ジョブは .pre-commit-config.yaml と全く同じ定義をそのまま再実行する
@@ -12,7 +12,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 permissions:
@@ -53,16 +52,13 @@ jobs:
         with:
           fetch-depth: 0   # PR 範囲・親コミット・worktree 復元に全履歴が必要（§5）
       - uses: astral-sh/setup-uv@v5
-      # ---- BINDING: 採用列のテスト実行環境をここへ（例: setup-node + npm ci。§5・§11 表A）----
+      # BINDING-SOURCE: python-uv@10（この区画は空が正: このリポジトリの SINGLE_TEST_COMMAND
+      # は `uv run pytest {file}`（Python列採用 — repo_scan.py の BINDING 区画に判断記録）で
+      # Node/pnpm セットアップは不要。TS側の red-first は ts-test ジョブが通しで再現する運用。
+      # 区画マーカー対は verify_scenarios の充填シナリオがテンプレートとして使うため、
+      # コメントも含めて区画の外に置き、対を空のまま維持する — guardrails-kit@7f9ceb8）
       # >>> GUARDRAILS BINDING: red-first-setup >>>
-      # BINDING-SOURCE: ts-react-web@12（パス調整済み: npm ではなく pnpm workspace）
-      - uses: pnpm/action-setup@v4
-        with: { version: "11.9.0" }
-      - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-# <<< GUARDRAILS BINDING: red-first-setup <<<
-      # ---------------------------------------------------------------------------------------
+      # <<< GUARDRAILS BINDING: red-first-setup <<<
       - run: uv run scripts/check_red_first.py --base "${{ github.event.pull_request.base.sha }}"
 
   # commit-msg 系ゲートの CI 実効化（v2.30・G9）: `check-commit-msg` は stages:[commit-msg]

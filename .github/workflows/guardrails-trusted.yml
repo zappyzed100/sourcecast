@@ -1,0 +1,22 @@
+# guardrails-trusted.yml — base branch のコードだけで PR 側 workflow を検査する信頼の根
+name: Guardrails Trusted
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      # PR head は checkout・実行せず、git show の入力データとしてだけ取得する。
+      # CI全体をbyte固定するため、言語別jobを `run: true` にする改変も通らない。
+      - run: git fetch --no-tags origin "+refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/pull/${{ github.event.pull_request.number }}/head"
+      - run: uv run scripts/check_workflow_integrity.py --base "${{ github.event.pull_request.base.sha }}" --head "refs/remotes/pull/${{ github.event.pull_request.number }}/head"
