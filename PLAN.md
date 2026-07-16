@@ -89,8 +89,9 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [x] Phase 5 — 出典独立性・題材選出
 - [x] Phase 6 — LLM処理・主張台帳・台本
 - [x] OpenRouter実接続の配線と品質実測（caller実装・Napoleon検証・レジストリ実測反映）
-- [ ] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。Phase 7の前段） `next`
-- [ ] Phase 7 — 音声・スライド動画・関連書籍 `backlog`
+- [x] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。7ソース・解決器・
+  手動修正辞書まで完了。VOICEVOXへの読み注入はPhase 7で同時着手）
+- [ ] Phase 7 — 音声・スライド動画・関連書籍 `next`
 - [ ] Phase 8 — 公開ページ統合・Cloudflare `backlog`
 - [ ] Phase 9 — RSS・配信先 `backlog`
 - [ ] Phase 10 — 自動検査ゲート `backlog`

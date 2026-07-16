@@ -1,0 +1,36 @@
+# manual.yaml — 手動修正辞書（development-plan.md §8.4。自作——本プロジェクトの資産）
+#
+# 人間が検証した正。文脈依存の複数読みは同一surfaceでcontextを変えた複数エントリで
+# 表現する（context: null は文脈非依存の既定読み——surfaceごとに高々1件のみ許可）。
+# NDL「ヨミガナ辞書」(PDF)を確認資料として使った場合は、その旨をエントリ直上の
+# コメントに残す（config/readings/README.md の運用手順）。
+#
+# ローダー: readings/manual_dictionary.py（重複・曖昧な既定読みは起動時に拒否）。
+entries:
+  # 判官: 源平合戦の文脈（源義経の通称「判官」）ではホウガン、現代の役職名としては
+  # ハンガン。文脈非依存の既定読みは置かない——どちらの時代の話か分からない台本で
+  # 断定させない（fail closed。context不一致はunresolvedへ倒す — resolver.py）。
+  - surface: 判官
+    reading: ホウガン
+    kind: office
+    context: 源平合戦
+    confidence: 1.0
+  - surface: 判官
+    reading: ハンガン
+    kind: office
+    context: 現代
+    confidence: 1.0
+
+  # 太政大臣: 律令制の官職。時代を問わず読みが変わらないため既定読みを持つ。
+  - surface: 太政大臣
+    reading: ダイジョウダイジン
+    kind: office
+    context: null
+    confidence: 1.0
+
+  # 大蔵卿: 明治期の官職。NDLヨミガナ辞書で確認（2026-07-17）。
+  - surface: 大蔵卿
+    reading: オオクラキョウ
+    kind: office
+    context: null
+    confidence: 1.0
