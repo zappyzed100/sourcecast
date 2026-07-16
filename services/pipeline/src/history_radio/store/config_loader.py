@@ -97,4 +97,26 @@ def load_model_registry(path: Path, *, today: date | None = None) -> list[ModelR
             f"{path}: 無料枠外のモデル: {paid}"
             "（本番は無料モデル限定 — §2「LLMはOpenRouterの無料モデルを使用する」）"
         )
+    # §8.1: openrouter/free・auto等、実モデルがランダムに変わるルーターは本番禁止
+    routers = [
+        m.model_id
+        for m in parsed.models
+        if m.model_id.startswith("openrouter/") or m.model_id.split(":")[0].endswith("/auto")
+    ]
+    if routers:
+        raise ConfigValidationError(
+            f"{path}: ランダムルーターは本番使用不可: {routers}"
+            "（モデルIDとプロバイダーを固定する — §8.1）"
+        )
+    no_structured = [m.model_id for m in parsed.models if not m.supports_structured_output]
+    if no_structured:
+        raise ConfigValidationError(
+            f"{path}: 構造化出力（JSON Schema）非対応モデル: {no_structured}（§8.1）"
+        )
+    regression_failed = [m.model_id for m in parsed.models if not m.japanese_regression_passed]
+    if regression_failed:
+        raise ConfigValidationError(
+            f"{path}: 日本語回帰テスト未合格モデル: {regression_failed}"
+            "（合格するまで自動公開に使用しない — §8.1）"
+        )
     return parsed.models

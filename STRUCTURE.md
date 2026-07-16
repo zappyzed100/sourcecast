@@ -169,6 +169,7 @@
 - `scripts/generate_structure.py` — generate_structure.py — STRUCTURE.md を実ツリー・実シンボルから再生成する唯一の主体（契約: .guardrails/GUARDRAILS.md §7.4）
 - `scripts/install_kit.py` — install_kit.py — キットの機械的配置（詳細は直下の docstring と README_SETUP.md §1）
 - `scripts/install_workbench.py` — install_workbench.py — workbench(UIスキル一式+特別対応の充填)を kit 導入済みリポジトリへ機械適用する
+- `scripts/llm_quality_probe.py` — llm_quality_probe.py — 無料LLMの出力品質を実測する検証ハーネス（仕様書§8.1の回帰前段）
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
@@ -198,6 +199,10 @@
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
+- `services/pipeline/src/history_radio/llm/cache.py`
+- `services/pipeline/src/history_radio/llm/extraction.py`
+- `services/pipeline/src/history_radio/llm/ledger.py`
+- `services/pipeline/src/history_radio/llm/openrouter.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -206,6 +211,8 @@
 - `services/pipeline/src/history_radio/rights/license_normalization.py`
 - `services/pipeline/src/history_radio/rights/screening.py`
 - `services/pipeline/src/history_radio/script/__init__.py`
+- `services/pipeline/src/history_radio/script/schema.py`
+- `services/pipeline/src/history_radio/script/validator.py`
 - `services/pipeline/src/history_radio/select/__init__.py`
 - `services/pipeline/src/history_radio/select/cooldown.py`
 - `services/pipeline/src/history_radio/select/lineage.py`
@@ -235,10 +242,17 @@
 - `services/pipeline/tests/ingest/test_collector.py`
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
+- `services/pipeline/tests/llm/__init__.py`
+- `services/pipeline/tests/llm/test_cache.py`
+- `services/pipeline/tests/llm/test_extraction.py`
+- `services/pipeline/tests/llm/test_ledger.py`
+- `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
 - `services/pipeline/tests/rights/test_screening.py`
+- `services/pipeline/tests/script/__init__.py`
+- `services/pipeline/tests/script/test_validator.py`
 - `services/pipeline/tests/select/__init__.py`
 - `services/pipeline/tests/select/test_cooldown.py`
 - `services/pipeline/tests/select/test_lineage.py`
@@ -514,6 +528,12 @@
 - def fill_binding
 - def main
 
+### `scripts/llm_quality_probe.py`
+- def run_extraction_task
+- def run_script_task
+- def registry_model_ids
+- def main
+
 ### `scripts/repo_scan.py`
 - class ScanError
 - def reconfigure_stdio
@@ -608,6 +628,31 @@
 - class FetchResponseInfo
 - class FetchedDocument
 
+### `services/pipeline/src/history_radio/llm/cache.py`
+- class LlmResult
+- class LlmCaller
+- def input_hash
+- def cached_llm_call
+
+### `services/pipeline/src/history_radio/llm/extraction.py`
+- class ExtractionValidationError
+- class FactLocator
+- class ExtractedFact
+- class SummaryExtraction
+- class ProvenancedFact
+- def parse_extraction
+- def verify_evidence_quote
+- def attach_provenance
+
+### `services/pipeline/src/history_radio/llm/ledger.py`
+- class ClaimInput
+- def build_claim
+- def build_claim_ledger
+
+### `services/pipeline/src/history_radio/llm/openrouter.py`
+- class OpenRouterError
+- class OpenRouterCaller
+
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
 - def build_rights_decision
@@ -627,6 +672,15 @@
 - def foreign_wartime_outcome
 - def neighboring_rights_outcome
 - def translation_outcome
+
+### `services/pipeline/src/history_radio/script/schema.py`
+- class ScriptSentence
+- class ScriptSection
+- class Script
+
+### `services/pipeline/src/history_radio/script/validator.py`
+- class ScriptValidationError
+- def validate_script
 
 ### `services/pipeline/src/history_radio/select/cooldown.py`
 - class PastUsage
@@ -689,6 +743,7 @@
 - class RightsDecisionRow
 - class DocumentRow
 - class FetchSnapshotRow
+- class LlmRunRow
 - class TermsSnapshotRow
 
 ### `services/pipeline/src/history_radio/store/rights.py`
@@ -750,6 +805,7 @@
 - class Disconnect
 - class RecordedRequest
 - class FakeClock
+- def scripted_client
 - def scripted_fetcher
 
 ### `services/pipeline/tests/ingest/test_collector.py`
@@ -787,6 +843,41 @@
 - def test_locator_rejects_reversed_offsets
 - def test_response_info_rejects_out_of_range_http_status
 
+### `services/pipeline/tests/llm/test_cache.py`
+- def session
+- class CountingCaller
+- def test_same_input_and_version_uses_cache_without_second_call
+- def test_different_prompt_version_re_executes
+- def test_different_model_re_executes
+- def test_run_record_stores_hashes_and_usage
+
+### `services/pipeline/tests/llm/test_extraction.py`
+- def test_valid_extraction_parses
+- def test_invalid_json_is_rejected
+- def test_extra_keys_are_rejected
+- def test_missing_required_key_is_rejected
+- def test_exact_quote_passes_verification
+- def test_one_character_alteration_is_rejected
+- def test_out_of_range_locator_is_rejected
+- def test_document_without_stored_text_cannot_be_cited
+- def test_provenance_is_injected_from_document_not_llm
+
+### `services/pipeline/tests/llm/test_ledger.py`
+- def test_two_independent_families_allow_script_use
+- def test_single_family_claim_is_not_allowed_in_script
+- def test_single_family_claim_is_forced_to_attribution_qualification
+- def test_duplicate_family_ids_do_not_inflate_independence
+- def test_ledger_rejects_duplicate_claim_ids
+- def test_ledger_builds_all_entries
+
+### `services/pipeline/tests/llm/test_openrouter.py`
+- def test_success_parses_content_and_usage
+- def test_http_error_raises_without_leaking_key
+- def test_malformed_response_raises
+- def test_from_env_requires_key
+- def test_from_env_reads_key
+- def test_request_disables_training_providers
+
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
 - def test_unknown_license_is_internal_research_only_not_public
@@ -814,6 +905,16 @@
 - def test_foreign_wartime_outcome_never_auto_approves
 - def test_neighboring_rights_never_auto_approves
 - class TestTranslationOutcome
+
+### `services/pipeline/tests/script/test_validator.py`
+- def test_valid_script_passes
+- def test_claim_sentence_without_claim_id_is_rejected
+- def test_claim_id_not_in_ledger_is_rejected
+- def test_disallowed_claim_is_rejected
+- def test_forbidden_expression_is_rejected
+- def test_missing_section_is_rejected
+- def test_wrong_section_order_is_rejected
+- def test_all_problems_are_reported_at_once
 
 ### `services/pipeline/tests/select/test_cooldown.py`
 - def test_entity_used_within_cooldown_excludes_candidate
@@ -857,6 +958,9 @@
 - def test_invalid_url_rejected
 - def test_expired_model_rejected
 - def test_paid_model_rejected
+- def test_random_router_models_are_rejected
+- def test_model_without_structured_output_is_rejected
+- def test_regression_failed_model_is_rejected
 
 ### `services/pipeline/tests/store/test_documents.py`
 - def session

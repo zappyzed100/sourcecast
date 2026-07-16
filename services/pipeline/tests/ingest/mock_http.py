@@ -59,6 +59,34 @@ class FakeClock:
         self.now += seconds
 
 
+def scripted_client(
+    script: list[ScriptItem],
+) -> tuple[httpx.Client, list[RecordedRequest]]:
+    """応答台本どおりに振る舞う素のhttpx.Client（POST等、PoliteFetcher外の用途向け）。
+
+    リクエスト記録には本文も残す（POSTボディの検証用——headersはRecordedRequestと同形）。
+    """
+    requests: list[RecordedRequest] = []
+    position = {"index": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(
+            RecordedRequest(url=str(request.url), headers=dict(request.headers.items()))
+        )
+        item = script[min(position["index"], len(script) - 1)]
+        position["index"] += 1
+        if isinstance(item, Timeout):
+            raise httpx.ConnectTimeout("timed out")
+        if isinstance(item, Disconnect):
+            raise httpx.ReadError("connection reset")
+        response = httpx.Response(item.status, text=item.text, headers=item.headers)
+        if item.content_length_override is not None:
+            response.headers["Content-Length"] = item.content_length_override
+        return response
+
+    return httpx.Client(transport=httpx.MockTransport(handler)), requests
+
+
 def scripted_fetcher(
     script: list[ScriptItem],
     **fetcher_overrides: float | int,
