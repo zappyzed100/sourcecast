@@ -216,6 +216,8 @@
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/media/ffmpeg_audio.py`
 - `services/pipeline/src/history_radio/media/media_manifest.py`
+- `services/pipeline/src/history_radio/media/slide_render.py`
+- `services/pipeline/src/history_radio/media/slides.py`
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -281,6 +283,8 @@
 - `services/pipeline/tests/media/__init__.py`
 - `services/pipeline/tests/media/test_ffmpeg_audio.py`
 - `services/pipeline/tests/media/test_media_manifest.py`
+- `services/pipeline/tests/media/test_slide_render.py`
+- `services/pipeline/tests/media/test_slides.py`
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
@@ -731,6 +735,15 @@
 - def validate_media_manifest
 - def credits_for_section
 
+### `services/pipeline/src/history_radio/media/slide_render.py`
+- class SlideRenderError
+- def render_slide_image
+- def encode_slide_video
+
+### `services/pipeline/src/history_radio/media/slides.py`
+- class SlideSpec
+- def build_slide_deck
+
 ### `services/pipeline/src/history_radio/media/voicevox.py`
 - class VoicevoxError
 - def inject_readings
@@ -1065,6 +1078,30 @@
 - def test_duplicate_asset_id_is_rejected
 - def test_all_problems_are_reported_at_once
 - def test_credits_for_section_filters_by_usage
+
+### `services/pipeline/tests/media/test_slide_render.py`
+- def test_self_drawn_fallback_renders_a_valid_image
+- def test_rendered_image_contains_title_and_body_text_layout
+- def test_no_font_candidates_found_raises_instead_of_producing_tofu
+- def test_invalid_explicit_font_path_raises
+- def test_licensed_background_image_is_used_when_available
+- def test_missing_background_image_raises
+- def test_encode_slide_video_produces_playable_mp4
+- def test_encode_with_no_slides_raises
+- def test_encode_with_missing_image_raises
+- def test_encode_with_missing_audio_raises
+
+### `services/pipeline/tests/media/test_slides.py`
+- def test_deck_has_one_slide_per_section
+- def test_no_assets_yields_self_drawn_fallback_for_every_slide
+- def test_section_with_matching_asset_does_not_use_fallback
+- def test_duration_is_clamped_within_spec_range
+- def test_long_text_clamps_to_max_duration
+- def test_short_text_clamps_to_min_duration
+- def test_body_lines_do_not_exceed_max_chars
+- def test_source_numbers_are_derived_from_claim_ids
+- def test_section_without_claims_has_no_source_numbers
+- def test_slide_ids_are_unique_and_stable
 
 ### `services/pipeline/tests/media/test_voicevox.py`
 - def test_check_version_returns_stripped_version_string
