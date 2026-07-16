@@ -116,6 +116,7 @@
 - `config/model_registry.yaml`
 - `config/readings/README.md`
 - `config/readings/eras.yaml`
+- `config/readings/manual.yaml`
 - `config/readings/sources.yaml`
 - `config/source_registry.yaml`
 
@@ -216,11 +217,16 @@
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
 - `services/pipeline/src/history_radio/readings/address_registry.py`
+- `services/pipeline/src/history_radio/readings/context_matching.py`
 - `services/pipeline/src/history_radio/readings/entry.py`
 - `services/pipeline/src/history_radio/readings/era_dictionary.py`
+- `services/pipeline/src/history_radio/readings/fetch_manifest.py`
 - `services/pipeline/src/history_radio/readings/jmnedict.py`
+- `services/pipeline/src/history_radio/readings/manual_dictionary.py`
+- `services/pipeline/src/history_radio/readings/media_gate.py`
 - `services/pipeline/src/history_radio/readings/ndl_authorities.py`
 - `services/pipeline/src/history_radio/readings/notices.py`
+- `services/pipeline/src/history_radio/readings/resolver.py`
 - `services/pipeline/src/history_radio/readings/sources_config.py`
 - `services/pipeline/src/history_radio/readings/store_jsonl.py`
 - `services/pipeline/src/history_radio/readings/sudachi.py`
@@ -268,11 +274,16 @@
 - `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
+- `services/pipeline/tests/readings/test_context_matching.py`
 - `services/pipeline/tests/readings/test_entry.py`
 - `services/pipeline/tests/readings/test_era_dictionary.py`
+- `services/pipeline/tests/readings/test_fetch_manifest.py`
 - `services/pipeline/tests/readings/test_jmnedict.py`
+- `services/pipeline/tests/readings/test_manual_dictionary.py`
+- `services/pipeline/tests/readings/test_media_gate.py`
 - `services/pipeline/tests/readings/test_ndl_authorities.py`
 - `services/pipeline/tests/readings/test_notices.py`
+- `services/pipeline/tests/readings/test_resolver.py`
 - `services/pipeline/tests/readings/test_sources_config.py`
 - `services/pipeline/tests/readings/test_sudachi.py`
 - `services/pipeline/tests/readings/test_wikidata_kana.py`
@@ -689,6 +700,9 @@
 - class AddressColumns
 - def convert_address_rows
 
+### `services/pipeline/src/history_radio/readings/context_matching.py`
+- def select_manual_reading
+
 ### `services/pipeline/src/history_radio/readings/entry.py`
 - class ReadingEntry
 
@@ -698,16 +712,33 @@
 - def load_era_dictionary
 - def to_reading_entries
 
+### `services/pipeline/src/history_radio/readings/fetch_manifest.py`
+- class FetchManifestEntry
+- def build_fetch_manifest
+
 ### `services/pipeline/src/history_radio/readings/jmnedict.py`
 - class JmnedictParseError
 - def hiragana_to_katakana
 - def parse_jmnedict
+
+### `services/pipeline/src/history_radio/readings/manual_dictionary.py`
+- class ManualDictionaryError
+- def load_manual_dictionary
+
+### `services/pipeline/src/history_radio/readings/media_gate.py`
+- def unresolved_surfaces
+- def decide_media_job_status
 
 ### `services/pipeline/src/history_radio/readings/ndl_authorities.py`
 - def fetch_ndl_authority_readings
 
 ### `services/pipeline/src/history_radio/readings/notices.py`
 - def build_notices
+
+### `services/pipeline/src/history_radio/readings/resolver.py`
+- class ResolvedReading
+- class UnresolvedReading
+- def resolve_reading
 
 ### `services/pipeline/src/history_radio/readings/sources_config.py`
 - class ReadingSourcesError
@@ -966,6 +997,14 @@
 - def test_already_katakana_kana_column_is_left_as_is
 - def test_entries_pass_source_registration_check
 
+### `services/pipeline/tests/readings/test_context_matching.py`
+- def test_matching_context_is_selected
+- def test_non_matching_context_falls_to_none_not_default
+- def test_multiple_matching_contexts_is_ambiguous
+- def test_single_default_reading_is_used_when_no_context_entries
+- def test_surface_not_present_returns_none
+- def test_explicit_default_entry_is_used_when_context_does_not_match
+
 ### `services/pipeline/tests/readings/test_entry.py`
 - def test_valid_entry_is_accepted
 - def test_context_dependent_readings_are_distinct_rows
@@ -983,6 +1022,12 @@
 - def test_gap_after_701_is_rejected
 - def test_multiple_open_ended_eras_are_rejected
 
+### `services/pipeline/tests/readings/test_fetch_manifest.py`
+- def test_same_entries_produce_same_hash_regardless_of_order
+- def test_different_entries_produce_different_hash
+- def test_manifest_records_source_and_count
+- def test_empty_entries_still_produce_a_hash
+
 ### `services/pipeline/tests/readings/test_jmnedict.py`
 - def test_sample_xml_parses_to_person_and_place_entries
 - def test_non_target_name_types_and_kana_only_entries_are_dropped
@@ -991,6 +1036,20 @@
 - def test_jmnedict_entries_cannot_be_written_into_another_sources_table
 - def test_loading_detects_contaminated_table
 - def test_round_trip_preserves_entries
+
+### `services/pipeline/tests/readings/test_manual_dictionary.py`
+- def test_real_manual_yaml_loads_and_has_context_dependent_readings
+- def test_context_free_entry_has_single_default
+- def test_duplicate_surface_and_context_is_rejected
+- def test_two_default_readings_for_same_surface_are_rejected
+- def test_invalid_kind_is_rejected
+- def test_empty_file_loads_as_empty_list
+
+### `services/pipeline/tests/readings/test_media_gate.py`
+- def test_all_resolved_yields_queued
+- def test_single_unresolved_yields_blocked
+- def test_empty_resolutions_yields_queued
+- def test_unresolved_surfaces_lists_only_unresolved
 
 ### `services/pipeline/tests/readings/test_ndl_authorities.py`
 - def test_matching_entity_yields_reading_with_dates_stripped
@@ -1007,6 +1066,19 @@
 - def test_adding_a_source_adds_its_attribution_line
 - def test_generation_is_deterministic
 - def test_first_party_and_third_party_are_separated
+
+### `services/pipeline/tests/readings/test_resolver.py`
+- def test_manual_layer_resolves_alone
+- def test_era_layer_resolves_alone
+- def test_wikidata_or_ndl_layer_resolves_alone
+- def test_address_layer_resolves_alone
+- def test_jmnedict_layer_resolves_alone
+- def test_sudachi_layer_resolves_alone
+- def test_manual_layer_overrides_all_lower_layers
+- def test_higher_layer_wins_over_lower_when_both_present
+- def test_no_layer_has_candidate_is_unresolved
+- def test_ambiguous_layer_stops_there_and_does_not_fall_through
+- def test_manual_ambiguous_stops_there_and_does_not_fall_through
 
 ### `services/pipeline/tests/readings/test_sources_config.py`
 - def test_real_sources_yaml_loads_with_all_expected_ids
