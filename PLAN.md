@@ -86,8 +86,8 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [ ] Pagefindの年代・地域・人物フィルタ（Phase 5でtopicsに構造化データが載ってから） `backlog`
 - [x] Phase 3 — 権利判定エンジン
 - [x] Phase 4 — 収集
-- [ ] Phase 5 — 出典独立性・題材選出 `next`
-- [ ] Phase 6 — LLM処理・主張台帳・台本 `backlog`
+- [x] Phase 5 — 出典独立性・題材選出
+- [ ] Phase 6 — LLM処理・主張台帳・台本 `next`
 - [ ] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。Phase 7の前段） `backlog`
 - [ ] Phase 7 — 音声・スライド動画・関連書籍 `backlog`
 - [ ] Phase 8 — 公開ページ統合・Cloudflare `backlog`

@@ -207,6 +207,10 @@
 - `services/pipeline/src/history_radio/rights/screening.py`
 - `services/pipeline/src/history_radio/script/__init__.py`
 - `services/pipeline/src/history_radio/select/__init__.py`
+- `services/pipeline/src/history_radio/select/cooldown.py`
+- `services/pipeline/src/history_radio/select/lineage.py`
+- `services/pipeline/src/history_radio/select/news_filter.py`
+- `services/pipeline/src/history_radio/select/scoring.py`
 - `services/pipeline/src/history_radio/store/__init__.py`
 - `services/pipeline/src/history_radio/store/config_loader.py`
 - `services/pipeline/src/history_radio/store/config_schemas.py`
@@ -235,6 +239,11 @@
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
 - `services/pipeline/tests/rights/test_screening.py`
+- `services/pipeline/tests/select/__init__.py`
+- `services/pipeline/tests/select/test_cooldown.py`
+- `services/pipeline/tests/select/test_lineage.py`
+- `services/pipeline/tests/select/test_news_filter.py`
+- `services/pipeline/tests/select/test_scoring.py`
 - `services/pipeline/tests/store/__init__.py`
 - `services/pipeline/tests/store/test_config_loader.py`
 - `services/pipeline/tests/store/test_documents.py`
@@ -619,6 +628,28 @@
 - def neighboring_rights_outcome
 - def translation_outcome
 
+### `services/pipeline/src/history_radio/select/cooldown.py`
+- class PastUsage
+- def cooling_entities
+- def is_cooling_down
+- def filter_cooled_candidates
+
+### `services/pipeline/src/history_radio/select/lineage.py`
+- class EvidenceSource
+- def group_source_families
+- def count_independent_families
+
+### `services/pipeline/src/history_radio/select/news_filter.py`
+- class NewsTerm
+- class NewsDerivedTerms
+- class NewsRejected
+- def evaluate_news_item
+
+### `services/pipeline/src/history_radio/select/scoring.py`
+- class CandidateFeatures
+- class ScoreWeights
+- def compute_candidate_score
+
 ### `services/pipeline/src/history_radio/store/config_loader.py`
 - class ConfigValidationError
 - def load_source_registry
@@ -783,6 +814,39 @@
 - def test_foreign_wartime_outcome_never_auto_approves
 - def test_neighboring_rights_never_auto_approves
 - class TestTranslationOutcome
+
+### `services/pipeline/tests/select/test_cooldown.py`
+- def test_entity_used_within_cooldown_excludes_candidate
+- def test_entity_outside_cooldown_is_available_again
+- def test_cooldown_boundary_day_is_still_cooling
+- def test_filter_removes_only_overlapping_candidates_and_keeps_order
+- def test_no_history_filters_nothing
+
+### `services/pipeline/tests/select/test_lineage.py`
+- def test_wikipedia_and_its_reprint_site_count_as_one_family
+- def test_wikipedia_used_with_its_cited_primary_adds_no_extra_family
+- def test_multiple_articles_based_solely_on_same_primary_count_as_one
+- def test_duplicate_records_in_same_institution_db_count_as_one
+- def test_same_db_different_records_stay_independent
+- def test_primary_plus_independent_secondary_count_as_two_families
+- def test_chained_reprints_collapse_into_the_origin_family
+
+### `services/pipeline/tests/select/test_news_filter.py`
+- def test_safe_science_news_yields_terms_without_url
+- def test_forbidden_word_in_headline_rejects_entire_item
+- def test_disaster_association_case_is_not_auto_adopted
+- def test_unknown_category_is_rejected_fail_closed
+- def test_allowed_category_alone_is_not_sufficient_event_type_also_required
+- def test_disallowed_category_is_rejected_even_if_clean
+- def test_person_names_are_never_adopted_as_terms
+
+### `services/pipeline/tests/select/test_scoring.py`
+- def test_initial_formula_matches_spec_example
+- def test_partial_features_scale_linearly
+- def test_penalties_can_drive_score_negative
+- def test_custom_weights_are_respected
+- def test_out_of_range_features_are_rejected_not_clipped
+- def test_breakdown_sums_to_score
 
 ### `services/pipeline/tests/store/test_config_loader.py`
 - def test_real_source_registry_loads
