@@ -169,6 +169,7 @@
 - `scripts/generate_structure.py` — generate_structure.py — STRUCTURE.md を実ツリー・実シンボルから再生成する唯一の主体（契約: .guardrails/GUARDRAILS.md §7.4）
 - `scripts/install_kit.py` — install_kit.py — キットの機械的配置（詳細は直下の docstring と README_SETUP.md §1）
 - `scripts/install_workbench.py` — install_workbench.py — workbench(UIスキル一式+特別対応の充填)を kit 導入済みリポジトリへ機械適用する
+- `scripts/llm_quality_probe.py` — llm_quality_probe.py — 無料LLMの出力品質を実測する検証ハーネス（仕様書§8.1の回帰前段）
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
@@ -201,6 +202,7 @@
 - `services/pipeline/src/history_radio/llm/cache.py`
 - `services/pipeline/src/history_radio/llm/extraction.py`
 - `services/pipeline/src/history_radio/llm/ledger.py`
+- `services/pipeline/src/history_radio/llm/openrouter.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -244,6 +246,7 @@
 - `services/pipeline/tests/llm/test_cache.py`
 - `services/pipeline/tests/llm/test_extraction.py`
 - `services/pipeline/tests/llm/test_ledger.py`
+- `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
 - `services/pipeline/tests/rights/test_license_normalization.py`
@@ -525,6 +528,12 @@
 - def fill_binding
 - def main
 
+### `scripts/llm_quality_probe.py`
+- def run_extraction_task
+- def run_script_task
+- def registry_model_ids
+- def main
+
 ### `scripts/repo_scan.py`
 - class ScanError
 - def reconfigure_stdio
@@ -639,6 +648,10 @@
 - class ClaimInput
 - def build_claim
 - def build_claim_ledger
+
+### `services/pipeline/src/history_radio/llm/openrouter.py`
+- class OpenRouterError
+- class OpenRouterCaller
 
 ### `services/pipeline/src/history_radio/rights/engine.py`
 - def decide_from_license
@@ -792,6 +805,7 @@
 - class Disconnect
 - class RecordedRequest
 - class FakeClock
+- def scripted_client
 - def scripted_fetcher
 
 ### `services/pipeline/tests/ingest/test_collector.py`
@@ -855,6 +869,14 @@
 - def test_duplicate_family_ids_do_not_inflate_independence
 - def test_ledger_rejects_duplicate_claim_ids
 - def test_ledger_builds_all_entries
+
+### `services/pipeline/tests/llm/test_openrouter.py`
+- def test_success_parses_content_and_usage
+- def test_http_error_raises_without_leaking_key
+- def test_malformed_response_raises
+- def test_from_env_requires_key
+- def test_from_env_reads_key
+- def test_request_disables_training_providers
 
 ### `services/pipeline/tests/rights/test_engine.py`
 - def test_named_auto_approvable_licenses_allow_public_use_without_exception
