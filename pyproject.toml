@@ -12,6 +12,8 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "pyyaml>=6.0.3",
     "httpx>=0.28.1",
+    "sudachipy>=0.6.11",
+    "sudachidict-full>=20260428",
 ]
 
 [dependency-groups]
@@ -85,3 +87,7 @@ select = ["E", "F", "I", "T201", "E722"]
 include = ["services/pipeline/src", "services/pipeline/tests", "migrations"]
 pythonVersion = "3.14"
 typeCheckingMode = "strict"
+# sudachipyは型スタブを配布していない（読み辞書アダプタの唯一の外部依存 — §8.4）。
+# TokenLike Protocolで受け渡しの型は自前で保証するため、このパッケージ由来の
+# 未型付けインポートだけ許容する。
+reportMissingTypeStubs = false
