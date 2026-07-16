@@ -1,0 +1,149 @@
+---
+// EpisodeDetail.astro — エピソード詳細の共通表示(episodes/[id]とversions/[revision]で共有)。
+// 台本・出典・主張対応・訂正履歴・関連書籍の描画をここに集約する(重複防止)。
+import AudioPlayer from "./AudioPlayer.astro";
+
+interface Source {
+	name: string;
+	url: string;
+	license: string;
+	credit: string;
+	accessedAt: Date;
+}
+interface Claim {
+	text: string;
+	sourceIndexes: number[];
+}
+interface Correction {
+	date: Date;
+	description: string;
+}
+interface RelatedBook {
+	title: string;
+	author: string;
+	url: string;
+}
+interface Chapter {
+	title: string;
+	startSeconds: number;
+}
+
+interface EpisodeData {
+	episodeId: string;
+	revision: number;
+	title: string;
+	summary: string;
+	publishedAt: Date;
+	updatedAt: Date;
+	sources: Source[];
+	claims: Claim[];
+	corrections: Correction[];
+	relatedBooks: RelatedBook[];
+	audioUrl?: string;
+	chapters?: Chapter[];
+}
+
+interface Props {
+	data: EpisodeData;
+}
+
+const { data } = Astro.props;
+---
+
+<article data-testid="episode-detail" data-revision={data.revision}>
+	<slot name="banner" />
+	<h1>{data.title}</h1>
+	<p>
+		公開日: <time datetime={data.publishedAt.toISOString()}>{data.publishedAt.toISOString().slice(0, 10)}</time>
+		{data.updatedAt.valueOf() !== data.publishedAt.valueOf() && (
+			<>
+				（更新日: <time datetime={data.updatedAt.toISOString()}>{data.updatedAt.toISOString().slice(0, 10)}</time>）
+			</>
+		)}
+		（revision {data.revision}）
+	</p>
+
+	{data.audioUrl && <AudioPlayer episodeId={data.episodeId} audioUrl={data.audioUrl} chapters={data.chapters ?? []} />}
+
+	<section>
+		<h2>台本</h2>
+		<slot />
+	</section>
+
+	{
+		data.claims.length > 0 && (
+			<section data-testid="claim-evidence-table">
+				<h2>主張と出典の対応</h2>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">主張</th>
+							<th scope="col">出典</th>
+						</tr>
+					</thead>
+					<tbody>
+						{data.claims.map((claim) => (
+							<tr>
+								<td>{claim.text}</td>
+								<td>
+									{claim.sourceIndexes
+										.map((i) => data.sources[i]?.name)
+										.filter(Boolean)
+										.join(" / ")}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</section>
+		)
+	}
+
+	<section data-testid="sources-list">
+		<h2>出典・クレジット</h2>
+		<ul>
+			{data.sources.map((source) => (
+				<li>
+					<a href={source.url}>{source.name}</a>（{source.license}・{source.credit}・閲覧日{" "}
+					{source.accessedAt.toISOString().slice(0, 10)}）
+				</li>
+			))}
+		</ul>
+	</section>
+
+	{
+		data.corrections.length > 0 && (
+			<section data-testid="corrections-list">
+				<h2>訂正履歴</h2>
+				<ul>
+					{data.corrections.map((correction) => (
+						<li>
+							<time datetime={correction.date.toISOString()}>
+								{correction.date.toISOString().slice(0, 10)}
+							</time>
+							: {correction.description}
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
+
+	{
+		data.relatedBooks.length > 0 && (
+			<section data-testid="related-books">
+				<h2>関連書籍</h2>
+				<ul>
+					{data.relatedBooks.map((book) => (
+						<li>
+							<a href={book.url}>{book.title}</a>（{book.author}）
+						</li>
+					))}
+				</ul>
+				<p><small>上記リンクにはアフィリエイトが含まれる場合があります。</small></p>
+			</section>
+		)
+	}
+
+	<slot name="versions" />
+</article>

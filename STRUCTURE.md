@@ -97,12 +97,14 @@
 - `apps/site/public/scripts/pagefind-bridge.js`
 - `apps/site/scripts/check-bundle-budget.ts` — check-bundle-budget.ts — 初期JavaScript予算(gzip後60KB以下 — plan.md §3.3)をビルド済みdistで検査する。
 - `apps/site/src/components/AudioPlayer.astro`
+- `apps/site/src/components/EpisodeDetail.astro`
 - `apps/site/src/content.config.ts` — content.config.ts — 公開エピソードのコンテンツコレクション定義（Astro Content Layer API）
 - `apps/site/src/content/episodes/2026-07-15-first-railway.md`
 - `apps/site/src/content/episodes/2026-07-16-can-opener.md`
 - `apps/site/src/layouts/BaseLayout.astro`
 - `apps/site/src/pages/404.astro`
 - `apps/site/src/pages/episodes/[id]/index.astro`
+- `apps/site/src/pages/episodes/[id]/versions/[revision]/index.astro`
 - `apps/site/src/pages/index.astro`
 - `apps/site/tsconfig.json`
 
@@ -221,6 +223,7 @@
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
+- `services/pipeline/src/history_radio/publish/episode_publisher.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
 - `services/pipeline/src/history_radio/readings/address_registry.py`
@@ -289,6 +292,7 @@
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/publish/__init__.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
+- `services/pipeline/tests/publish/test_episode_publisher.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
 - `services/pipeline/tests/readings/test_context_matching.py`
@@ -763,6 +767,11 @@
 - def validate_episode_page
 - def render_episode_frontmatter
 
+### `services/pipeline/src/history_radio/publish/episode_publisher.py`
+- class EpisodePublishConflictError
+- class PublishResult
+- def publish_episode
+
 ### `services/pipeline/src/history_radio/readings/address_registry.py`
 - class AddressColumns
 - def convert_address_rows
@@ -1145,6 +1154,15 @@
 - def test_frontmatter_keys_are_camel_case
 - def test_chapters_and_audio_url_are_omitted_when_absent
 - def test_chapters_and_audio_url_are_included_when_present
+
+### `services/pipeline/tests/publish/test_episode_publisher.py`
+- def test_first_publish_creates_current_and_version_files
+- def test_republishing_same_revision_with_identical_content_is_idempotent
+- def test_republishing_same_revision_with_different_content_is_rejected
+- def test_new_higher_revision_does_not_overwrite_old_version_file
+- def test_publishing_lower_revision_after_current_exists_is_rejected
+- def test_publishing_same_revision_number_after_current_exists_is_rejected
+- def test_invalid_episode_data_is_rejected_before_writing_anything
 
 ### `services/pipeline/tests/readings/test_address_registry.py`
 - def test_rows_convert_to_place_entries_with_katakana_readings

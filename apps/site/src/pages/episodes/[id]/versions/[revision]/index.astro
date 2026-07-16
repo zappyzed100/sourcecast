@@ -1,0 +1,58 @@
+---
+// episodes/[id]/versions/[revision]/index.astro — 過去バージョンの固定表示
+// (development-plan.md Phase 8タスク2「再生成が旧版を上書きせず、新版と訂正履歴を追加する」の検証先)。
+import { getCollection, getEntry, render } from "astro:content";
+import EpisodeDetail from "../../../../../components/EpisodeDetail.astro";
+import BaseLayout from "../../../../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+	const versions = await getCollection("episodes", (entry) =>
+		entry.id.includes("/versions/"),
+	);
+	return versions.map((version) => ({
+		params: {
+			id: version.data.episodeId,
+			revision: String(version.data.revision),
+		},
+		props: { slug: version.id },
+	}));
+}
+
+interface Props {
+	slug: string;
+}
+
+const { slug } = Astro.props as Props;
+const version = await getEntry("episodes", slug);
+if (!version) {
+	// getStaticPaths が返したslugのはずなので到達しない——ビルド決定性が壊れた合図として落とす。
+	throw new Error(
+		`episodes/[id]/versions/[revision]: エントリが見つからない: ${slug}`,
+	);
+}
+const { Content } = await render(version);
+const { data } = version;
+
+const current = await getEntry("episodes", data.episodeId);
+const isLatest =
+	current !== undefined && current.data.revision === data.revision;
+---
+
+<BaseLayout
+	title={`${data.title}（revision ${data.revision}） — 歴史スライドラジオ（仮）`}
+	description={data.summary}
+	canonicalPath={`/episodes/${data.episodeId}/versions/${data.revision}/`}
+>
+	<EpisodeDetail data={data}>
+		<Content />
+		<Fragment slot="banner">
+			<p data-testid="version-banner" role="note">
+				これはrevision {data.revision}時点の記録です。{!isLatest && (
+					<>
+						最新版は<a href={`/episodes/${data.episodeId}/`}>こちら</a>をご覧ください。
+					</>
+				)}
+			</p>
+		</Fragment>
+	</EpisodeDetail>
+</BaseLayout>

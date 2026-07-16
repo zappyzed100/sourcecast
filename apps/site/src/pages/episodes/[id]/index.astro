@@ -1,12 +1,17 @@
 ---
-// episodes/[id]/index.astro — エピソード詳細。出典・主張対応・訂正履歴・関連書籍・音声を表示する
-// (plan.md Phase 2「詳細」「出典」「訂正履歴」)。
+// episodes/[id]/index.astro — エピソード詳細(最新版)。出典・主張対応・訂正履歴・関連書籍・音声を表示する
+// (plan.md Phase 2「詳細」「出典」「訂正履歴」。development-plan.md Phase 8タスク2で過去版一覧を追加)。
 import { getCollection, getEntry, render } from "astro:content";
-import AudioPlayer from "../../../components/AudioPlayer.astro";
+import EpisodeDetail from "../../../components/EpisodeDetail.astro";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths() {
-	const episodes = await getCollection("episodes");
+	// versions/<revision>.md のアーカイブ済みスナップショットは除外し、現行版ポインタだけを対象にする
+	// (同じepisodeIdで複数の静的パスが衝突しないように)。
+	const episodes = await getCollection(
+		"episodes",
+		(entry) => !entry.id.includes("/versions/"),
+	);
 	return episodes.map((episode) => ({
 		params: { id: episode.data.episodeId },
 		props: { slug: episode.id },
@@ -25,100 +30,35 @@ if (!episode) {
 }
 const { Content } = await render(episode);
 const { data } = episode;
+
+const pastVersions = (
+	await getCollection("episodes", (entry) =>
+		entry.id.startsWith(`${data.episodeId}/versions/`),
+	)
+).sort((a, b) => b.data.revision - a.data.revision);
 ---
 
 <BaseLayout title={`${data.title} — 歴史スライドラジオ（仮）`} description={data.summary} canonicalPath={`/episodes/${data.episodeId}/`}>
-	<article data-testid="episode-detail">
-		<h1>{data.title}</h1>
-		<p>
-			公開日: <time datetime={data.publishedAt.toISOString()}>{data.publishedAt.toISOString().slice(0, 10)}</time>
-			{data.updatedAt.valueOf() !== data.publishedAt.valueOf() && (
-				<>
-					（更新日: <time datetime={data.updatedAt.toISOString()}>{data.updatedAt.toISOString().slice(0, 10)}</time>）
-				</>
-			)}
-		</p>
-
-		{data.audioUrl && <AudioPlayer episodeId={data.episodeId} audioUrl={data.audioUrl} chapters={data.chapters ?? []} />}
-
-		<section>
-			<h2>台本</h2>
-			<Content />
-		</section>
-
-		{
-			data.claims.length > 0 && (
-				<section data-testid="claim-evidence-table">
-					<h2>主張と出典の対応</h2>
-					<table>
-						<thead>
-							<tr>
-								<th scope="col">主張</th>
-								<th scope="col">出典</th>
-							</tr>
-						</thead>
-						<tbody>
-							{data.claims.map((claim) => (
-								<tr>
-									<td>{claim.text}</td>
-									<td>
-										{claim.sourceIndexes
-											.map((i) => data.sources[i]?.name)
-											.filter(Boolean)
-											.join(" / ")}
-									</td>
-								</tr>
+	<EpisodeDetail data={data}>
+		<Content />
+		<Fragment slot="versions">
+			{
+				pastVersions.length > 0 && (
+					<section data-testid="version-history">
+						<h2>過去のバージョン</h2>
+						<ul>
+							{pastVersions.map((version) => (
+								<li>
+									<a href={`/episodes/${data.episodeId}/versions/${version.data.revision}/`}>
+										revision {version.data.revision}
+									</a>
+									{version.data.revision === data.revision && "（現行版）"}
+								</li>
 							))}
-						</tbody>
-					</table>
-				</section>
-			)
-		}
-
-		<section data-testid="sources-list">
-			<h2>出典・クレジット</h2>
-			<ul>
-				{data.sources.map((source) => (
-					<li>
-						<a href={source.url}>{source.name}</a>（{source.license}・{source.credit}・閲覧日{" "}
-						{source.accessedAt.toISOString().slice(0, 10)}）
-					</li>
-				))}
-			</ul>
-		</section>
-
-		{
-			data.corrections.length > 0 && (
-				<section data-testid="corrections-list">
-					<h2>訂正履歴</h2>
-					<ul>
-						{data.corrections.map((correction) => (
-							<li>
-								<time datetime={correction.date.toISOString()}>
-									{correction.date.toISOString().slice(0, 10)}
-								</time>
-								: {correction.description}
-							</li>
-						))}
-					</ul>
-				</section>
-			)
-		}
-
-		{
-			data.relatedBooks.length > 0 && (
-				<section data-testid="related-books">
-					<h2>関連書籍</h2>
-					<ul>
-						{data.relatedBooks.map((book) => (
-							<li>
-								<a href={book.url}>{book.title}</a>（{book.author}）
-							</li>
-						))}
-					</ul>
-					<p><small>上記リンクにはアフィリエイトが含まれる場合があります。</small></p>
-				</section>
-			)
-		}
-	</article>
+						</ul>
+					</section>
+				)
+			}
+		</Fragment>
+	</EpisodeDetail>
 </BaseLayout>
