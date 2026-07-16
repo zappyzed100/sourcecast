@@ -14,6 +14,8 @@ models:
     context_length: 128000
     expires_at: 2026-12-31
     data_policy: "no_training_no_retention"
+    supports_structured_output: true
+    japanese_regression_passed: true
 
   - model_id: "qwen/qwen-2.5-7b-instruct:free"
     provider: "openrouter"
@@ -23,3 +25,5 @@ models:
     context_length: 32000
     expires_at: 2026-12-31
     data_policy: "no_training_no_retention"
+    supports_structured_output: true
+    japanese_regression_passed: true

@@ -58,7 +58,12 @@ class LicenseRulesFile(SchemaModel):
 
 class ModelRegistryEntry(SchemaModel):
     """`config/model_registry.yaml` の1エントリ（仕様書§8.1）。無料モデルのみ許可
-    （price_prompt/price_completionが0でないエントリはconfig_loaderが拒否する）。"""
+    （price_prompt/price_completionが0でないエントリはconfig_loaderが拒否する）。
+
+    supports_structured_output / japanese_regression_passed はPhase 6のモデル検査
+    （§8.1「JSON Schema、必要コンテキスト長、日本語回帰テスト…を検証」）——
+    どちらかがfalseのエントリもconfig_loaderが起動時に拒否する。
+    """
 
     model_id: str = Field(min_length=1)
     provider: str = Field(min_length=1)
@@ -68,6 +73,8 @@ class ModelRegistryEntry(SchemaModel):
     context_length: int = Field(gt=0)
     expires_at: date
     data_policy: str = Field(min_length=1)
+    supports_structured_output: bool
+    japanese_regression_passed: bool
 
 
 class ModelRegistryFile(SchemaModel):

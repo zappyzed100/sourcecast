@@ -94,6 +94,8 @@ models:
     context_length: 8000
     expires_at: 2020-01-01
     data_policy: "no_training_no_retention"
+    supports_structured_output: true
+    japanese_regression_passed: true
 """
     )
     with pytest.raises(ConfigValidationError, match="期限切れ"):
@@ -113,7 +115,56 @@ models:
     context_length: 8000
     expires_at: 2099-01-01
     data_policy: "no_training_no_retention"
+    supports_structured_output: true
+    japanese_regression_passed: true
 """
     )
     with pytest.raises(ConfigValidationError, match="無料枠外"):
+        load_model_registry(path, today=date(2026, 7, 16))
+
+
+def _model_yaml(**overrides: object) -> str:
+    """Phase 6検査（ルーター・構造化出力・日本語回帰）用の1エントリYAML。"""
+    values: dict[str, object] = {
+        "model_id": "vendor/fixed-model:free",
+        "supports_structured_output": "true",
+        "japanese_regression_passed": "true",
+    }
+    values.update(overrides)
+    return f"""
+models:
+  - model_id: "{values["model_id"]}"
+    provider: openrouter
+    endpoint: "https://openrouter.ai/api/v1/chat/completions"
+    price_prompt: 0
+    price_completion: 0
+    context_length: 8000
+    expires_at: 2099-01-01
+    data_policy: "no_training_no_retention"
+    supports_structured_output: {values["supports_structured_output"]}
+    japanese_regression_passed: {values["japanese_regression_passed"]}
+"""
+
+
+@pytest.mark.parametrize("router_id", ["openrouter/free", "openrouter/auto", "some-vendor/auto"])
+def test_random_router_models_are_rejected(tmp_path: Path, router_id: str) -> None:
+    """§8.1: 実モデルがランダムに変わるルーターは本番で使用しない。"""
+    path = tmp_path / "model_registry.yaml"
+    path.write_text(_model_yaml(model_id=router_id))
+    with pytest.raises(ConfigValidationError, match="ランダムルーター"):
+        load_model_registry(path, today=date(2026, 7, 16))
+
+
+def test_model_without_structured_output_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "model_registry.yaml"
+    path.write_text(_model_yaml(supports_structured_output="false"))
+    with pytest.raises(ConfigValidationError, match="構造化出力"):
+        load_model_registry(path, today=date(2026, 7, 16))
+
+
+def test_regression_failed_model_is_rejected(tmp_path: Path) -> None:
+    """§8.1: 日本語回帰テストに合格するまで自動公開に使用しない。"""
+    path = tmp_path / "model_registry.yaml"
+    path.write_text(_model_yaml(japanese_regression_passed="false"))
+    with pytest.raises(ConfigValidationError, match="日本語回帰"):
         load_model_registry(path, today=date(2026, 7, 16))

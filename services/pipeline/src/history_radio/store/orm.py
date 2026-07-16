@@ -118,6 +118,26 @@ class FetchSnapshotRow(Base):
     fetched_at: Mapped[datetime] = mapped_column(nullable=False)
 
 
+class LlmRunRow(Base):
+    """`llm_runs`（仕様書§8.1・Phase 6）: LLM実行1回分の記録とキャッシュのキー。
+
+    キャッシュキーは (model_id, prompt_version, input_hash)——同じ入力と版では
+    保存済み出力を返し、二重課金呼び出しをしない（llm/cache.py）。
+    """
+
+    __tablename__ = "llm_runs"
+
+    run_id: Mapped[str] = mapped_column(String, primary_key=True)
+    model_id: Mapped[str] = mapped_column(String, nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String, nullable=False)
+    input_hash: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    output_hash: Mapped[str] = mapped_column(String, nullable=False)
+    output_text: Mapped[str] = mapped_column(String, nullable=False)
+    prompt_tokens: Mapped[int] = mapped_column(nullable=False)
+    completion_tokens: Mapped[int] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
 class TermsSnapshotRow(Base):
     """`terms_snapshots`（§5.2・§7.2・Phase 4）: 規約ページの取得時点スナップショット。
 
