@@ -69,3 +69,66 @@ class RightsDecisionRow(Base):
     rule_version: Mapped[str] = mapped_column(String, nullable=False)
     reasons_json: Mapped[str] = mapped_column(String, nullable=False)
     computed_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class DocumentRow(Base):
+    """`documents`（仕様書§7.2・Phase 4）: 取得資料のメタデータと（許可時のみ）全文。
+
+    full_text が NULL のまま残るのは、権利判定が `allow_public_use` でない資料
+    （candidate/internal_research_only 等）——本文を保存しない契約はこの列の
+    NULL可否ではなく store/documents.py の書き込み経路が守る。メタデータ・抜粋・
+    ハッシュは §7.2 どおり常に保存してよい。
+    """
+
+    __tablename__ = "documents"
+
+    document_id: Mapped[str] = mapped_column(String, primary_key=True)
+    source_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    canonical_url: Mapped[str] = mapped_column(String, nullable=False)
+    permalink: Mapped[str] = mapped_column(String, nullable=False)
+    revision_id: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    language: Mapped[str] = mapped_column(String, nullable=False)
+    normalized_license_id: Mapped[str] = mapped_column(String, nullable=False)
+    use_class: Mapped[str] = mapped_column(String, nullable=False)
+    storage_permission: Mapped[str] = mapped_column(String, nullable=False)
+    publication_permission: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    excerpt: Mapped[str | None] = mapped_column(String, nullable=True)
+    full_text: Mapped[str | None] = mapped_column(String, nullable=True)
+    payload_json: Mapped[str] = mapped_column(String, nullable=False)
+    first_fetched_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class FetchSnapshotRow(Base):
+    """`fetch_snapshots`（§7.2・Phase 4）: 取得1回分の証跡（URL・日時・応答・ハッシュ）。
+
+    同一 document_id・同一 content_hash の再取得ではスナップショットを増やさない
+    （§7.3「同一内容はハッシュで再取得を抑制する」の保存面 — store/documents.py）。
+    """
+
+    __tablename__ = "fetch_snapshots"
+
+    snapshot_id: Mapped[str] = mapped_column(String, primary_key=True)
+    document_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    original_url: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False)
+    fetch_method: Mapped[str] = mapped_column(String, nullable=False)
+    http_status: Mapped[int] = mapped_column(nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class TermsSnapshotRow(Base):
+    """`terms_snapshots`（§5.2・§7.2・Phase 4）: 規約ページの取得時点スナップショット。
+
+    同一 source_id・同一 content_hash では増やさない（規約が変わった時だけ新しい行）。
+    """
+
+    __tablename__ = "terms_snapshots"
+
+    terms_snapshot_id: Mapped[str] = mapped_column(String, primary_key=True)
+    source_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    terms_url: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False)
+    text: Mapped[str] = mapped_column(String, nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(nullable=False)

@@ -189,6 +189,7 @@
 - `services/pipeline/src/history_radio/gate/__init__.py`
 - `services/pipeline/src/history_radio/ingest/__init__.py`
 - `services/pipeline/src/history_radio/ingest/adapter.py`
+- `services/pipeline/src/history_radio/ingest/collector.py`
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/ingest/wikipedia.py`
@@ -206,6 +207,7 @@
 - `services/pipeline/src/history_radio/store/config_loader.py`
 - `services/pipeline/src/history_radio/store/config_schemas.py`
 - `services/pipeline/src/history_radio/store/db.py`
+- `services/pipeline/src/history_radio/store/documents.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
 - `services/pipeline/src/history_radio/store/orm.py`
 - `services/pipeline/src/history_radio/store/rights.py`
@@ -217,6 +219,7 @@
 - `services/pipeline/tests/domain/test_models.py`
 - `services/pipeline/tests/ingest/__init__.py`
 - `services/pipeline/tests/ingest/mock_http.py`
+- `services/pipeline/tests/ingest/test_collector.py`
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
 - `services/pipeline/tests/ingest/test_wikipedia.py`
@@ -226,6 +229,7 @@
 - `services/pipeline/tests/rights/test_screening.py`
 - `services/pipeline/tests/store/__init__.py`
 - `services/pipeline/tests/store/test_config_loader.py`
+- `services/pipeline/tests/store/test_documents.py`
 - `services/pipeline/tests/store/test_episodes.py`
 - `services/pipeline/tests/store/test_rights.py`
 - `services/pipeline/tests/test_smoke.py`
@@ -553,6 +557,11 @@
 ### `services/pipeline/src/history_radio/ingest/adapter.py`
 - class SourceAdapter
 
+### `services/pipeline/src/history_radio/ingest/collector.py`
+- class SourceNotApprovedError
+- class CollectOutcome
+- def collect_document
+
 ### `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - class Clock
 - class SystemClock
@@ -607,6 +616,12 @@
 - def create_sqlite_engine
 - def session_factory
 
+### `services/pipeline/src/history_radio/store/documents.py`
+- def save_document
+- def save_terms_snapshot
+- def get_document
+- def list_snapshots
+
 ### `services/pipeline/src/history_radio/store/episodes.py`
 - class EpisodeConflictError
 - class EpisodeNotFoundError
@@ -620,6 +635,9 @@
 - class JobRow
 - class AuditEventRow
 - class RightsDecisionRow
+- class DocumentRow
+- class FetchSnapshotRow
+- class TermsSnapshotRow
 
 ### `services/pipeline/src/history_radio/store/rights.py`
 - def save_rights_decision
@@ -651,6 +669,18 @@
 - class RecordedRequest
 - class FakeClock
 - def scripted_fetcher
+
+### `services/pipeline/tests/ingest/test_collector.py`
+- def engine
+- def session
+- class StubAdapter
+- def test_candidate_source_is_rejected_before_any_fetch
+- def test_allow_public_use_document_stores_full_text
+- def test_internal_research_only_document_never_persists_full_text
+- def test_third_party_exception_source_downgrades_to_manual_review
+- def test_terms_fetch_failure_denies_and_stores_no_full_text
+- def test_every_collect_appends_a_rights_decision
+- def test_refetch_of_same_content_does_not_duplicate_snapshot
 
 ### `services/pipeline/tests/ingest/test_crawl_control.py`
 - def test_success_returns_response_and_sends_user_agent
@@ -720,6 +750,13 @@
 - def test_invalid_url_rejected
 - def test_expired_model_rejected
 - def test_paid_model_rejected
+
+### `services/pipeline/tests/store/test_documents.py`
+- def session
+- def test_store_full_text_false_discards_body_even_if_present
+- def test_new_revision_creates_new_document_and_snapshot
+- def test_same_content_refetch_does_not_add_snapshot
+- def test_terms_snapshot_deduplicates_by_content
 
 ### `services/pipeline/tests/store/test_episodes.py`
 - def engine
