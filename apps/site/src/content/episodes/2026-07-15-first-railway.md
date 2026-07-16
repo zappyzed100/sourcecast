@@ -30,6 +30,7 @@ relatedBooks:
     author: "鉄道史研究会（仮）"
     url: "https://ndlsearch.ndl.go.jp/"
 audioUrl: "/audio/2026-07-15-first-railway.mp3"
+audioLengthBytes: 120429
 chapters:
   - title: "導入"
     startSeconds: 0

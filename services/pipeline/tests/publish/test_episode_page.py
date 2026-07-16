@@ -129,6 +129,33 @@ def test_every_claim_reaches_at_least_one_valid_source_url() -> None:
         assert all(url.startswith(("http://", "https://")) for url in reachable_urls)
 
 
+def test_audio_url_without_length_bytes_is_rejected() -> None:
+    """Phase 9タスク1の前提: RSSのenclosureはurlとlengthの両方が無いと生成できない。"""
+    data = EpisodePageData.model_validate(
+        _data(audio_url="/audio/2026-07-16-can-opener.mp3", audio_length_bytes=None)
+    )
+    with pytest.raises(EpisodePageError, match="audio_urlとaudio_length_bytesは対で必須"):
+        validate_episode_page(data)
+
+
+def test_audio_length_bytes_without_url_is_rejected() -> None:
+    data = EpisodePageData.model_validate(_data(audio_url=None, audio_length_bytes=123456))
+    with pytest.raises(EpisodePageError, match="audio_urlとaudio_length_bytesは対で必須"):
+        validate_episode_page(data)
+
+
+def test_audio_url_and_length_bytes_together_pass() -> None:
+    data = EpisodePageData.model_validate(
+        _data(audio_url="/audio/2026-07-16-can-opener.mp3", audio_length_bytes=123456)
+    )
+    validate_episode_page(data)  # 例外なし
+
+
+def test_zero_or_negative_audio_length_bytes_is_rejected_at_schema_level() -> None:
+    with pytest.raises(ValidationError):
+        EpisodePageData.model_validate(_data(audio_url="/audio/x.mp3", audio_length_bytes=0))
+
+
 def test_malformed_episode_id_is_rejected() -> None:
     data = EpisodePageData.model_validate(_data(episode_id="not-a-valid-id!!"))
     with pytest.raises(EpisodePageError, match="形式が不正"):

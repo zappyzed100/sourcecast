@@ -540,8 +540,32 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 ### Phase 9 — RSS・配信先（仕様書 §10D）
 
-* [ ] RSS 2.0を静的生成し、GUID、公開日時、enclosure、長さ、MIME、クレジットを固定する。
+* [x] RSS 2.0を静的生成し、GUID、公開日時、enclosure、長さ、MIME、クレジットを固定する。
   検証: 標準バリデーターでエラー0件、過去GUIDの変化0件。
+  実装メモ: `apps/site/src/pages/feed.xml.ts`。Astro公式の`@astrojs/rss`
+  （既存のXML生成・RFC822日時整形を自前実装せずに済む——依存追加:
+  @astrojs/rss — RSS 2.0生成の実績あるAstro公式パッケージ）を使用。
+  GUIDは各エピソードの恒久ページURL（link）をそのまま使う（`@astrojs/rss`の既定動作
+  で`isPermaLink="true"`）——恒久URLは仕様書§10Bで「削除・URL変更を原則禁止」
+  「不変IDは再利用しない」とされているため、GUIDの安定性はepisode_idの設計自体が
+  既に保証しており、このファイル側で独自のGUID算出は行わない。enclosureの`length`
+  （実バイト数）・`type`（MIME）を生成できるよう、`content.config.ts`の
+  episodesスキーマと`episode_page.py`の`EpisodePageData`へ`audioLengthBytes`
+  （`audio_length_bytes`）を追加し、`audioUrl`と対で必須というfail closedな検証を
+  `validate_episode_page`へ追加した（RSSのenclosureはurlとlengthの両方が
+  無いと生成できないため）。クレジットは`<itunes:author>`（`xmlns:itunes`を
+  `xmlns`オプションで明示宣言——未宣言のまま名前空間付き要素を使うとXML
+  well-formedness違反になる）。
+  検証: `e2e/rss-feed.spec.ts`が「標準バリデーター」として
+  ブラウザの`DOMParser`によるwell-formedness検証と、RSS 2.0・Podcast
+  enclosureの必須要素チェックリスト（channel title/link/description、
+  item title/link/guid/pubDate(RFC822)/description/enclosure(url・length・type)・
+  itunes:author）をエラー0件で固定。過去GUIDの変化0件は、既存2フィクスチャの
+  GUID文字列をハードコードした回帰テストで固定（外部の検証サービスへの
+  ネットワークアクセスはtest-network違反になるため、標準バリデーターの
+  代わりに構造チェックを自前実装している——実際の配信登録後は各配信先の
+  バリデーション結果も確認すること）。単体テスト4件を`tests/publish/test_episode_page.py`
+  へ追加（audio_url/audio_length_bytesの対必須検証）。
 * [ ] YouTube、Podcast、Amazon Music/Audible向けメタデータを同じEpisodeから生成する。
   検証: 全配信先で同じ `episode_id` を冪等キーとして使う。
 * [ ] 自動アップロードはMVPでは限定公開までとし、公開ボタンは最終ゲート通過後だけ有効化する。
