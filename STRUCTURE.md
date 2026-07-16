@@ -213,6 +213,8 @@
 - `services/pipeline/src/history_radio/llm/ledger.py`
 - `services/pipeline/src/history_radio/llm/openrouter.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
+- `services/pipeline/src/history_radio/media/ffmpeg_audio.py`
+- `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
@@ -272,6 +274,9 @@
 - `services/pipeline/tests/llm/test_extraction.py`
 - `services/pipeline/tests/llm/test_ledger.py`
 - `services/pipeline/tests/llm/test_openrouter.py`
+- `services/pipeline/tests/media/__init__.py`
+- `services/pipeline/tests/media/test_ffmpeg_audio.py`
+- `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
 - `services/pipeline/tests/readings/test_context_matching.py`
@@ -696,6 +701,19 @@
 - class OpenRouterError
 - class OpenRouterCaller
 
+### `services/pipeline/src/history_radio/media/ffmpeg_audio.py`
+- class AudioProcessError
+- class AudioValidationError
+- class AudioProbe
+- def probe_audio
+- def measure_volume
+- def validate_audio
+
+### `services/pipeline/src/history_radio/media/voicevox.py`
+- class VoicevoxError
+- def inject_readings
+- class VoicevoxClient
+
 ### `services/pipeline/src/history_radio/readings/address_registry.py`
 - class AddressColumns
 - def convert_address_rows
@@ -988,6 +1006,31 @@
 - def test_from_env_reads_key
 - def test_request_disables_training_providers_by_default
 - def test_training_providers_can_be_opted_in_explicitly
+
+### `services/pipeline/tests/media/test_ffmpeg_audio.py`
+- def normal_wav
+- def test_normal_audio_passes_validation
+- def test_silent_audio_is_rejected
+- def test_out_of_range_volume_is_rejected
+- def test_too_short_audio_is_rejected
+- def test_corrupt_file_is_rejected
+- def test_missing_file_is_rejected
+- def test_disallowed_codec_is_rejected
+- def test_all_problems_are_reported_at_once
+
+### `services/pipeline/tests/media/test_voicevox.py`
+- def test_check_version_returns_stripped_version_string
+- def test_check_version_raises_when_engine_is_down
+- def test_synthesize_success_returns_audio_bytes
+- def test_synthesize_raises_on_timeout_during_synthesis_step
+- def test_synthesize_raises_on_failure_during_audio_query_step
+- def test_synthesize_raises_on_non_200_response
+- def test_synthesize_raises_on_empty_response_body
+- def test_synthesize_raises_on_malformed_audio_query_response
+- def test_inject_readings_replaces_surface_with_reading
+- def test_inject_readings_processes_longer_surfaces_first
+- def test_inject_readings_with_no_resolutions_returns_text_unchanged
+- def test_credit_text_matches_spec_wording
 
 ### `services/pipeline/tests/readings/test_address_registry.py`
 - def test_rows_convert_to_place_entries_with_katakana_readings
