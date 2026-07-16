@@ -191,6 +191,7 @@
 - `services/pipeline/src/history_radio/api/main.py`
 - `services/pipeline/src/history_radio/api/schemas.py`
 - `services/pipeline/src/history_radio/books/__init__.py`
+- `services/pipeline/src/history_radio/books/search.py`
 - `services/pipeline/src/history_radio/distribute/__init__.py`
 - `services/pipeline/src/history_radio/domain/__init__.py`
 - `services/pipeline/src/history_radio/domain/base.py`
@@ -214,6 +215,7 @@
 - `services/pipeline/src/history_radio/llm/openrouter.py`
 - `services/pipeline/src/history_radio/media/__init__.py`
 - `services/pipeline/src/history_radio/media/ffmpeg_audio.py`
+- `services/pipeline/src/history_radio/media/media_manifest.py`
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -256,6 +258,8 @@
 - `services/pipeline/tests/__init__.py`
 - `services/pipeline/tests/api/__init__.py`
 - `services/pipeline/tests/api/test_main.py`
+- `services/pipeline/tests/books/__init__.py`
+- `services/pipeline/tests/books/test_search.py`
 - `services/pipeline/tests/domain/__init__.py`
 - `services/pipeline/tests/domain/test_episode_state.py`
 - `services/pipeline/tests/domain/test_models.py`
@@ -276,6 +280,7 @@
 - `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/media/__init__.py`
 - `services/pipeline/tests/media/test_ffmpeg_audio.py`
+- `services/pipeline/tests/media/test_media_manifest.py`
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
@@ -623,6 +628,17 @@
 ### `services/pipeline/src/history_radio/api/schemas.py`
 - class DashboardSummary
 
+### `services/pipeline/src/history_radio/books/search.py`
+- class BookCandidate
+- class BookMatchFeatures
+- def compute_relevance
+- def group_by_bibliographic_match
+- def independent_system_count
+- def is_title_only_match
+- def has_confirmed_identifier
+- class RankedBook
+- def rank_books
+
 ### `services/pipeline/src/history_radio/domain/base.py`
 - class SchemaModel
 
@@ -708,6 +724,12 @@
 - def probe_audio
 - def measure_volume
 - def validate_audio
+
+### `services/pipeline/src/history_radio/media/media_manifest.py`
+- class MediaAssetError
+- class MediaAsset
+- def validate_media_manifest
+- def credits_for_section
 
 ### `services/pipeline/src/history_radio/media/voicevox.py`
 - class VoicevoxError
@@ -883,6 +905,21 @@
 - def test_candidates_returns_list
 - def test_jobs_returns_list_with_failed_job_error_detail
 
+### `services/pipeline/tests/books/test_search.py`
+- def test_relevance_formula_matches_spec_example
+- def test_relevance_scales_linearly_with_partial_features
+- def test_title_only_match_is_detected
+- def test_match_with_any_other_signal_is_not_title_only
+- def test_independent_system_count_counts_distinct_systems
+- def test_isbn_confirmed_candidate_allows_affiliate_link
+- def test_no_identifier_disallows_affiliate_link
+- def test_single_lineage_candidate_is_hidden_from_ranking
+- def test_two_lineage_candidate_is_ranked
+- def test_below_threshold_yields_no_related_books
+- def test_title_only_match_is_excluded_from_ranking
+- def test_ranking_is_sorted_by_relevance_descending
+- def test_group_by_isbn_ignores_title_variations
+
 ### `services/pipeline/tests/domain/test_episode_state.py`
 - def test_allowed_forward_transitions
 - def test_failure_transitions_allowed_from_any_nonterminal_state
@@ -1017,6 +1054,17 @@
 - def test_missing_file_is_rejected
 - def test_disallowed_codec_is_rejected
 - def test_all_problems_are_reported_at_once
+
+### `services/pipeline/tests/media/test_media_manifest.py`
+- def test_valid_licensed_and_self_drawn_assets_pass
+- def test_missing_credit_is_rejected
+- def test_whitespace_only_credit_is_rejected
+- def test_licensed_asset_without_source_url_is_rejected
+- def test_licensed_asset_without_license_id_is_rejected
+- def test_self_drawn_asset_does_not_require_source_url
+- def test_duplicate_asset_id_is_rejected
+- def test_all_problems_are_reported_at_once
+- def test_credits_for_section_filters_by_usage
 
 ### `services/pipeline/tests/media/test_voicevox.py`
 - def test_check_version_returns_stripped_version_string
