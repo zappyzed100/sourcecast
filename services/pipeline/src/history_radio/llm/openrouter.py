@@ -37,6 +37,11 @@ class OpenRouterCaller:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     # 構造化出力の強制（§8.1「JSON Schema」検証の前段。対応モデルのみtrueにする）
     require_json: bool = True
+    # 学習利用プロバイダーへのルーティング許可（既定は拒否 — §8.1）。
+    # Nemotron系等「学習利用と引き換えに無料」のエンドポイントを使う場合のみ
+    # 明示的にtrueへ（2026-07-16 ユーザー決定: 送信するのはPD資料由来テキストのみ
+    # のためNemotron系で許可。個人情報・未公開原稿は送らない前提を崩さないこと）
+    allow_training_providers: bool = False
 
     @classmethod
     def from_env(cls, client: httpx.Client) -> OpenRouterCaller:
@@ -51,8 +56,8 @@ class OpenRouterCaller:
         body: dict[str, Any] = {
             "model": model_id,
             "messages": [{"role": "user", "content": prompt}],
-            # §8.1: 学習利用を許可するプロバイダーへのルーティングを無効化
-            "provider": {"data_collection": "deny"},
+            # §8.1: 学習利用プロバイダーへのルーティングは既定で無効化（オプトインのみ許可）
+            "provider": {"data_collection": "allow" if self.allow_training_providers else "deny"},
         }
         if self.require_json:
             body["response_format"] = {"type": "json_object"}

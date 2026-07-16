@@ -66,8 +66,7 @@ def test_from_env_reads_key(monkeypatch: pytest.MonkeyPatch) -> None:
     assert caller.api_key == "sk-from-env"
 
 
-def test_request_disables_training_providers() -> None:
-    """§8.1: 学習利用を許可するプロバイダーへのルーティングを無効化するボディを送る。"""
+def _capture_request_body(caller_kwargs: dict[str, object]) -> dict[str, object]:
     captured: list[str] = []
     client, _requests = scripted_client([Reply(text=_OK_RESPONSE)])
     original_post = client.post
@@ -77,7 +76,19 @@ def test_request_disables_training_providers() -> None:
         return original_post(*args, **kwargs)  # type: ignore[arg-type]
 
     client.post = spying_post  # type: ignore[method-assign]
-    OpenRouterCaller(client=client, api_key="sk-t")(model_id="vendor/m:free", prompt="x")
-    body = json.loads(captured[0])
+    caller = OpenRouterCaller(client=client, api_key="sk-t", **caller_kwargs)  # type: ignore[arg-type]
+    caller(model_id="vendor/m:free", prompt="x")
+    return json.loads(captured[0])
+
+
+def test_request_disables_training_providers_by_default() -> None:
+    """§8.1: 学習利用を許可するプロバイダーへのルーティングは既定で無効化。"""
+    body = _capture_request_body({})
     assert body["provider"] == {"data_collection": "deny"}
     assert body["response_format"] == {"type": "json_object"}
+
+
+def test_training_providers_can_be_opted_in_explicitly() -> None:
+    """Nemotron系「学習利用と引き換えに無料」枠のためのオプトイン（既定は変えない）。"""
+    body = _capture_request_body({"allow_training_providers": True})
+    assert body["provider"] == {"data_collection": "allow"}
