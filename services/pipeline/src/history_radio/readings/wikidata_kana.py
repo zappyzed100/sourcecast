@@ -42,7 +42,7 @@ def fetch_kana_readings(
             return []  # NO-LOG: 解決器がunresolvedとして記録する（§8.4のfail-closed契約）
         payload: Any = response.json()
         bindings = payload["results"]["bindings"]
-    except FetchBlockedError, ValueError, KeyError, TypeError:
+    except (FetchBlockedError, ValueError, KeyError, TypeError):
         return []  # NO-LOG: 同上——例外を上げず候補なしへ倒す
 
     entries: list[ReadingEntry] = []

@@ -215,12 +215,15 @@
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
+- `services/pipeline/src/history_radio/readings/address_registry.py`
 - `services/pipeline/src/history_radio/readings/entry.py`
 - `services/pipeline/src/history_radio/readings/era_dictionary.py`
 - `services/pipeline/src/history_radio/readings/jmnedict.py`
+- `services/pipeline/src/history_radio/readings/ndl_authorities.py`
 - `services/pipeline/src/history_radio/readings/notices.py`
 - `services/pipeline/src/history_radio/readings/sources_config.py`
 - `services/pipeline/src/history_radio/readings/store_jsonl.py`
+- `services/pipeline/src/history_radio/readings/sudachi.py`
 - `services/pipeline/src/history_radio/readings/wikidata_kana.py`
 - `services/pipeline/src/history_radio/rights/__init__.py`
 - `services/pipeline/src/history_radio/rights/engine.py`
@@ -264,11 +267,14 @@
 - `services/pipeline/tests/llm/test_ledger.py`
 - `services/pipeline/tests/llm/test_openrouter.py`
 - `services/pipeline/tests/readings/__init__.py`
+- `services/pipeline/tests/readings/test_address_registry.py`
 - `services/pipeline/tests/readings/test_entry.py`
 - `services/pipeline/tests/readings/test_era_dictionary.py`
 - `services/pipeline/tests/readings/test_jmnedict.py`
+- `services/pipeline/tests/readings/test_ndl_authorities.py`
 - `services/pipeline/tests/readings/test_notices.py`
 - `services/pipeline/tests/readings/test_sources_config.py`
+- `services/pipeline/tests/readings/test_sudachi.py`
 - `services/pipeline/tests/readings/test_wikidata_kana.py`
 - `services/pipeline/tests/rights/__init__.py`
 - `services/pipeline/tests/rights/test_engine.py`
@@ -679,6 +685,10 @@
 - class OpenRouterError
 - class OpenRouterCaller
 
+### `services/pipeline/src/history_radio/readings/address_registry.py`
+- class AddressColumns
+- def convert_address_rows
+
 ### `services/pipeline/src/history_radio/readings/entry.py`
 - class ReadingEntry
 
@@ -692,6 +702,9 @@
 - class JmnedictParseError
 - def hiragana_to_katakana
 - def parse_jmnedict
+
+### `services/pipeline/src/history_radio/readings/ndl_authorities.py`
+- def fetch_ndl_authority_readings
 
 ### `services/pipeline/src/history_radio/readings/notices.py`
 - def build_notices
@@ -708,6 +721,12 @@
 - def path_for_source
 - def save_entries
 - def load_entries
+
+### `services/pipeline/src/history_radio/readings/sudachi.py`
+- class TokenLike
+- def create_tokenizer
+- def tokens_to_reading_entries
+- def fetch_sudachi_readings
 
 ### `services/pipeline/src/history_radio/readings/wikidata_kana.py`
 - def fetch_kana_readings
@@ -939,6 +958,14 @@
 - def test_request_disables_training_providers_by_default
 - def test_training_providers_can_be_opted_in_explicitly
 
+### `services/pipeline/tests/readings/test_address_registry.py`
+- def test_rows_convert_to_place_entries_with_katakana_readings
+- def test_duplicate_rows_are_deduplicated
+- def test_every_entry_carries_attribution_and_processing_notice
+- def test_rows_missing_name_or_kana_are_skipped
+- def test_already_katakana_kana_column_is_left_as_is
+- def test_entries_pass_source_registration_check
+
 ### `services/pipeline/tests/readings/test_entry.py`
 - def test_valid_entry_is_accepted
 - def test_context_dependent_readings_are_distinct_rows
@@ -965,6 +992,16 @@
 - def test_loading_detects_contaminated_table
 - def test_round_trip_preserves_entries
 
+### `services/pipeline/tests/readings/test_ndl_authorities.py`
+- def test_matching_entity_yields_reading_with_dates_stripped
+- def test_alt_label_reading_is_included
+- def test_non_matching_organization_entity_is_excluded
+- def test_no_search_results_returns_empty
+- def test_search_failure_returns_empty_instead_of_raising
+- def test_entity_fetch_failure_returns_empty
+- def test_malformed_entity_json_returns_empty
+- def test_short_name_returns_empty_without_network_call
+
 ### `services/pipeline/tests/readings/test_notices.py`
 - def test_committed_notices_match_regeneration
 - def test_adding_a_source_adds_its_attribution_line
@@ -978,6 +1015,16 @@
 - def test_duplicate_source_id_is_rejected
 - def test_entry_with_unregistered_source_id_is_rejected
 - def test_registered_entries_pass_validation
+
+### `services/pipeline/tests/readings/test_sudachi.py`
+- def test_person_name_token_maps_to_person_kind
+- def test_place_name_token_maps_to_place_kind
+- def test_common_noun_maps_to_common_kind
+- def test_particles_and_verbs_are_skipped
+- def test_non_katakana_reading_is_skipped_not_raised
+- def test_entries_pass_source_registration_check
+- def test_real_sudachidict_resolves_known_word
+- def test_apache_license_is_recorded_in_third_party_notices
 
 ### `services/pipeline/tests/readings/test_wikidata_kana.py`
 - def test_kana_reading_is_fetched_and_katakanized
