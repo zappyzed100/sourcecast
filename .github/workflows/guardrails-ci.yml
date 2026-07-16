@@ -93,10 +93,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      # media/ffmpeg_audio.py の統合テストが実ffmpeg/ffprobeを要求する（Phase 7・
-      # development-plan.md §1.3「FFmpeg…をPython依存へ混ぜず外部実行ファイルとして」）。
-      # ランナー既定イメージ頼みにせず明示インストールする。
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      # media/ffmpeg_audio.py・media/slide_render.py の統合テストが実ffmpeg/ffprobeと
+      # 日本語フォントを要求する（Phase 7・development-plan.md §1.3「FFmpeg…を
+      # Python依存へ混ぜず外部実行ファイルとして」）。ランナー既定イメージ頼みにせず
+      # 明示インストールする（fonts-noto-cjkはmedia/slide_render.pyの候補パスに一致）。
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run basedpyright services/pipeline
