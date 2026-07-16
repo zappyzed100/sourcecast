@@ -92,7 +92,9 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [x] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。7ソース・解決器・
   手動修正辞書まで完了。VOICEVOXへの読み注入はPhase 7で同時着手）
 - [x] Phase 7 — 音声・スライド動画・関連書籍
-- [ ] Phase 8 — 公開ページ統合・Cloudflare `in_progress`
+- [x] Phase 8 — 公開ページ統合・Cloudflare（タスク5・6のCloudflareダッシュボード側の
+  仕上げ〔独自ドメイン接続・Pagesプロジェクト作成・実クレデンシャルでの動作確認〕は
+  HUMAN_TASKS.mdで依頼中——実装・テストは完了）
 - [ ] Phase 9 — RSS・配信先 `backlog`
 - [ ] Phase 10 — 自動検査ゲート `backlog`
 - [ ] Phase 11 — 管理画面の実運用化 `backlog`

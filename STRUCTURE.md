@@ -140,6 +140,9 @@
 - `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
 - `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
 - `e2e/episode-publish.spec.ts` — episode-publish.spec.ts — Phase 8タスク3 DoD: 主張‐出典対応・コピー・ダウンロード・過去版差分が
+- `e2e/known-pages.ts` — known-pages.ts — 全既知ページの一覧(accessibility.spec.tsとsite-health.spec.tsで共有する)。
+- `e2e/parse-headers-file.ts` — parse-headers-file.ts — Cloudflare Pagesの_headers構文をパースする(site-health.spec.tsで使用)。
+- `e2e/site-health.spec.ts` — site-health.spec.ts — Phase 8タスク5 DoD: プレビューと本番でリンク切れ、mixed content、
 - `e2e/site-search.spec.ts` — site-search.spec.ts — Phase 2 DoD: fixtureの固有語を検索し、該当エピソードが返ることを確認する
 - `e2e/site-smoke.spec.ts` — site-smoke.spec.ts — Phase 0のブラウザsmoke test: 公開サイトのホームページが読み込めることだけを確認する
 
@@ -232,6 +235,7 @@
 - `services/pipeline/src/history_radio/media/slides.py`
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
+- `services/pipeline/src/history_radio/publish/cloudflare_pages.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -302,6 +306,7 @@
 - `services/pipeline/tests/media/test_slides.py`
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/publish/__init__.py`
+- `services/pipeline/tests/publish/test_cloudflare_pages.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
 - `services/pipeline/tests/readings/__init__.py`
@@ -423,6 +428,13 @@
 ### `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts`
 - function getStaticPaths
 - const GET
+
+### `e2e/known-pages.ts`
+- const KNOWN_PAGES
+
+### `e2e/parse-headers-file.ts`
+- interface HeaderBlock
+- function parseHeadersFile
 
 ### `migrations/env.py`
 - def run_migrations_offline
@@ -787,6 +799,11 @@
 - class VoicevoxError
 - def inject_readings
 - class VoicevoxClient
+
+### `services/pipeline/src/history_radio/publish/cloudflare_pages.py`
+- class PagesRollbackError
+- class Deployment
+- class PagesClient
 
 ### `services/pipeline/src/history_radio/publish/episode_page.py`
 - class EpisodePageError
@@ -1185,6 +1202,18 @@
 - def test_inject_readings_processes_longer_surfaces_first
 - def test_inject_readings_with_no_resolutions_returns_text_unchanged
 - def test_credit_text_matches_spec_wording
+
+### `services/pipeline/tests/publish/test_cloudflare_pages.py`
+- def test_list_deployments_filters_by_environment_and_sorts_newest_first
+- def test_rollback_to_previous_calls_rollback_with_second_newest_deployment_id
+- def test_rollback_with_no_previous_deployment_is_rejected
+- def test_rollback_with_zero_deployments_is_rejected
+- def test_list_deployments_rejects_unsuccessful_response
+- def test_list_deployments_rejects_missing_required_field
+- def test_list_deployments_rejects_non_200_status
+- def test_rollback_call_rejects_non_200_status
+- def test_network_error_during_list_is_rejected
+- def test_authorization_header_uses_bearer_token
 
 ### `services/pipeline/tests/publish/test_episode_page.py`
 - def test_valid_data_passes_validation_and_renders
