@@ -1,0 +1,1495 @@
+# eras.yaml — 元号読み辞書（development-plan.md §8.4。自作——本プロジェクトの資産）
+#
+# 年代・QIDはWikidata（P31=Q24706, 2026-07-17取得）由来、読みは歴史年表の通行読みで
+# 自作した。verified はレビューで一度人手検証したら true にする（§8.4「人手で一度
+# 検証」。false のエントリは confidence 0.9、true は 1.0 — readings/era_dictionary.py）。
+# 再生成はしない——このファイルが正本（Wikidata側の変更に自動追随しない）。
+eras:
+  - name: 大化
+    reading: タイカ
+    start_year: 645
+    end_year: 650
+    wikidata_qid: Q1077930
+    verified: false
+  - name: 白雉
+    reading: ハクチ
+    start_year: 650
+    end_year: 654
+    wikidata_qid: Q540118
+    verified: false
+  - name: 白鳳
+    reading: ハクホウ
+    start_year: 661
+    end_year: 683
+    wikidata_qid: Q11580612
+    verified: false
+  - name: 朱鳥
+    reading: シュチョウ
+    start_year: 686
+    end_year: 686
+    wikidata_qid: Q777413
+    verified: false
+  - name: 大宝
+    reading: タイホウ
+    start_year: 701
+    end_year: 704
+    wikidata_qid: Q1346269
+    verified: false
+  - name: 慶雲
+    reading: ケイウン
+    start_year: 704
+    end_year: 708
+    wikidata_qid: Q428753
+    verified: false
+  - name: 和銅
+    reading: ワドウ
+    start_year: 708
+    end_year: 715
+    wikidata_qid: Q1373026
+    verified: false
+  - name: 霊亀
+    reading: レイキ
+    start_year: 715
+    end_year: 717
+    wikidata_qid: Q1373115
+    verified: false
+  - name: 養老
+    reading: ヨウロウ
+    start_year: 717
+    end_year: 724
+    wikidata_qid: Q1373061
+    verified: false
+  - name: 神亀
+    reading: ジンキ
+    start_year: 724
+    end_year: 729
+    wikidata_qid: Q1373210
+    verified: false
+  - name: 天平
+    reading: テンピョウ
+    start_year: 729
+    end_year: 749
+    wikidata_qid: Q1199879
+    verified: false
+  - name: 天平勝宝
+    reading: テンピョウショウホウ
+    start_year: 749
+    end_year: 757
+    wikidata_qid: Q1373169
+    verified: false
+  - name: 天平感宝
+    reading: テンピョウカンポウ
+    start_year: 749
+    end_year: 749
+    wikidata_qid: Q1373199
+    verified: false
+  - name: 天平宝字
+    reading: テンピョウホウジ
+    start_year: 757
+    end_year: 765
+    wikidata_qid: Q1346307
+    verified: false
+  - name: 天平神護
+    reading: テンピョウジンゴ
+    start_year: 765
+    end_year: 767
+    wikidata_qid: Q1373181
+    verified: false
+  - name: 神護景雲
+    reading: ジンゴケイウン
+    start_year: 767
+    end_year: 770
+    wikidata_qid: Q1373049
+    verified: false
+  - name: 宝亀
+    reading: ホウキ
+    start_year: 770
+    end_year: 781
+    wikidata_qid: Q18520676
+    verified: false
+  - name: 天応
+    reading: テンオウ
+    start_year: 781
+    end_year: 782
+    wikidata_qid: Q1373125
+    verified: false
+  - name: 延暦
+    reading: エンリャク
+    start_year: 782
+    end_year: 806
+    wikidata_qid: Q1373176
+    verified: false
+  - name: 大同
+    reading: ダイドウ
+    start_year: 806
+    end_year: 810
+    wikidata_qid: Q1373191
+    verified: false
+  - name: 弘仁
+    reading: コウニン
+    start_year: 810
+    end_year: 824
+    wikidata_qid: Q1373070
+    verified: false
+  - name: 天長
+    reading: テンチョウ
+    start_year: 824
+    end_year: 834
+    wikidata_qid: Q1373138
+    verified: false
+  - name: 承和
+    reading: ジョウワ
+    start_year: 834
+    end_year: 848
+    wikidata_qid: Q1075605
+    verified: false
+  - name: 嘉祥
+    reading: カショウ
+    start_year: 848
+    end_year: 851
+    wikidata_qid: Q1373157
+    verified: false
+  - name: 仁寿
+    reading: ニンジュ
+    start_year: 851
+    end_year: 854
+    wikidata_qid: Q1373077
+    verified: false
+  - name: 斉衡
+    reading: サイコウ
+    start_year: 854
+    end_year: 857
+    wikidata_qid: Q1324664
+    verified: false
+  - name: 天安
+    reading: テンアン
+    start_year: 857
+    end_year: 859
+    wikidata_qid: Q1075611
+    verified: false
+  - name: 貞観
+    reading: ジョウガン
+    start_year: 859
+    end_year: 878
+    wikidata_qid: Q1075635
+    verified: false
+  - name: 元慶
+    reading: ガンギョウ
+    start_year: 877
+    end_year: 885
+    wikidata_qid: Q747451
+    verified: false
+  - name: 仁和
+    reading: ニンナ
+    start_year: 885
+    end_year: 889
+    wikidata_qid: Q1346317
+    verified: false
+  - name: 寛平
+    reading: カンピョウ
+    start_year: 889
+    end_year: 898
+    wikidata_qid: Q1346292
+    verified: false
+  - name: 昌泰
+    reading: ショウタイ
+    start_year: 898
+    end_year: 901
+    wikidata_qid: Q1324780
+    verified: false
+  - name: 延喜
+    reading: エンギ
+    start_year: 901
+    end_year: 923
+    wikidata_qid: Q1374325
+    verified: false
+  - name: 延長
+    reading: エンチョウ
+    start_year: 923
+    end_year: 931
+    wikidata_qid: Q1327274
+    verified: false
+  - name: 承平
+    reading: ジョウヘイ
+    start_year: 931
+    end_year: 938
+    wikidata_qid: Q1324874
+    verified: false
+  - name: 天慶
+    reading: テンギョウ
+    start_year: 938
+    end_year: 947
+    wikidata_qid: Q1327340
+    verified: false
+  - name: 天暦
+    reading: テンリャク
+    start_year: 947
+    end_year: 957
+    wikidata_qid: Q1346281
+    verified: false
+  - name: 天徳
+    reading: テントク
+    start_year: 957
+    end_year: 961
+    wikidata_qid: Q1327662
+    verified: false
+  - name: 応和
+    reading: オウワ
+    start_year: 961
+    end_year: 964
+    wikidata_qid: Q1324768
+    verified: false
+  - name: 康保
+    reading: コウホウ
+    start_year: 964
+    end_year: 968
+    wikidata_qid: Q1327182
+    verified: false
+  - name: 安和
+    reading: アンナ
+    start_year: 968
+    end_year: 970
+    wikidata_qid: Q1373003
+    verified: false
+  - name: 天禄
+    reading: テンロク
+    start_year: 970
+    end_year: 974
+    wikidata_qid: Q1327229
+    verified: false
+  - name: 天延
+    reading: テンエン
+    start_year: 974
+    end_year: 976
+    wikidata_qid: Q1327245
+    verified: false
+  - name: 貞元
+    reading: ジョウゲン
+    start_year: 976
+    end_year: 978
+    wikidata_qid: Q1324833
+    verified: false
+  - name: 天元
+    reading: テンゲン
+    start_year: 978
+    end_year: 983
+    wikidata_qid: Q1327101
+    verified: false
+  - name: 永観
+    reading: エイカン
+    start_year: 983
+    end_year: 985
+    wikidata_qid: Q1327084
+    verified: false
+  - name: 寛和
+    reading: カンナ
+    start_year: 985
+    end_year: 987
+    wikidata_qid: Q1327053
+    verified: false
+  - name: 永延
+    reading: エイエン
+    start_year: 987
+    end_year: 989
+    wikidata_qid: Q1324864
+    verified: false
+  - name: 永祚
+    reading: エイソ
+    start_year: 989
+    end_year: 990
+    wikidata_qid: Q1327358
+    verified: false
+  - name: 正暦
+    reading: ショウリャク
+    start_year: 990
+    end_year: 995
+    wikidata_qid: Q1324858
+    verified: false
+  - name: 長徳
+    reading: チョウトク
+    start_year: 995
+    end_year: 999
+    wikidata_qid: Q1327213
+    verified: false
+  - name: 長保
+    reading: チョウホウ
+    start_year: 999
+    end_year: 1004
+    wikidata_qid: Q1324844
+    verified: false
+  - name: 寛弘
+    reading: カンコウ
+    start_year: 1004
+    end_year: 1013
+    wikidata_qid: Q2736722
+    verified: false
+  - name: 長和
+    reading: チョウワ
+    start_year: 1013
+    end_year: 1017
+    wikidata_qid: Q1194173
+    verified: false
+  - name: 寛仁
+    reading: カンニン
+    start_year: 1017
+    end_year: 1021
+    wikidata_qid: Q1193951
+    verified: false
+  - name: 治安
+    reading: ジアン
+    start_year: 1021
+    end_year: 1024
+    wikidata_qid: Q1150852
+    verified: false
+  - name: 万寿
+    reading: マンジュ
+    start_year: 1024
+    end_year: 1028
+    wikidata_qid: Q1194155
+    verified: false
+  - name: 長元
+    reading: チョウゲン
+    start_year: 1028
+    end_year: 1037
+    wikidata_qid: Q1193557
+    verified: false
+  - name: 長暦
+    reading: チョウリャク
+    start_year: 1037
+    end_year: 1040
+    wikidata_qid: Q1193519
+    verified: false
+  - name: 長久
+    reading: チョウキュウ
+    start_year: 1040
+    end_year: 1044
+    wikidata_qid: Q1193530
+    verified: false
+  - name: 寛徳
+    reading: カントク
+    start_year: 1044
+    end_year: 1046
+    wikidata_qid: Q1193536
+    verified: false
+  - name: 永承
+    reading: エイショウ
+    start_year: 1046
+    end_year: 1053
+    wikidata_qid: Q1193549
+    verified: false
+  - name: 天喜
+    reading: テンギ
+    start_year: 1053
+    end_year: 1058
+    wikidata_qid: Q1193591
+    verified: false
+  - name: 康平
+    reading: コウヘイ
+    start_year: 1058
+    end_year: 1065
+    wikidata_qid: Q1193572
+    verified: false
+  - name: 治暦
+    reading: ジリャク
+    start_year: 1065
+    end_year: 1069
+    wikidata_qid: Q934365
+    verified: false
+  - name: 延久
+    reading: エンキュウ
+    start_year: 1069
+    end_year: 1074
+    wikidata_qid: Q1193638
+    verified: false
+  - name: 承保
+    reading: ジョウホウ
+    start_year: 1074
+    end_year: 1077
+    wikidata_qid: Q1193592
+    verified: false
+  - name: 承暦
+    reading: ジョウリャク
+    start_year: 1077
+    end_year: 1081
+    wikidata_qid: Q279743
+    verified: false
+  - name: 永保
+    reading: エイホウ
+    start_year: 1081
+    end_year: 1084
+    wikidata_qid: Q1193881
+    verified: false
+  - name: 応徳
+    reading: オウトク
+    start_year: 1084
+    end_year: 1087
+    wikidata_qid: Q264214
+    verified: false
+  - name: 寛治
+    reading: カンジ
+    start_year: 1087
+    end_year: 1094
+    wikidata_qid: Q1193874
+    verified: false
+  - name: 嘉保
+    reading: カホウ
+    start_year: 1094
+    end_year: 1096
+    wikidata_qid: Q1193280
+    verified: false
+  - name: 永長
+    reading: エイチョウ
+    start_year: 1096
+    end_year: 1097
+    wikidata_qid: Q1193646
+    verified: false
+  - name: 承徳
+    reading: ジョウトク
+    start_year: 1097
+    end_year: 1099
+    wikidata_qid: Q1193901
+    verified: false
+  - name: 康和
+    reading: コウワ
+    start_year: 1099
+    end_year: 1104
+    wikidata_qid: Q1193890
+    verified: false
+  - name: 長治
+    reading: チョウジ
+    start_year: 1104
+    end_year: 1106
+    wikidata_qid: Q1150870
+    verified: false
+  - name: 嘉承
+    reading: カジョウ
+    start_year: 1106
+    end_year: 1108
+    wikidata_qid: Q1193892
+    verified: false
+  - name: 天仁
+    reading: テンニン
+    start_year: 1108
+    end_year: 1110
+    wikidata_qid: Q1193599
+    verified: false
+  - name: 天永
+    reading: テンエイ
+    start_year: 1110
+    end_year: 1113
+    wikidata_qid: Q1193915
+    verified: false
+  - name: 永久
+    reading: エイキュウ
+    start_year: 1113
+    end_year: 1118
+    wikidata_qid: Q543201
+    verified: false
+  - name: 元永
+    reading: ゲンエイ
+    start_year: 1118
+    end_year: 1120
+    wikidata_qid: Q1193613
+    verified: false
+  - name: 保安
+    reading: ホウアン
+    start_year: 1120
+    end_year: 1124
+    wikidata_qid: Q1194464
+    verified: false
+  - name: 天治
+    reading: テンジ
+    start_year: 1124
+    end_year: 1126
+    wikidata_qid: Q1150846
+    verified: false
+  - name: 大治
+    reading: ダイジ
+    start_year: 1126
+    end_year: 1131
+    wikidata_qid: Q1037046
+    verified: false
+  - name: 天承
+    reading: テンジョウ
+    start_year: 1131
+    end_year: 1132
+    wikidata_qid: Q550527
+    verified: false
+  - name: 長承
+    reading: チョウショウ
+    start_year: 1132
+    end_year: 1135
+    wikidata_qid: Q1194264
+    verified: false
+  - name: 保延
+    reading: ホウエン
+    start_year: 1135
+    end_year: 1141
+    wikidata_qid: Q1193929
+    verified: false
+  - name: 永治
+    reading: エイジ
+    start_year: 1141
+    end_year: 1142
+    wikidata_qid: Q1194167
+    verified: false
+  - name: 康治
+    reading: コウジ
+    start_year: 1142
+    end_year: 1144
+    wikidata_qid: Q1194459
+    verified: false
+  - name: 天養
+    reading: テンヨウ
+    start_year: 1144
+    end_year: 1145
+    wikidata_qid: Q1194175
+    verified: false
+  - name: 久安
+    reading: キュウアン
+    start_year: 1145
+    end_year: 1151
+    wikidata_qid: Q1193860
+    verified: false
+  - name: 仁平
+    reading: ニンペイ
+    start_year: 1151
+    end_year: 1154
+    wikidata_qid: Q1193887
+    verified: false
+  - name: 久寿
+    reading: キュウジュ
+    start_year: 1154
+    end_year: 1156
+    wikidata_qid: Q1194205
+    verified: false
+  - name: 保元
+    reading: ホウゲン
+    start_year: 1156
+    end_year: 1159
+    wikidata_qid: Q1193898
+    verified: false
+  - name: 平治
+    reading: ヘイジ
+    start_year: 1159
+    end_year: 1160
+    wikidata_qid: Q1193930
+    verified: false
+  - name: 永暦
+    reading: エイリャク
+    start_year: 1160
+    end_year: 1161
+    wikidata_qid: Q1193895
+    verified: false
+  - name: 応保
+    reading: オウホウ
+    start_year: 1161
+    end_year: 1163
+    wikidata_qid: Q1193927
+    verified: false
+  - name: 長寛
+    reading: チョウカン
+    start_year: 1163
+    end_year: 1165
+    wikidata_qid: Q1193904
+    verified: false
+  - name: 永万
+    reading: エイマン
+    start_year: 1165
+    end_year: 1166
+    wikidata_qid: Q1193868
+    verified: false
+  - name: 仁安
+    reading: ニンアン
+    start_year: 1166
+    end_year: 1169
+    wikidata_qid: Q3577285
+    verified: false
+  - name: 嘉応
+    reading: カオウ
+    start_year: 1169
+    end_year: 1171
+    wikidata_qid: Q1150842
+    verified: false
+  - name: 承安
+    reading: ジョウアン
+    start_year: 1171
+    end_year: 1175
+    wikidata_qid: Q1194188
+    verified: false
+  - name: 安元
+    reading: アンゲン
+    start_year: 1175
+    end_year: 1177
+    wikidata_qid: Q1193287
+    verified: false
+  - name: 治承
+    reading: ジショウ
+    start_year: 1177
+    end_year: 1181
+    wikidata_qid: Q1194671
+    verified: false
+  - name: 養和
+    reading: ヨウワ
+    start_year: 1181
+    end_year: 1182
+    wikidata_qid: Q729609
+    verified: false
+  - name: 寿永
+    reading: ジュエイ
+    start_year: 1182
+    end_year: 1184
+    wikidata_qid: Q598057
+    verified: false
+  - name: 元暦
+    reading: ゲンリャク
+    start_year: 1184
+    end_year: 1185
+    wikidata_qid: Q1194250
+    verified: false
+  - name: 文治
+    reading: ブンジ
+    start_year: 1185
+    end_year: 1190
+    wikidata_qid: Q1194415
+    verified: false
+  - name: 建久
+    reading: ケンキュウ
+    start_year: 1190
+    end_year: 1199
+    wikidata_qid: Q1193933
+    verified: false
+  - name: 正治
+    reading: ショウジ
+    start_year: 1199
+    end_year: 1201
+    wikidata_qid: Q1199890
+    verified: false
+  - name: 建仁
+    reading: ケンニン
+    start_year: 1201
+    end_year: 1204
+    wikidata_qid: Q1195433
+    verified: false
+  - name: 元久
+    reading: ゲンキュウ
+    start_year: 1204
+    end_year: 1206
+    wikidata_qid: Q1194276
+    verified: false
+  - name: 建永
+    reading: ケンエイ
+    start_year: 1206
+    end_year: 1207
+    wikidata_qid: Q1194153
+    verified: false
+  - name: 承元
+    reading: ジョウゲン
+    start_year: 1207
+    end_year: 1211
+    wikidata_qid: Q1194389
+    verified: false
+  - name: 建暦
+    reading: ケンリャク
+    start_year: 1211
+    end_year: 1213
+    wikidata_qid: Q1194260
+    verified: false
+  - name: 建保
+    reading: ケンポウ
+    start_year: 1213
+    end_year: 1219
+    wikidata_qid: Q1194251
+    verified: false
+  - name: 承久
+    reading: ジョウキュウ
+    start_year: 1219
+    end_year: 1222
+    wikidata_qid: Q1195428
+    verified: false
+  - name: 貞応
+    reading: ジョウオウ
+    start_year: 1222
+    end_year: 1224
+    wikidata_qid: Q1194163
+    verified: false
+  - name: 元仁
+    reading: ゲンニン
+    start_year: 1224
+    end_year: 1225
+    wikidata_qid: Q1194430
+    verified: false
+  - name: 嘉禄
+    reading: カロク
+    start_year: 1225
+    end_year: 1227
+    wikidata_qid: Q1194421
+    verified: false
+  - name: 安貞
+    reading: アンテイ
+    start_year: 1227
+    end_year: 1229
+    wikidata_qid: Q737537
+    verified: false
+  - name: 寛喜
+    reading: カンギ
+    start_year: 1229
+    end_year: 1232
+    wikidata_qid: Q1194200
+    verified: false
+  - name: 貞永
+    reading: ジョウエイ
+    start_year: 1232
+    end_year: 1233
+    wikidata_qid: Q1194168
+    verified: false
+  - name: 天福
+    reading: テンプク
+    start_year: 1233
+    end_year: 1234
+    wikidata_qid: Q1194452
+    verified: false
+  - name: 文暦
+    reading: ブンリャク
+    start_year: 1234
+    end_year: 1235
+    wikidata_qid: Q1194125
+    verified: false
+  - name: 嘉禎
+    reading: カテイ
+    start_year: 1235
+    end_year: 1238
+    wikidata_qid: Q651897
+    verified: false
+  - name: 暦仁
+    reading: リャクニン
+    start_year: 1238
+    end_year: 1239
+    wikidata_qid: Q1193948
+    verified: false
+  - name: 延応
+    reading: エンオウ
+    start_year: 1239
+    end_year: 1240
+    wikidata_qid: Q1193942
+    verified: false
+  - name: 仁治
+    reading: ニンジ
+    start_year: 1240
+    end_year: 1243
+    wikidata_qid: Q1194262
+    verified: false
+  - name: 寛元
+    reading: カンゲン
+    start_year: 1243
+    end_year: 1247
+    wikidata_qid: Q1194187
+    verified: false
+  - name: 宝治
+    reading: ホウジ
+    start_year: 1247
+    end_year: 1249
+    wikidata_qid: Q1327400
+    verified: false
+  - name: 建長
+    reading: ケンチョウ
+    start_year: 1249
+    end_year: 1256
+    wikidata_qid: Q1194270
+    verified: false
+  - name: 康元
+    reading: コウゲン
+    start_year: 1256
+    end_year: 1257
+    wikidata_qid: Q1194242
+    verified: false
+  - name: 正嘉
+    reading: ショウカ
+    start_year: 1257
+    end_year: 1259
+    wikidata_qid: Q1327489
+    verified: false
+  - name: 正元
+    reading: ショウゲン
+    start_year: 1259
+    end_year: 1260
+    wikidata_qid: Q1194244
+    verified: false
+  - name: 文応
+    reading: ブンオウ
+    start_year: 1260
+    end_year: 1261
+    wikidata_qid: Q1199883
+    verified: false
+  - name: 弘長
+    reading: コウチョウ
+    start_year: 1261
+    end_year: 1264
+    wikidata_qid: Q1327323
+    verified: false
+  - name: 文永
+    reading: ブンエイ
+    start_year: 1264
+    end_year: 1275
+    wikidata_qid: Q1010103
+    verified: false
+  - name: 建治
+    reading: ケンジ
+    start_year: 1275
+    end_year: 1278
+    wikidata_qid: Q1327993
+    verified: false
+  - name: 弘安
+    reading: コウアン
+    start_year: 1278
+    end_year: 1288
+    wikidata_qid: Q389180
+    verified: false
+  - name: 正応
+    reading: ショウオウ
+    start_year: 1288
+    end_year: 1293
+    wikidata_qid: Q1327371
+    verified: false
+  - name: 永仁
+    reading: エイニン
+    start_year: 1293
+    end_year: 1299
+    wikidata_qid: Q1327307
+    verified: false
+  - name: 正安
+    reading: ショウアン
+    start_year: 1299
+    end_year: 1302
+    wikidata_qid: Q1327427
+    verified: false
+  - name: 乾元
+    reading: ケンゲン
+    start_year: 1302
+    end_year: 1303
+    wikidata_qid: Q1327472
+    verified: false
+  - name: 嘉元
+    reading: カゲン
+    start_year: 1303
+    end_year: 1307
+    wikidata_qid: Q1327409
+    verified: false
+  - name: 徳治
+    reading: トクジ
+    start_year: 1307
+    end_year: 1308
+    wikidata_qid: Q1327170
+    verified: false
+  - name: 延慶
+    reading: エンキョウ
+    start_year: 1308
+    end_year: 1311
+    wikidata_qid: Q1327068
+    verified: false
+  - name: 応長
+    reading: オウチョウ
+    start_year: 1311
+    end_year: 1312
+    wikidata_qid: Q1327136
+    verified: false
+  - name: 正和
+    reading: ショウワ
+    start_year: 1312
+    end_year: 1317
+    wikidata_qid: Q1324807
+    verified: false
+  - name: 文保
+    reading: ブンポウ
+    start_year: 1317
+    end_year: 1319
+    wikidata_qid: Q987788
+    verified: false
+  - name: 元応
+    reading: ゲンオウ
+    start_year: 1319
+    end_year: 1321
+    wikidata_qid: Q1193925
+    verified: false
+  - name: 元亨
+    reading: ゲンコウ
+    start_year: 1321
+    end_year: 1324
+    wikidata_qid: Q509889
+    verified: false
+  - name: 正中
+    reading: ショウチュウ
+    start_year: 1324
+    end_year: 1326
+    wikidata_qid: Q1327153
+    verified: false
+  - name: 嘉暦
+    reading: カリャク
+    start_year: 1326
+    end_year: 1329
+    wikidata_qid: Q1327198
+    verified: false
+  - name: 元徳
+    reading: ゲントク
+    start_year: 1329
+    end_year: 1331
+    wikidata_qid: Q1327385
+    verified: false
+  - name: 元弘
+    reading: ゲンコウ
+    start_year: 1331
+    end_year: 1334
+    wikidata_qid: Q1194556
+    verified: false
+  - name: 正慶
+    reading: ショウケイ
+    start_year: 1332
+    end_year: 1333
+    wikidata_qid: Q1069086
+    verified: false
+  - name: 建武
+    reading: ケンム
+    start_year: 1334
+    end_year: 1338
+    wikidata_qid: Q1193970
+    verified: false
+  - name: 延元
+    reading: エンゲン
+    start_year: 1336
+    end_year: 1340
+    wikidata_qid: Q1194159
+    verified: false
+  - name: 暦応
+    reading: リャクオウ
+    start_year: 1338
+    end_year: 1342
+    wikidata_qid: Q1146182
+    verified: false
+  - name: 興国
+    reading: コウコク
+    start_year: 1340
+    end_year: 1346
+    wikidata_qid: Q1143592
+    verified: false
+  - name: 康永
+    reading: コウエイ
+    start_year: 1342
+    end_year: 1345
+    wikidata_qid: Q980266
+    verified: false
+  - name: 正平
+    reading: ショウヘイ
+    start_year: 1346
+    end_year: 1370
+    wikidata_qid: Q1143587
+    verified: false
+  - name: 観応
+    reading: カンノウ
+    start_year: 1350
+    end_year: 1352
+    wikidata_qid: Q1145053
+    verified: false
+  - name: 文和
+    reading: ブンナ
+    start_year: 1352
+    end_year: 1356
+    wikidata_qid: Q1146252
+    verified: false
+  - name: 延文
+    reading: エンブン
+    start_year: 1356
+    end_year: 1361
+    wikidata_qid: Q1145071
+    verified: false
+  - name: 康安
+    reading: コウアン
+    start_year: 1361
+    end_year: 1362
+    wikidata_qid: Q515424
+    verified: false
+  - name: 貞治
+    reading: ジョウジ
+    start_year: 1362
+    end_year: 1368
+    wikidata_qid: Q1146153
+    verified: false
+  - name: 応安
+    reading: オウアン
+    start_year: 1368
+    end_year: 1375
+    wikidata_qid: Q1146245
+    verified: false
+  - name: 建徳
+    reading: ケントク
+    start_year: 1370
+    end_year: 1372
+    wikidata_qid: Q1143922
+    verified: false
+  - name: 文中
+    reading: ブンチュウ
+    start_year: 1372
+    end_year: 1375
+    wikidata_qid: Q1194181
+    verified: false
+  - name: 天授
+    reading: テンジュ
+    start_year: 1375
+    end_year: 1381
+    wikidata_qid: Q1145023
+    verified: false
+  - name: 永和
+    reading: エイワ
+    start_year: 1375
+    end_year: 1379
+    wikidata_qid: Q1145780
+    verified: false
+  - name: 康暦
+    reading: コウリャク
+    start_year: 1379
+    end_year: 1381
+    wikidata_qid: Q252777
+    verified: false
+  - name: 弘和
+    reading: コウワ
+    start_year: 1381
+    end_year: 1384
+    wikidata_qid: Q1145818
+    verified: false
+  - name: 永徳
+    reading: エイトク
+    start_year: 1381
+    end_year: 1384
+    wikidata_qid: Q1145805
+    verified: false
+  - name: 元中
+    reading: ゲンチュウ
+    start_year: 1384
+    end_year: 1392
+    wikidata_qid: Q1146236
+    verified: false
+  - name: 至徳
+    reading: シトク
+    start_year: 1384
+    end_year: 1387
+    wikidata_qid: Q1146202
+    verified: false
+  - name: 嘉慶
+    reading: カキョウ
+    start_year: 1387
+    end_year: 1389
+    wikidata_qid: Q1145253
+    verified: false
+  - name: 康応
+    reading: コウオウ
+    start_year: 1389
+    end_year: 1390
+    wikidata_qid: Q1146172
+    verified: false
+  - name: 明徳
+    reading: メイトク
+    start_year: 1390
+    end_year: 1394
+    wikidata_qid: Q1145032
+    verified: false
+  - name: 応永
+    reading: オウエイ
+    start_year: 1394
+    end_year: 1428
+    wikidata_qid: Q1193078
+    verified: false
+  - name: 正長
+    reading: ショウチョウ
+    start_year: 1428
+    end_year: 1429
+    wikidata_qid: Q1193070
+    verified: false
+  - name: 永享
+    reading: エイキョウ
+    start_year: 1429
+    end_year: 1441
+    wikidata_qid: Q1193059
+    verified: false
+  - name: 嘉吉
+    reading: カキツ
+    start_year: 1441
+    end_year: 1444
+    wikidata_qid: Q1193238
+    verified: false
+  - name: 文安
+    reading: ブンアン
+    start_year: 1444
+    end_year: 1449
+    wikidata_qid: Q1193586
+    verified: false
+  - name: 宝徳
+    reading: ホウトク
+    start_year: 1449
+    end_year: 1452
+    wikidata_qid: Q1143606
+    verified: false
+  - name: 享徳
+    reading: キョウトク
+    start_year: 1452
+    end_year: 1455
+    wikidata_qid: Q1143370
+    verified: false
+  - name: 康正
+    reading: コウショウ
+    start_year: 1455
+    end_year: 1457
+    wikidata_qid: Q1143364
+    verified: false
+  - name: 長禄
+    reading: チョウロク
+    start_year: 1457
+    end_year: 1460
+    wikidata_qid: Q1193524
+    verified: false
+  - name: 寛正
+    reading: カンショウ
+    start_year: 1460
+    end_year: 1466
+    wikidata_qid: Q1143928
+    verified: false
+  - name: 文正
+    reading: ブンショウ
+    start_year: 1466
+    end_year: 1467
+    wikidata_qid: Q1193596
+    verified: false
+  - name: 応仁
+    reading: オウニン
+    start_year: 1467
+    end_year: 1469
+    wikidata_qid: Q1143903
+    verified: false
+  - name: 文明
+    reading: ブンメイ
+    start_year: 1469
+    end_year: 1487
+    wikidata_qid: Q1193544
+    verified: false
+  - name: 長享
+    reading: チョウキョウ
+    start_year: 1487
+    end_year: 1489
+    wikidata_qid: Q968843
+    verified: false
+  - name: 延徳
+    reading: エントク
+    start_year: 1489
+    end_year: 1492
+    wikidata_qid: Q431465
+    verified: false
+  - name: 明応
+    reading: メイオウ
+    start_year: 1492
+    end_year: 1501
+    wikidata_qid: Q1193841
+    verified: false
+  - name: 文亀
+    reading: ブンキ
+    start_year: 1501
+    end_year: 1504
+    wikidata_qid: Q1324885
+    verified: false
+  - name: 永正
+    reading: エイショウ
+    start_year: 1504
+    end_year: 1521
+    wikidata_qid: Q1193577
+    verified: false
+  - name: 大永
+    reading: タイエイ
+    start_year: 1521
+    end_year: 1528
+    wikidata_qid: Q1193564
+    verified: false
+  - name: 享禄
+    reading: キョウロク
+    start_year: 1528
+    end_year: 1532
+    wikidata_qid: Q1193418
+    verified: false
+  - name: 天文
+    reading: テンブン
+    start_year: 1532
+    end_year: 1555
+    wikidata_qid: Q1192853
+    verified: false
+  - name: 弘治
+    reading: コウジ
+    start_year: 1555
+    end_year: 1558
+    wikidata_qid: Q1143910
+    verified: false
+  - name: 永禄
+    reading: エイロク
+    start_year: 1558
+    end_year: 1570
+    wikidata_qid: Q1143341
+    verified: false
+  - name: 元亀
+    reading: ゲンキ
+    start_year: 1570
+    end_year: 1573
+    wikidata_qid: Q1145064
+    verified: false
+  - name: 天正
+    reading: テンショウ
+    start_year: 1573
+    end_year: 1592
+    wikidata_qid: Q1145058
+    verified: false
+  - name: 文禄
+    reading: ブンロク
+    start_year: 1592
+    end_year: 1596
+    wikidata_qid: Q1373039
+    verified: false
+  - name: 慶長
+    reading: ケイチョウ
+    start_year: 1596
+    end_year: 1615
+    wikidata_qid: Q1328185
+    verified: false
+  - name: 元和
+    reading: ゲンナ
+    start_year: 1615
+    end_year: 1624
+    wikidata_qid: Q635245
+    verified: false
+  - name: 寛永
+    reading: カンエイ
+    start_year: 1624
+    end_year: 1645
+    wikidata_qid: Q1192913
+    verified: false
+  - name: 正保
+    reading: ショウホウ
+    start_year: 1645
+    end_year: 1648
+    wikidata_qid: Q1146192
+    verified: false
+  - name: 慶安
+    reading: ケイアン
+    start_year: 1648
+    end_year: 1652
+    wikidata_qid: Q1146135
+    verified: false
+  - name: 承応
+    reading: ジョウオウ
+    start_year: 1652
+    end_year: 1655
+    wikidata_qid: Q1145081
+    verified: false
+  - name: 明暦
+    reading: メイレキ
+    start_year: 1655
+    end_year: 1658
+    wikidata_qid: Q1192766
+    verified: false
+  - name: 万治
+    reading: マンジ
+    start_year: 1658
+    end_year: 1661
+    wikidata_qid: Q1145295
+    verified: false
+  - name: 寛文
+    reading: カンブン
+    start_year: 1661
+    end_year: 1673
+    wikidata_qid: Q1146228
+    verified: false
+  - name: 延宝
+    reading: エンポウ
+    start_year: 1673
+    end_year: 1681
+    wikidata_qid: Q1145735
+    verified: false
+  - name: 天和
+    reading: テンナ
+    start_year: 1681
+    end_year: 1684
+    wikidata_qid: Q1145289
+    verified: false
+  - name: 貞享
+    reading: ジョウキョウ
+    start_year: 1684
+    end_year: 1688
+    wikidata_qid: Q1146221
+    verified: false
+  - name: 元禄
+    reading: ゲンロク
+    start_year: 1688
+    end_year: 1704
+    wikidata_qid: Q1325001
+    verified: false
+  - name: 宝永
+    reading: ホウエイ
+    start_year: 1704
+    end_year: 1711
+    wikidata_qid: Q1145262
+    verified: false
+  - name: 正徳
+    reading: ショウトク
+    start_year: 1711
+    end_year: 1716
+    wikidata_qid: Q1193848
+    verified: false
+  - name: 享保
+    reading: キョウホウ
+    start_year: 1716
+    end_year: 1736
+    wikidata_qid: Q1145048
+    verified: false
+  - name: 元文
+    reading: ゲンブン
+    start_year: 1736
+    end_year: 1741
+    wikidata_qid: Q1145754
+    verified: false
+  - name: 寛保
+    reading: カンポウ
+    start_year: 1741
+    end_year: 1744
+    wikidata_qid: Q1145798
+    verified: false
+  - name: 延享
+    reading: エンキョウ
+    start_year: 1744
+    end_year: 1748
+    wikidata_qid: Q1183728
+    verified: false
+  - name: 寛延
+    reading: カンエン
+    start_year: 1748
+    end_year: 1751
+    wikidata_qid: Q1145723
+    verified: false
+  - name: 宝暦
+    reading: ホウレキ
+    start_year: 1751
+    end_year: 1764
+    wikidata_qid: Q1194397
+    verified: false
+  - name: 明和
+    reading: メイワ
+    start_year: 1764
+    end_year: 1772
+    wikidata_qid: Q1146161
+    verified: false
+  - name: 安永
+    reading: アンエイ
+    start_year: 1772
+    end_year: 1781
+    wikidata_qid: Q1193910
+    verified: false
+  - name: 天明
+    reading: テンメイ
+    start_year: 1781
+    end_year: 1789
+    wikidata_qid: Q1194121
+    verified: false
+  - name: 寛政
+    reading: カンセイ
+    start_year: 1789
+    end_year: 1801
+    wikidata_qid: Q1195131
+    verified: false
+  - name: 享和
+    reading: キョウワ
+    start_year: 1801
+    end_year: 1804
+    wikidata_qid: Q960763
+    verified: false
+  - name: 文化
+    reading: ブンカ
+    start_year: 1804
+    end_year: 1818
+    wikidata_qid: Q1373146
+    verified: false
+  - name: 文政
+    reading: ブンセイ
+    start_year: 1818
+    end_year: 1831
+    wikidata_qid: Q1327119
+    verified: false
+  - name: 天保
+    reading: テンポウ
+    start_year: 1831
+    end_year: 1845
+    wikidata_qid: Q1369045
+    verified: false
+  - name: 弘化
+    reading: コウカ
+    start_year: 1845
+    end_year: 1848
+    wikidata_qid: Q1325317
+    verified: false
+  - name: 嘉永
+    reading: カエイ
+    start_year: 1848
+    end_year: 1855
+    wikidata_qid: Q1146125
+    verified: false
+  - name: 安政
+    reading: アンセイ
+    start_year: 1855
+    end_year: 1860
+    wikidata_qid: Q1327259
+    verified: false
+  - name: 万延
+    reading: マンエン
+    start_year: 1860
+    end_year: 1861
+    wikidata_qid: Q1193862
+    verified: false
+  - name: 文久
+    reading: ブンキュウ
+    start_year: 1861
+    end_year: 1864
+    wikidata_qid: Q730266
+    verified: false
+  - name: 元治
+    reading: ゲンジ
+    start_year: 1864
+    end_year: 1865
+    wikidata_qid: Q1325419
+    verified: false
+  - name: 慶応
+    reading: ケイオウ
+    start_year: 1865
+    end_year: 1868
+    wikidata_qid: Q776775
+    verified: false
+  - name: 明治
+    reading: メイジ
+    start_year: 1868
+    end_year: 1912
+    wikidata_qid: Q3125096
+    verified: false
+  - name: 大正
+    reading: タイショウ
+    start_year: 1912
+    end_year: 1926
+    wikidata_qid: Q329174
+    verified: false
+  - name: 昭和
+    reading: ショウワ
+    start_year: 1926
+    end_year: 1989
+    wikidata_qid: Q327567
+    verified: false
+  - name: 平成
+    reading: ヘイセイ
+    start_year: 1989
+    end_year: 2019
+    wikidata_qid: Q234510
+    verified: false
+  - name: 令和
+    reading: レイワ
+    start_year: 2019
+    end_year: null
+    wikidata_qid: Q62609017
+    verified: false
