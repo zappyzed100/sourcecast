@@ -1,12 +1,35 @@
-# _headers — Cloudflare Pagesが読むレスポンスヘッダー定義（plan.md §3.4）。
+# _headers — Cloudflare Pagesが読むレスポンスヘッダー定義（plan.md §3.4・development-plan.md Phase 8タスク5）。
 #
 # Content-Security-Policyはここでは設定しない——Astroの`security.csp: true`が
 # インラインscript/styleのハッシュを含む<meta http-equiv>を各HTMLへ埋め込んでおり、
 # ここで別のCSPをヘッダーとして重ねるとブラウザは「両方を満たす」交差適用になり、
 # ビルド後に変わるハッシュをこのファイルだけ手で追随させる二重管理が生まれる（G5）。
 # ヘッダー側では、meta要素のCSPでは表現できない項目だけを補う。
+#
+# キャッシュ方針: このビルドはcontent-hashされた資産（Astroの`_astro/`等）を
+# 生成していない（インラインscript中心のため）——ファイル名が変わらないまま中身が
+# 更新され得るので、`immutable`のような長期不変キャッシュは使わない。将来hashed
+# assetを導入したら、その時点でそのパスにだけ`immutable`を追加する。
+# Cloudflare Pagesは複数ブロックが同じパスへマッチする場合、後方の宣言が同名ヘッダーを
+# 上書きする——`/*`が全体の既定値、より具体的なパスが個別に上書きする構成にしている。
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
   X-Frame-Options: DENY
+  Cache-Control: public, max-age=0, must-revalidate
+
+/audio/*
+  Cache-Control: public, max-age=86400
+
+/scripts/*
+  Cache-Control: public, max-age=3600
+
+/pagefind/*
+  Cache-Control: public, max-age=3600
+
+/favicon.ico
+  Cache-Control: public, max-age=86400
+
+/favicon.svg
+  Cache-Control: public, max-age=86400

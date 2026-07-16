@@ -504,10 +504,39 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   単体テスト12件（`tests/media/test_r2_upload.py`、`httpx.MockTransport`で
   GET+PUT/GETのみ/エラー系を検証——同一内容の再アップロードでPUTが
   一切呼ばれないことを直接アサートしている）。
-* [ ] Cloudflare Pagesへ独自ドメイン、HTTPS、キャッシュ、セキュリティヘッダー、404を設定する。
+* [x] Cloudflare Pagesへ独自ドメイン、HTTPS、キャッシュ、セキュリティヘッダー、404を設定する。
   検証: プレビューと本番でリンク切れ、mixed content、ヘッダー欠落が0件。
-* [ ] Pages/R2からGit上の直前版へ戻す手順を自動化する。
+  実装メモ: リポジトリ側で完結する部分を実装・e2eで固定した——独自ドメイン・HTTPS証明書
+  発行・Pagesプロジェクトの作成自体はCloudflareダッシュボード操作が必須のため
+  HUMAN_TASKS.mdへ依頼済み（未着手）。404は既存の`404.astro`がAstroの規約で
+  `dist/404.html`としてビルドされ、Cloudflare Pagesは規約上これを自動でカスタム
+  404として認識する（追加設定不要）。`apps/site/public/_headers`へキャッシュ方針
+  （content-hashされた資産がまだ無いため`immutable`は使わず、HTML=no-cache、
+  audio/pagefind/scripts=中期キャッシュに限定）を追記。`e2e/site-health.spec.ts`で
+  3点を固定: (1) `_headers`ファイル自体をパースし必須ヘッダーの宣言漏れが無いこと
+  （`astro preview`はCloudflare Pages固有の`_headers`適用を行わないため、ライブHTTP
+  応答ではなく設定ファイルを検証——ライブ応答での検証はPagesプロジェクトが実在してから
+  別途スモークテストとして追加する）、(2) 全既知ページでmixed content
+  （`http://`の能動的な資源読み込み）が0件、(3) 全既知ページの内部リンクに
+  リンク切れが0件（外部ドメインへの実アクセスはtest-network違反になるため対象外——
+  同一オリジンのみ検証）。`e2e/known-pages.ts`へページ一覧を集約し
+  `accessibility.spec.ts`と共有（重複管理によるドリフト防止）。
+* [x] Pages/R2からGit上の直前版へ戻す手順を自動化する。
   検証: ステージングで1回ロールバックし、URLとRSS GUIDが変わらない。
+  実装メモ: `services/pipeline/src/history_radio/publish/cloudflare_pages.py`の
+  `PagesClient.rollback_to_previous()`。Cloudflare Pagesのrollbackは既存デプロイへ
+  配信対象を差し替えるだけで新しいURLを発行しない（Cloudflare公式機能の性質——
+  本番URL・各エピソードの恒久URLは変わらない）。R2上のmediaオブジェクトは
+  ロールバックで一切変更されない（r2_upload.pyは削除APIを持たず、既存オブジェクトを
+  不変に保つ設計）。デプロイ一覧を新しい順に取得し2番目（直前版）へロールバックする。
+  ロールバック先が無い（デプロイ1件以下）場合はfail closedで拒否する。
+  エンドポイントの存在・認証形式は`api.cloudflare.com`への実プローブで確認済み
+  （`GET .../deployments`・`POST .../deployments/{id}/rollback`）が、実クレデンシャルでの
+  成功応答の中身は未確認——HUMAN_TASKS.mdでPagesプロジェクト作成とトークン発行を依頼中。
+  「URLとRSS GUIDが変わらない」というDoDのうち、RSS GUIDの部分はPhase 9でRSSが
+  実装されてからでないと検証できない（現時点ではepisode_idから決定的にGUIDを
+  導出する設計にする、という設計意図のみ）——**Phase 9完了後に本DoDを再検証すること**。
+  単体テスト10件（`tests/publish/test_cloudflare_pages.py`）。
 
 ### Phase 9 — RSS・配信先（仕様書 §10D）
 

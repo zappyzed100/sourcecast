@@ -196,37 +196,59 @@ ruleset登録を終えれば人間側の作業は無い。**
      （§8.1・§8.4）。手動修正辞書へ個別の読みを追加する際の**確認資料**として
      参照するだけなので、追加のライセンス手続きは不要。
 
-## Phase 8着手中（2026-07-16〜）: R2アップロードで今すぐ必要になったもの
+## Phase 8着手中（2026-07-16〜）: R2アップロード・Pages公開/ロールバックで今すぐ必要になったもの
 
 タスク4「R2へハッシュ付きキーでmediaをアップロード」のクライアント
-（`services/pipeline/src/history_radio/media/r2_upload.py`）は実装・単体テスト済み
-だが、**実クレデンシャルでの動作確認はまだ行っていない**（Cloudflare API v4の
-R2オブジェクトエンドポイントの存在・認証ヘッダ形式は`api.cloudflare.com`への
-実プローブで確認済みだが、成功応答の形は未確認）。下記の項目がまだなら、
-このタイミングで進めてもらえると実クレデンシャルでの検証ができる:
+（`services/pipeline/src/history_radio/media/r2_upload.py`）と、タスク6
+「Pages/R2からGit上の直前版へ戻す手順」のクライアント
+（`services/pipeline/src/history_radio/publish/cloudflare_pages.py`）は
+実装・単体テスト済みだが、**どちらも実クレデンシャルでの動作確認はまだ行っていない**
+（Cloudflare API v4のR2オブジェクト/Pagesデプロイ関連エンドポイントの存在・認証
+ヘッダ形式は`api.cloudflare.com`への実プローブで確認済みだが、成功応答の形は未確認）。
+下記の項目がまだなら、このタイミングで進めてもらえると実クレデンシャルでの検証ができる:
 
 1. 上記「Phase 8までに決めること」の1〜4（ドメイン・Cloudflareアカウント・
    R2バケット作成・公開URL方針）が未了なら先に進める。
-2. **Cloudflare API トークンを発行する**: Cloudflareダッシュボード →
+2. **Cloudflare Pagesプロジェクトを作成する**: Cloudflareダッシュボード →
+   **Workers & Pages** → **Create** → **Pages** →
+   **Connect to Git**でこのGitHubリポジトリ（`zappyzed100/sourcecast`）を選ぶ。
+   ビルド設定は次の通り:
+   - **Framework preset**: Astro
+   - **Build command**: `cd apps/site && pnpm install && pnpm run build`
+     （モノレポなのでルートではなく`apps/site`でビルドする——正確なコマンドは
+     ルートの`pnpm-lock.yaml`を使うため実際には`pnpm --filter apps-site... run build`
+     系になる可能性があり、実装側で最終調整する）
+   - **Build output directory**: `apps/site/dist`
+   プロジェクト名を決める（例: `history-radio-site`）——これは
+   `CLOUDFLARE_PAGES_PROJECT`として教えてほしい（秘密情報ではない）。
+3. **独自ドメインをPagesプロジェクトへ接続する**（上記1でドメインが決まっていれば）:
+   Pagesプロジェクトの **Custom domains** タブ → **Set up a custom domain**。
+   HTTPS証明書はCloudflareが自動発行する（追加操作は基本不要）。
+4. **Cloudflare API トークンを発行する**: Cloudflareダッシュボード →
    右上のプロフィールアイコン → **My Profile** → **API Tokens** →
    **Create Token** → **Custom token**。権限は最低限
    「**Account** → **Workers R2 Storage** → **Edit**」（R2オブジェクトの
-   読み書き）を付与する。発行されたトークン文字列は**このチャットに貼らず**、
-   環境変数`CLOUDFLARE_API_TOKEN`として渡してほしい（渡し方はOpenRouterの
-   APIキーの時と同じ——ローカルなら`.env`等、CIならGitHub Actions
-   repository secrets）。
-3. **アカウントIDを控える**: Cloudflareダッシュボードの右サイドバー
+   読み書き）と「**Account** → **Cloudflare Pages** → **Edit**」
+   （Pagesデプロイ一覧取得・ロールバック）の両方を付与する。発行された
+   トークン文字列は**このチャットに貼らず**、環境変数
+   `CLOUDFLARE_API_TOKEN`として渡してほしい（渡し方はOpenRouterのAPIキーの
+   時と同じ——ローカルなら`.env`等、CIならGitHub Actions repository secrets）。
+5. **アカウントIDを控える**: Cloudflareダッシュボードの右サイドバー
    （どのドメイン/サービスのページでも表示される）に「Account ID」という
    32文字の16進数文字列がある。これも環境変数
    `CLOUDFLARE_ACCOUNT_ID`として渡してほしい（秘密情報ではないので
    チャットに直接書いても問題ない）。
-4. **R2バケット名を教えてほしい**（上記「決めること」3で決めた名前、
+6. **R2バケット名を教えてほしい**（上記「決めること」3で決めた名前、
    例: `history-radio-media`）——これは`CLOUDFLARE_R2_BUCKET`として渡す
    か、チャットで直接教えてもらえればよい。
 
-これらが揃うまでは、R2アップロード機能はモック（`httpx.MockTransport`）による
-単体テストのみで検証された状態で先へ進める（OpenRouter・VOICEVOXの時と同じ
-「実クレデンシャルが無くてもテスト可能なクライアント抽象を先に作る」方針）。
+これらが揃うまでは、R2アップロード・Pagesロールバックの両機能はモック
+（`httpx.MockTransport`）による単体テストのみで検証された状態で先へ進める
+（OpenRouter・VOICEVOXの時と同じ「実クレデンシャルが無くてもテスト可能な
+クライアント抽象を先に作る」方針）。Pagesプロジェクトが実在してから、
+「プレビューと本番でリンク切れ・mixed content・ヘッダー欠落が0件」という
+タスク5のDoDの後半（ライブHTTP応答での検証——現状は`_headers`ファイル自体の
+静的検証のみ）にも着手できる。
 
 ## Phase 8（公開ページ統合・Cloudflare）までに決めること
 

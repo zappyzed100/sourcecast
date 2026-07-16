@@ -1,18 +1,9 @@
 // accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { KNOWN_PAGES } from "./known-pages";
 
-const PAGES = [
-	"/",
-	"/episodes/2026-07-16-can-opener/",
-	"/episodes/2026-07-15-first-railway/",
-	"/episodes/2026-07-18-tokyo-tower-color/",
-	"/episodes/2026-07-18-tokyo-tower-color/versions/1/",
-	"/episodes/2026-07-18-tokyo-tower-color/versions/2/",
-	"/404",
-];
-
-for (const path of PAGES) {
+for (const path of KNOWN_PAGES) {
 	test(`${path} に重大なアクセシビリティ違反が無い`, async ({ page }) => {
 		await page.goto(path);
 		const results = await new AxeBuilder({ page })
