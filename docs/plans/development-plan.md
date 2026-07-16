@@ -487,8 +487,23 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   Markdownの内容一致・追加行のdiff表示を確認済み。Python側は
   `test_every_claim_reaches_at_least_one_valid_source_url`
   （`tests/publish/test_episode_page.py`）でDoDのハッピーパスを明示的に固定。
-* [ ] R2へハッシュ付きキーでmediaをアップロードし、存在・サイズ・ハッシュを確認する。
+* [x] R2へハッシュ付きキーでmediaをアップロードし、存在・サイズ・ハッシュを確認する。
   検証: 同じ入力の再実行が重複オブジェクトを作らない。
+  実装メモ: `services/pipeline/src/history_radio/media/r2_upload.py`。
+  Cloudflare API v4のR2オブジェクトエンドポイント（`Authorization: Bearer`認証）を
+  使う——HUMAN_TASKS.mdで依頼している「Cloudflare API トークン（R2編集権限）＋
+  アカウントID」がそのままこのクライアントの資格情報になる（S3互換APIのaccess
+  key/secretとは別物）。エンドポイントの存在・認証ヘッダ形式・HEAD不可（405実測）は
+  `api.cloudflare.com`への実プローブで確認済み（実クレデンシャルでの成功応答は
+  HUMAN_TASKS.mdのトークン発行待ち）。`object_key()`がコンテンツのsha256から
+  決定的にキーを導出するため、重複防止は事前チェックの有無に関わらずキー設計
+  そのものへ構造的に埋め込まれている——アップロード前の存在確認はGETを
+  ストリーミングモードで発行しヘッダだけ読んでbodyを読まずに閉じる方式
+  （R2 API v4にはHEADもオブジェクト一覧APIも無いため）。既存オブジェクトの
+  サイズが今回のバイト列と食い違う場合（キー設計の前提破壊）はfail closedで拒否する。
+  単体テスト12件（`tests/media/test_r2_upload.py`、`httpx.MockTransport`で
+  GET+PUT/GETのみ/エラー系を検証——同一内容の再アップロードでPUTが
+  一切呼ばれないことを直接アサートしている）。
 * [ ] Cloudflare Pagesへ独自ドメイン、HTTPS、キャッシュ、セキュリティヘッダー、404を設定する。
   検証: プレビューと本番でリンク切れ、mixed content、ヘッダー欠落が0件。
 * [ ] Pages/R2からGit上の直前版へ戻す手順を自動化する。
