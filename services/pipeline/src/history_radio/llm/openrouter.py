@@ -75,10 +75,16 @@ class OpenRouterCaller:
         try:
             content = payload["choices"][0]["message"]["content"]
             usage = payload.get("usage", {})
-            return LlmResult(
-                output_text=content,
-                prompt_tokens=int(usage.get("prompt_tokens", 0)),
-                completion_tokens=int(usage.get("completion_tokens", 0)),
-            )
         except (KeyError, IndexError, TypeError) as exc:
             raise OpenRouterError(f"OpenRouter応答が想定の形でない: {exc!r}") from exc
+        if not isinstance(content, str) or not content.strip():
+            # reasoning系モデルはcontentがnull/空でreasoningフィールドに出すことがある
+            raise OpenRouterError(
+                f"OpenRouter応答のcontentが空（model={model_id}。reasoning系は"
+                "content空になり得る——本パイプラインの対象外モデル）"
+            )
+        return LlmResult(
+            output_text=content,
+            prompt_tokens=int(usage.get("prompt_tokens", 0)),
+            completion_tokens=int(usage.get("completion_tokens", 0)),
+        )
