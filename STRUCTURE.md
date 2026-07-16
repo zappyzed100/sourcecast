@@ -904,9 +904,11 @@
 - def test_success_parses_content_and_usage
 - def test_http_error_raises_without_leaking_key
 - def test_malformed_response_raises
+- def test_null_content_raises_instead_of_returning_none
 - def test_from_env_requires_key
 - def test_from_env_reads_key
-- def test_request_disables_training_providers
+- def test_request_disables_training_providers_by_default
+- def test_training_providers_can_be_opted_in_explicitly
 
 ### `services/pipeline/tests/readings/test_entry.py`
 - def test_valid_entry_is_accepted

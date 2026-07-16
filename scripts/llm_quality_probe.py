@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -221,7 +222,26 @@ def registry_model_ids() -> list[str]:
     return [m["model_id"] for m in raw["models"]]
 
 
+def _call_with_retry(caller, *, model_id: str, prompt: str, retries: int = 3):
+    """無料枠の一時的な429は数十秒で解けることが多い——リトライしてから諦める。"""
+    last_error = None
+    for attempt in range(retries + 1):
+        try:
+            return caller(model_id=model_id, prompt=prompt)
+        except OpenRouterError as exc:
+            last_error = exc
+            if "429" not in str(exc) or attempt == retries:
+                raise
+            wait = 30 * (attempt + 1)
+            print(f"  (429: {wait}秒待って再試行 {attempt + 1}/{retries})")
+            time.sleep(wait)
+    raise last_error  # 到達しない（型のため）
+
+
 def main() -> int:
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        sys.stdout.reconfigure(encoding="utf-8")  # Windowsのcp932コンソール対策
+        sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="無料LLMの出力品質を実測する")
     ap.add_argument(
         "--model", action="append", help="対象モデルID（複数可。省略時はレジストリ全件）"
@@ -245,7 +265,7 @@ def main() -> int:
             for run_index in range(args.runs):
                 label = f"{model_id} / {task_name} / run{run_index + 1}"
                 try:
-                    llm = caller(model_id=model_id, prompt=prompt)
+                    llm = _call_with_retry(caller, model_id=model_id, prompt=prompt)
                 except OpenRouterError as exc:
                     print(f"\n=== {label}: 呼び出し失敗 ===\n{exc}")
                     continue

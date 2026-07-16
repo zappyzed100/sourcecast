@@ -5,25 +5,37 @@
 # config_loader.load_model_registry が起動時に拒否する(無料モデル限定 — §2)。
 # expires_atを過ぎたエントリも同様に拒否する(毎日の確認を怠って古い設定のまま
 # 動かし続けることを防ぐ)。
+#
+# 2026-07-16 品質実測(scripts/llm_quality_probe.py＋英語版Wikipedia「Napoleon」検証。
+# 記録: artifacts/llm-probe-2026-07-16/)に基づく登録。初期登録の
+# meta-llama/llama-3.1-8b と qwen/qwen-2.5-7b は無料枠から撤退済みのため削除。
 models:
-  - model_id: "meta-llama/llama-3.1-8b-instruct:free"
+  # 主力(題材リサーチ・採点・台本下書き)。§8.3採点の重み付き検算6/6一致・
+  # 根拠引用6/6実在・§9.1台本がvalidate_script通過。data_policyの
+  # training_opt_in は「学習利用と引き換えに無料」枠——呼び出し側は
+  # OpenRouterCaller(allow_training_providers=True) を明示する(PD資料由来
+  # テキストのみ送る前提。ユーザー決定 2026-07-16)
+  - model_id: "nvidia/nemotron-3-super-120b-a12b:free"
     provider: "openrouter"
     endpoint: "https://openrouter.ai/api/v1/chat/completions"
     price_prompt: 0
     price_completion: 0
-    context_length: 128000
-    expires_at: 2026-12-31
-    data_policy: "no_training_no_retention"
+    context_length: 1000000
+    expires_at: 2026-08-16
+    data_policy: "free_tier_requires_training_opt_in"
     supports_structured_output: true
     japanese_regression_passed: true
 
-  - model_id: "qwen/qwen-2.5-7b-instruct:free"
+  # 抽出用(§8.2)。学習拒否(data_collection=deny)のまま使える。
+  # 抽出タスク合格: スキーマ適合・根拠抜粋4/4完全一致(オフセットは不正確——
+  # パイプライン側でstr.find導出)
+  - model_id: "google/gemma-4-31b-it:free"
     provider: "openrouter"
     endpoint: "https://openrouter.ai/api/v1/chat/completions"
     price_prompt: 0
     price_completion: 0
-    context_length: 32000
-    expires_at: 2026-12-31
+    context_length: 262144
+    expires_at: 2026-08-16
     data_policy: "no_training_no_retention"
     supports_structured_output: true
     japanese_regression_passed: true
