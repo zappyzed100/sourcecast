@@ -34,6 +34,9 @@ class ScriptSentence(SchemaModel):
     text: str = Field(min_length=1)
     kind: SentenceKind
     claim_id: str | None = None
+    # 引用として明示・出所表示した文かどうか（仕様書§11 転載検知「引用として明示・
+    # 出所表示した箇所は除く」）。development-plan.md Phase 10タスク2で追加。
+    is_quoted: bool = False
 
 
 class ScriptSection(SchemaModel):

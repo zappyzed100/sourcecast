@@ -602,10 +602,38 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 ### Phase 10 — 自動検査ゲート（仕様書 §11）
 
-* [ ] 権利、独立出典数、claim_id、転載類似度、禁止語、クレジット、media、RSS、URLをAND評価する。
+* [x] 権利、独立出典数、claim_id、転載類似度、禁止語、クレジット、media、RSS、URLをAND評価する。
   検証: 各項目を1つずつ失敗させたケースがすべて `publish_ready=false` になる。
-* [ ] 和文25文字以上、欧文8語以上の連続一致を転載候補として検出する。
+  実装メモ: `services/pipeline/src/history_radio/publish/publish_gate.py`の
+  `evaluate_publish_gate()`。**既存の検査ロジックを再実装しない**——
+  `episode_page.validate_episode_page`（権利・episode_id形式・audio/RSS前提）、
+  `script.validator.validate_script`（7段構成・claim_id・独立系統2件未満の主張の
+  不使用）、`media_manifest.validate_media_manifest`（クレジット・出典URL・
+  ライセンスID）、`distribution_metadata.build_all_distribution_metadata`
+  （YouTube/Podcast/Amazon Music向けメタデータの episode_id 一致）という
+  既存の`validate_*`/`build_*`関数をそのまま呼び出し、例外を`GateCheckResult`へ
+  変換して束ねるだけにした（決定と実行の分離を保つ）。audioチェックは
+  `ffmpeg_audio.validate_audio`が実ファイルへのI/Oを伴うため、ゲート関数自体は
+  I/Oを行わず呼び出し側が事前実行した結果（bool + reasons）を受け取る設計にした。
+  publish_readyは`all(c.passed for c in checks)`という素直なAND評価——7項目
+  それぞれを単独で失敗させ、他の6項目は`passed=True`のまま残ることを
+  9件のテストで直接証明した（`tests/publish/test_publish_gate.py`）。
+  **スコープの明示**（モジュールdocstringに記載）: 仕様書§11の全17項目のうち
+  本ゲートが検査するのは7系統（権利・claim・転載・禁止語・media・音声・
+  RSS/URL整合性）。OpenRouterモデルレジストリとの整合性、前回動画との類似度、
+  条件付き素材の§5A判定ログ添付、規約再確認期限は実クレデンシャル・実生成物が
+  必要なため未対応（Phase 11以降で対応）。
+* [x] 和文25文字以上、欧文8語以上の連続一致を転載候補として検出する。
   検証: 出典原文の25文字コピーを拒否する。
+  実装メモ: `services/pipeline/src/history_radio/script/reproduction_detector.py`。
+  標準ライブラリの`difflib.SequenceMatcher`（Ratcliff/Obershelp法）で2文字列間の
+  連続一致ブロックを求める——新規依存を追加しない設計（全文検索エンジン水準の
+  精度ではなく、規則ベースの自動ゲート用の実用的な実装であることをdocstringに
+  明記）。一致した部分文字列自体にCJK文字が含まれれば和文（文字数閾値）、
+  含まれなければ欧文（空白区切り語数閾値）と判定する。`ScriptSentence`へ
+  `is_quoted: bool = False`を追加し、引用として明示・出所表示した文
+  （仕様書§11「引用として明示・出所表示した箇所は除く」）を検査対象から
+  除外できるようにした。単体テスト8件。
 * [ ] ゲート結果に規則版と全チェックの根拠を保存し、管理画面から追跡できるようにする。
   検証: 公開済み版から当時の検査結果を再表示できる。
 * [ ] ゲート通過後の成果物ハッシュを固定し、公開直前の差替えを拒否する。

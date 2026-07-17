@@ -242,6 +242,7 @@
 - `services/pipeline/src/history_radio/publish/distribution_metadata.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
+- `services/pipeline/src/history_radio/publish/publish_gate.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
 - `services/pipeline/src/history_radio/readings/address_registry.py`
@@ -264,6 +265,7 @@
 - `services/pipeline/src/history_radio/rights/license_normalization.py`
 - `services/pipeline/src/history_radio/rights/screening.py`
 - `services/pipeline/src/history_radio/script/__init__.py`
+- `services/pipeline/src/history_radio/script/reproduction_detector.py`
 - `services/pipeline/src/history_radio/script/schema.py`
 - `services/pipeline/src/history_radio/script/validator.py`
 - `services/pipeline/src/history_radio/select/__init__.py`
@@ -315,6 +317,7 @@
 - `services/pipeline/tests/publish/test_distribution_metadata.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
+- `services/pipeline/tests/publish/test_publish_gate.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
 - `services/pipeline/tests/readings/test_context_matching.py`
@@ -335,6 +338,7 @@
 - `services/pipeline/tests/rights/test_license_normalization.py`
 - `services/pipeline/tests/rights/test_screening.py`
 - `services/pipeline/tests/script/__init__.py`
+- `services/pipeline/tests/script/test_reproduction_detector.py`
 - `services/pipeline/tests/script/test_validator.py`
 - `services/pipeline/tests/select/__init__.py`
 - `services/pipeline/tests/select/test_cooldown.py`
@@ -847,6 +851,11 @@
 - class PublishResult
 - def publish_episode
 
+### `services/pipeline/src/history_radio/publish/publish_gate.py`
+- class GateCheckResult
+- class PublishGateResult
+- def evaluate_publish_gate
+
 ### `services/pipeline/src/history_radio/readings/address_registry.py`
 - class AddressColumns
 - def convert_address_rows
@@ -932,6 +941,10 @@
 - def foreign_wartime_outcome
 - def neighboring_rights_outcome
 - def translation_outcome
+
+### `services/pipeline/src/history_radio/script/reproduction_detector.py`
+- class ReproducedSpan
+- def detect_reproduction
 
 ### `services/pipeline/src/history_radio/script/schema.py`
 - class ScriptSentence
@@ -1289,6 +1302,17 @@
 - def test_publishing_same_revision_number_after_current_exists_is_rejected
 - def test_invalid_episode_data_is_rejected_before_writing_anything
 
+### `services/pipeline/tests/publish/test_publish_gate.py`
+- def test_all_checks_pass_and_publish_ready_is_true
+- def test_rights_and_episode_schema_failure_alone_fails_the_gate
+- def test_script_and_claims_failure_alone_fails_the_gate
+- def test_reproduction_similarity_failure_alone_fails_the_gate
+- def test_forbidden_words_failure_alone_fails_the_gate
+- def test_media_manifest_failure_alone_fails_the_gate
+- def test_audio_failure_alone_fails_the_gate
+- def test_rss_and_url_consistency_failure_alone_fails_the_gate
+- def test_gate_result_reports_rule_version_for_every_check
+
 ### `services/pipeline/tests/readings/test_address_registry.py`
 - def test_rows_convert_to_place_entries_with_katakana_readings
 - def test_duplicate_rows_are_deduplicated
@@ -1433,6 +1457,16 @@
 - def test_foreign_wartime_outcome_never_auto_approves
 - def test_neighboring_rights_never_auto_approves
 - class TestTranslationOutcome
+
+### `services/pipeline/tests/script/test_reproduction_detector.py`
+- def test_no_match_when_source_texts_are_unrelated
+- def test_25_char_or_more_japanese_verbatim_copy_is_detected
+- def test_under_25_char_japanese_match_is_not_flagged
+- def test_8_word_or_more_western_verbatim_copy_is_detected
+- def test_under_8_word_western_match_is_not_flagged
+- def test_quoted_sentence_is_excluded_from_reproduction_check
+- def test_matches_across_multiple_sources_are_all_reported
+- def test_custom_thresholds_are_respected
 
 ### `services/pipeline/tests/script/test_validator.py`
 - def test_valid_script_passes

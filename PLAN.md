@@ -98,7 +98,7 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [x] Phase 9 — RSS・配信先（実配信は各配信先の実クライアント未実装——実装したのは
   RSS生成・配信先ごとのメタデータ生成・approvedゲート・二重投稿防止台帳。
   実クレデンシャルでの動作確認はHUMAN_TASKSで依頼中）
-- [ ] Phase 10 — 自動検査ゲート `backlog`
+- [ ] Phase 10 — 自動検査ゲート `in_progress`
 - [ ] Phase 11 — 管理画面の実運用化 `backlog`
 - [ ] Phase 12 — バックアップ・障害対応 `backlog`
 - [ ] Phase 13 — 受入検証 `backlog`
