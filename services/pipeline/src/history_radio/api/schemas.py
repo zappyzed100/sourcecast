@@ -9,6 +9,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from history_radio.domain.base import SchemaModel
+from history_radio.domain.models import CandidateDecisionValue
 
 
 class DashboardSummary(SchemaModel):
@@ -21,3 +22,10 @@ class DashboardSummary(SchemaModel):
     episodes_published_this_month: int = Field(ge=0)
     openrouter_calls_today: int = Field(ge=0)
     candidates_awaiting_review: int = Field(ge=0)
+
+
+class ReviewCandidateRequest(SchemaModel):
+    """`POST /api/v1/candidates/{candidate_id}/review`（仕様書§12.3「採用／除外」）の入力。"""
+
+    decision: CandidateDecisionValue
+    reason: str | None = None

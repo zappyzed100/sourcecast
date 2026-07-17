@@ -75,10 +75,11 @@
 - `apps/admin/src/lib/api.ts` — api.ts — localhost管理APIのクライアント(plan.md Phase 2)。
 - `apps/admin/src/lib/useAsync.ts` — useAsync.ts — API呼び出し1本の読み込み状態を管理する小さなフック。
 - `apps/admin/src/main.tsx`
-- `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧(仕様書§12.3)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
+- `apps/admin/src/pages/Candidates.test.tsx` — Candidates.test.tsx — Phase 11タスク1・3 DoD: 採用・除外(理由必須)の審査UIを固定する
+- `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧・審査(仕様書§12.3「採用／除外／再生成」のうち採用・除外)。
 - `apps/admin/src/pages/Dashboard.tsx` — Dashboard.tsx — 管理画面ホーム(仕様書§12.1)。API停止・タイムアウト・壊れた応答を安全に表示する。
 - `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
-- `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する
+- `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する。
 - `apps/admin/tsconfig.app.json`
 - `apps/admin/tsconfig.json`
 - `apps/admin/tsconfig.node.json`
@@ -164,6 +165,7 @@
 - `packages/contracts/package.json`
 - `packages/contracts/schema/AuditEvent.schema.json`
 - `packages/contracts/schema/Candidate.schema.json`
+- `packages/contracts/schema/CandidateDecision.schema.json`
 - `packages/contracts/schema/Claim.schema.json`
 - `packages/contracts/schema/Episode.schema.json`
 - `packages/contracts/schema/Job.schema.json`
@@ -203,6 +205,7 @@
 
 - `services/pipeline/src/history_radio/__init__.py`
 - `services/pipeline/src/history_radio/api/__init__.py`
+- `services/pipeline/src/history_radio/api/db.py`
 - `services/pipeline/src/history_radio/api/fixtures.py`
 - `services/pipeline/src/history_radio/api/main.py`
 - `services/pipeline/src/history_radio/api/schemas.py`
@@ -269,11 +272,14 @@
 - `services/pipeline/src/history_radio/script/schema.py`
 - `services/pipeline/src/history_radio/script/validator.py`
 - `services/pipeline/src/history_radio/select/__init__.py`
+- `services/pipeline/src/history_radio/select/candidate_review.py`
 - `services/pipeline/src/history_radio/select/cooldown.py`
 - `services/pipeline/src/history_radio/select/lineage.py`
 - `services/pipeline/src/history_radio/select/news_filter.py`
 - `services/pipeline/src/history_radio/select/scoring.py`
 - `services/pipeline/src/history_radio/store/__init__.py`
+- `services/pipeline/src/history_radio/store/candidate_decisions.py`
+- `services/pipeline/src/history_radio/store/candidates.py`
 - `services/pipeline/src/history_radio/store/config_loader.py`
 - `services/pipeline/src/history_radio/store/config_schemas.py`
 - `services/pipeline/src/history_radio/store/db.py`
@@ -343,11 +349,14 @@
 - `services/pipeline/tests/script/test_reproduction_detector.py`
 - `services/pipeline/tests/script/test_validator.py`
 - `services/pipeline/tests/select/__init__.py`
+- `services/pipeline/tests/select/test_candidate_review.py`
 - `services/pipeline/tests/select/test_cooldown.py`
 - `services/pipeline/tests/select/test_lineage.py`
 - `services/pipeline/tests/select/test_news_filter.py`
 - `services/pipeline/tests/select/test_scoring.py`
 - `services/pipeline/tests/store/__init__.py`
+- `services/pipeline/tests/store/test_candidate_decisions.py`
+- `services/pipeline/tests/store/test_candidates.py`
 - `services/pipeline/tests/store/test_config_loader.py`
 - `services/pipeline/tests/store/test_documents.py`
 - `services/pipeline/tests/store/test_episodes.py`
@@ -408,9 +417,13 @@
 - class ApiError
 - type DashboardSummary
 - type Candidate
+- type CandidateDecision
+- type CandidateDecisionValue
 - type Job
 - function getDashboardSummary
 - function getCandidates
+- function reviewCandidate
+- function getCandidateDecisions
 - function getJobs
 
 ### `apps/admin/src/lib/useAsync.ts`
@@ -678,6 +691,9 @@
 - def render_skill_md
 - def main
 
+### `services/pipeline/src/history_radio/api/db.py`
+- def get_session
+
 ### `services/pipeline/src/history_radio/api/fixtures.py`
 - def dashboard_summary
 - def candidates
@@ -686,10 +702,13 @@
 ### `services/pipeline/src/history_radio/api/main.py`
 - def get_dashboard
 - def get_candidates
+- def get_candidate_decisions
+- def review_candidate_endpoint
 - def get_jobs
 
 ### `services/pipeline/src/history_radio/api/schemas.py`
 - class DashboardSummary
+- class ReviewCandidateRequest
 
 ### `services/pipeline/src/history_radio/books/search.py`
 - class BookCandidate
@@ -713,6 +732,7 @@
 - class SourceRecord
 - class RightsDecision
 - class Candidate
+- class CandidateDecision
 - class Claim
 - class Episode
 - class Job
@@ -961,6 +981,10 @@
 - class ScriptValidationError
 - def validate_script
 
+### `services/pipeline/src/history_radio/select/candidate_review.py`
+- class CandidateReviewError
+- def review_candidate
+
 ### `services/pipeline/src/history_radio/select/cooldown.py`
 - class PastUsage
 - def cooling_entities
@@ -982,6 +1006,16 @@
 - class CandidateFeatures
 - class ScoreWeights
 - def compute_candidate_score
+
+### `services/pipeline/src/history_radio/store/candidate_decisions.py`
+- def save_candidate_decision
+- def list_decisions_for_candidate
+- def latest_decision_for_candidate
+
+### `services/pipeline/src/history_radio/store/candidates.py`
+- def save_candidate
+- def list_candidates
+- def get_candidate
 
 ### `services/pipeline/src/history_radio/store/config_loader.py`
 - class ConfigValidationError
@@ -1030,6 +1064,8 @@
 - class LlmRunRow
 - class TermsSnapshotRow
 - class PublishGateResultRow
+- class CandidateRow
+- class CandidateDecisionRow
 
 ### `services/pipeline/src/history_radio/store/rights.py`
 - def save_rights_decision
@@ -1037,9 +1073,18 @@
 - def latest_rights_decision_for_document
 
 ### `services/pipeline/tests/api/test_main.py`
+- def engine
+- def client
 - def test_dashboard_returns_summary
-- def test_candidates_returns_list
+- def test_candidates_returns_empty_list_when_db_is_empty
+- def test_candidates_returns_seeded_data
 - def test_jobs_returns_list_with_failed_job_error_detail
+- def test_review_candidate_adopted_succeeds_without_reason
+- def test_review_candidate_excluded_without_reason_is_rejected
+- def test_review_candidate_excluded_with_reason_succeeds
+- def test_review_unknown_candidate_returns_404
+- def test_get_decisions_for_unknown_candidate_returns_404
+- def test_get_decisions_returns_review_history
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1501,6 +1546,13 @@
 - def test_wrong_section_order_is_rejected
 - def test_all_problems_are_reported_at_once
 
+### `services/pipeline/tests/select/test_candidate_review.py`
+- def test_adopting_a_candidate_does_not_require_a_reason
+- def test_excluding_without_reason_is_rejected
+- def test_excluding_with_blank_reason_is_rejected
+- def test_excluding_with_reason_succeeds
+- def test_reason_is_stripped
+
 ### `services/pipeline/tests/select/test_cooldown.py`
 - def test_entity_used_within_cooldown_excludes_candidate
 - def test_entity_outside_cooldown_is_available_again
@@ -1533,6 +1585,20 @@
 - def test_custom_weights_are_respected
 - def test_out_of_range_features_are_rejected_not_clipped
 - def test_breakdown_sums_to_score
+
+### `services/pipeline/tests/store/test_candidate_decisions.py`
+- def engine
+- def test_re_reviewing_a_candidate_keeps_the_old_decision
+- def test_latest_decision_returns_the_most_recent_review
+- def test_no_decision_returns_none
+- def test_saving_a_decision_also_appends_an_audit_event
+
+### `services/pipeline/tests/store/test_candidates.py`
+- def engine
+- def test_saved_candidate_can_be_retrieved
+- def test_missing_candidate_returns_none
+- def test_list_candidates_returns_oldest_first
+- def test_list_candidates_returns_empty_list_when_nothing_saved
 
 ### `services/pipeline/tests/store/test_config_loader.py`
 - def test_real_source_registry_loads

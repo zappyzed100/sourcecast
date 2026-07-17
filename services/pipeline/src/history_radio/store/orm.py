@@ -174,3 +174,37 @@ class PublishGateResultRow(Base):
     checks_json: Mapped[str] = mapped_column(String, nullable=False)
     artifact_hash: Mapped[str] = mapped_column(String, nullable=False)
     evaluated_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class CandidateRow(Base):
+    """`topics`（仕様書§13・§6A・Phase 11タスク1）: 機械選出の候補点と内訳の永続化。
+
+    再生成（仕様書§12.3「採用／除外／再生成」の再生成）は新しいcandidate_idで
+    別行を作る想定のため、更新関数は置かない（store/candidates.pyは挿入・参照のみ）。
+    """
+
+    __tablename__ = "candidates"
+
+    candidate_id: Mapped[str] = mapped_column(String, primary_key=True)
+    topic_title: Mapped[str] = mapped_column(String, nullable=False)
+    score: Mapped[float] = mapped_column(nullable=False)
+    score_breakdown_json: Mapped[str] = mapped_column(String, nullable=False)
+    independent_source_families: Mapped[int] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
+
+
+class CandidateDecisionRow(Base):
+    """候補の審査結果（仕様書§12.3・§12.4・Phase 11タスク1・3）。
+
+    主キーは `decision_id`——同じcandidate_idを再審査しても行を上書きせず追記する
+    （append-only。store/candidate_decisions.py に更新・削除関数を置かないことで
+    構造的に保証する。rights.py/gate_results.pyと同じ方針）。
+    """
+
+    __tablename__ = "candidate_decisions"
+
+    decision_id: Mapped[str] = mapped_column(String, primary_key=True)
+    candidate_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    decision: Mapped[str] = mapped_column(String, nullable=False)
+    reason: Mapped[str] = mapped_column(String, nullable=False, default="")
+    decided_at: Mapped[datetime] = mapped_column(nullable=False)
