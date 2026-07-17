@@ -1,4 +1,4 @@
-"""publish_gate.py — 自動検査ゲート（仕様書§11・development-plan.md Phase 10タスク1）。
+"""publish_gate.py — 自動検査ゲート（仕様書§11・development-plan.md Phase 10タスク1・4）。
 
 既存の各検査関数（rights・claim台帳・media・配信メタデータ）と、本Phaseで追加した
 転載検知・禁止語検査を1つのAND評価へ束ねる。**ここでは検査ロジックを再実装しない**
@@ -28,11 +28,19 @@ publish_readyはAND評価: 1項目でも失敗すれば全体が`publish_ready=f
 まだ無いか、実クレデンシャル・実生成物が必要なため——development-plan.md
 Phase 10タスク1の実装メモに記載）: OpenRouterモデルレジストリとの整合性、
 前回動画との類似度、条件付き素材の§5A判定ログ添付、規約再確認期限。
+
+タスク4（承認後の差替え拒否）: `PublishGateResult.artifact_hash`が評価対象の
+episode/script/media_assets一式から決定的に計算したsha256を持つ（`publish_ready`の
+真偽に関わらず常に計算する）。承認後、実際の公開直前に`verify_artifact_unchanged()`で
+現在の成果物ハッシュと承認時ハッシュを比較し、不一致ならfail closedで
+`ArtifactLockError`を送出する（=再承認が必要）。
 """
 
 from __future__ import annotations
 
-from typing import Literal
+import hashlib
+import json
+from typing import Any, Literal
 
 from history_radio.domain.base import SchemaModel
 from history_radio.domain.models import Claim
@@ -73,9 +81,56 @@ class GateCheckResult(SchemaModel):
 class PublishGateResult(SchemaModel):
     schema_version: Literal[1] = 1
     episode_id: str
+    revision: int
     rule_version: str
     publish_ready: bool
     checks: tuple[GateCheckResult, ...]
+    # 承認後の差替え拒否（development-plan.md Phase 10タスク4）に使うハッシュ。
+    # ゲート評価対象の episode/script/media_assets 一式から決定的に計算する
+    # （publish_ready の真偽に関わらず常に計算する——不合格時の監査にも使えるため）。
+    artifact_hash: str
+
+
+class ArtifactLockError(RuntimeError):
+    """承認後に台本・media・episodeのいずれかが変更され、再承認が必要な場合に送出する。"""
+
+
+def compute_artifact_hash(
+    *, episode: EpisodePageData, script: Script, media_assets: list[MediaAsset]
+) -> str:
+    """承認対象となる成果物一式のsha256を計算する。
+
+    episode/script/media_assetsのいずれかが1文字でも変われば別ハッシュになる
+    （辞書キーをソートした正規化JSONのsha256——同じ内容なら常に同じハッシュ）。
+    """
+    payload: dict[str, Any] = {
+        "episode": episode.model_dump(mode="json"),
+        "script": script.model_dump(mode="json"),
+        "media_assets": [asset.model_dump(mode="json") for asset in media_assets],
+    }
+    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def verify_artifact_unchanged(
+    gate_result: PublishGateResult,
+    *,
+    episode: EpisodePageData,
+    script: Script,
+    media_assets: list[MediaAsset],
+) -> None:
+    """公開直前に、承認時点のゲート結果と現在の成果物が一致するかを検査する。
+
+    development-plan.md Phase 10タスク4 DoD: 承認後に台本やmediaを変更すると
+    再承認が必要になる——一致しなければfail closedで`ArtifactLockError`を送出する。
+    """
+    current_hash = compute_artifact_hash(episode=episode, script=script, media_assets=media_assets)
+    if current_hash != gate_result.artifact_hash:
+        raise ArtifactLockError(
+            f"episode_id={gate_result.episode_id!r}: 承認後に台本またはmediaが変更されている"
+            f"——再承認が必要（承認時ハッシュ={gate_result.artifact_hash!r}, "
+            f"現在のハッシュ={current_hash!r}）"
+        )
 
 
 def _reasons_from_exception(exc: Exception) -> tuple[str, ...]:
@@ -178,7 +233,11 @@ def evaluate_publish_gate(
     )
     return PublishGateResult(
         episode_id=episode.episode_id,
+        revision=episode.revision,
         rule_version=RULE_VERSION,
         publish_ready=all(c.passed for c in checks),
         checks=checks,
+        artifact_hash=compute_artifact_hash(
+            episode=episode, script=script, media_assets=media_assets
+        ),
     )

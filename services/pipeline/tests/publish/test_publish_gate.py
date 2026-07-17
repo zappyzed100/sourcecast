@@ -106,6 +106,24 @@ def test_all_checks_pass_and_publish_ready_is_true() -> None:
     assert all(c.passed for c in result.checks)
     assert result.episode_id == "2026-07-19-tokyo-tower"
     assert result.rule_version
+    assert result.revision == 1
+    assert result.artifact_hash  # Phase 10タスク4: 常に計算される
+
+
+def test_artifact_hash_is_computed_even_when_gate_fails() -> None:
+    bad_episode = _episode(sources=[_source(normalized_license_id="unknown")])
+    result = evaluate_publish_gate(**_gate_kwargs(episode=bad_episode))
+    assert result.publish_ready is False
+    assert result.artifact_hash  # 不合格時も監査用に計算される
+
+
+def test_artifact_hash_changes_when_script_changes() -> None:
+    result_a = evaluate_publish_gate(**_gate_kwargs())
+    different_script = _script(
+        claim_sentence=ScriptSentence(text="別の台本文なのだ。", kind="claim", claim_id="claim-001")
+    )
+    result_b = evaluate_publish_gate(**_gate_kwargs(script=different_script))
+    assert result_a.artifact_hash != result_b.artifact_hash
 
 
 def _check(result: Any, name: str) -> Any:

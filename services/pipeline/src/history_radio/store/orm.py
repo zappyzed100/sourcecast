@@ -152,3 +152,25 @@ class TermsSnapshotRow(Base):
     content_hash: Mapped[str] = mapped_column(String, nullable=False)
     text: Mapped[str] = mapped_column(String, nullable=False)
     captured_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class PublishGateResultRow(Base):
+    """`publication_versions`系（仕様書§11・§13・Phase 10タスク3）: 自動検査ゲートの
+    評価結果1回分。
+
+    主キーは `result_id`——同じepisode_id・revisionを何度再評価しても行を上書きせず
+    追記する（append-only。store/gate_results.py に更新・削除関数を置かないことで
+    構造的に保証する）。「公開済み版から当時の検査結果を再表示できる」（Phase 10
+    タスク3 DoD）は、この行を(episode_id, revision)で検索することで満たす。
+    """
+
+    __tablename__ = "publish_gate_results"
+
+    result_id: Mapped[str] = mapped_column(String, primary_key=True)
+    episode_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    revision: Mapped[int] = mapped_column(nullable=False)
+    rule_version: Mapped[str] = mapped_column(String, nullable=False)
+    publish_ready: Mapped[bool] = mapped_column(nullable=False)
+    checks_json: Mapped[str] = mapped_column(String, nullable=False)
+    artifact_hash: Mapped[str] = mapped_column(String, nullable=False)
+    evaluated_at: Mapped[datetime] = mapped_column(nullable=False)
