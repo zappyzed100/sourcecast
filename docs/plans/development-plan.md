@@ -665,10 +665,37 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 * [ ] Phase 2の画面を実DBと実ジョブへ接続し、候補→審査→承認→限定公開を一画面ずつ完成させる。
   検証: 1件を最初から限定公開まで操作するPlaywright E2Eが通る。
+  進捗（候補→審査まで実装済み。承認→限定公開は未着手）: `topics`（候補）・
+  候補審査結果の永続化を新設した——`store/candidates.py`・`store/candidate_decisions.py`
+  （`store/rights.py`と同じ「追記のみ」方針。候補は選出パイプラインが1回生成した
+  時点の点数を記録し更新しない、審査結果は再審査しても過去の判定が消えない）。
+  ドメインへ`CandidateDecision`を追加しcontracts（JSON Schema・TypeScript型）を
+  再生成した。`select/candidate_review.py`の`review_candidate()`が採用／除外を
+  判定する純粋関数——除外には理由の入力を必須にする（タスク3の方針を審査
+  アクションへ先取り適用）。`api/db.py`でDBセッションを遅延初期化する
+  FastAPI依存性注入を新設（DBパスは`HISTORY_RADIO_DB_PATH`環境変数、既定は
+  `data/history_radio.sqlite3`。import時点でファイルを作らない——テストは
+  `app.dependency_overrides`で差し替える）。`GET /api/v1/candidates`を実DBへ
+  接続し、`POST /api/v1/candidates/{id}/review`・
+  `GET /api/v1/candidates/{id}/decisions`を新設。apps/adminの`Candidates.tsx`へ
+  採用・除外ボタンを追加（除外は理由入力欄が必須で表示される）。
+  **未着手**: 承認（ゲート評価のトリガー・`publish_gate.evaluate_publish_gate`との
+  接続）、限定公開（`distribution_ledger.dispatch`との接続）、ダッシュボード・
+  ジョブ一覧は引き続きfixture（実ジョブ接続はタスク2）。DoD本体の
+  「1件を最初から限定公開まで操作するPlaywright E2Eが通る」は、承認・限定公開の
+  実装が揃うまで満たせない——後続コミットで着手する。
+  単体テスト: Python 26件（select/candidate_review 5件・store/candidates 4件・
+  store/candidate_decisions 4件・api/main 10件の追加＋既存3件更新）、
+  TypeScript 9件（api.test.ts 5件・Candidates.test.tsx 4件）。
 * [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。
 * [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。
   検証: 理由なしの却下、削除、公開取消をAPIが拒否する。
+  進捗（却下のみ実装済み。削除・公開取消は対応するAPI自体が未実装）:
+  候補の除外（却下）は`select/candidate_review.py`が理由なしをfail closedで
+  拒否し、`store/candidate_decisions.py`が判定と同一トランザクションで
+  `AuditEventRow`を追記する（仕様書§15）。削除・公開取消は対応する操作自体が
+  まだ無いため、それらの実装時に同じ「理由入力必須＋監査ログ」方針を適用する。
 * [ ] CLIは残し、管理画面障害時にも状態確認、停止、再開、バックアップを実行できるようにする。
   検証: Reactを起動せず主要な復旧操作ができる。
 

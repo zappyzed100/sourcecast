@@ -12,6 +12,7 @@ from history_radio.domain.episode_state import (
 from history_radio.domain.models import (
     AuditEvent,
     Candidate,
+    CandidateDecision,
     Claim,
     Episode,
     Job,
@@ -26,6 +27,7 @@ __all__ = [
     "TERMINAL_STATES",
     "AuditEvent",
     "Candidate",
+    "CandidateDecision",
     "Claim",
     "Episode",
     "EpisodeState",

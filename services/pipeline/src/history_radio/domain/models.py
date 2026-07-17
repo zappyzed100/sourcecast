@@ -68,6 +68,23 @@ class Candidate(SchemaModel):
     independent_source_families: int = Field(ge=0)
 
 
+CandidateDecisionValue = Literal["adopted", "excluded"]
+
+
+class CandidateDecision(SchemaModel):
+    """`topics`の審査結果（仕様書§12.3「採用／除外／再生成」のうち採用・除外・
+    Phase 11タスク1・3）。除外にはreasonの入力が必須（select/candidate_review.pyが強制する
+    ——破壊的操作に理由入力を必須にする仕様書§12.4の方針を審査アクションにも適用する）。
+    """
+
+    schema_version: Literal[1] = 1
+    decision_id: str = Field(min_length=1)
+    candidate_id: str = Field(min_length=1)
+    decision: CandidateDecisionValue
+    reason: str = ""
+    decided_at: datetime
+
+
 class Claim(SchemaModel):
     """`claim_ledger`（仕様書§8.2A）: 台本生成前に確定する公開可能な主張の台帳。"""
 

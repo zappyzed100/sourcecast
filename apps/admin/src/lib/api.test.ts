@@ -1,6 +1,14 @@
 // api.test.ts — Phase 2 DoD: API停止・タイムアウト・空データ・壊れた応答の4パターンを固定する
+// (Phase 11タスク1: 候補審査APIクライアントのテストも本ファイルに追加)
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getCandidates, getDashboardSummary, getJobs } from "./api";
+import {
+	ApiError,
+	getCandidateDecisions,
+	getCandidates,
+	getDashboardSummary,
+	getJobs,
+	reviewCandidate,
+} from "./api";
 
 function jsonResponse(body: unknown, ok = true): Response {
 	return {
@@ -80,5 +88,92 @@ describe("api client", () => {
 			vi.fn().mockResolvedValue(jsonResponse({ detail: "boom" }, false)),
 		);
 		await expect(getJobs()).rejects.toBeInstanceOf(ApiError);
+	});
+});
+
+describe("candidate review", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	function decisionResponse(overrides: Record<string, unknown> = {}) {
+		return jsonResponse({
+			schema_version: 1,
+			decision_id: "decision-cand-1-abcd1234",
+			candidate_id: "cand-1",
+			decision: "adopted",
+			reason: "",
+			decided_at: "2026-07-19T00:00:00Z",
+			...overrides,
+		});
+	}
+
+	it("採用はPOSTでdecisionを送りCandidateDecisionを返す", async () => {
+		const fetchMock = vi.fn().mockResolvedValue(decisionResponse());
+		vi.stubGlobal("fetch", fetchMock);
+
+		const result = await reviewCandidate("cand-1", "adopted");
+
+		expect(result.decision).toBe("adopted");
+		const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+		expect(init.method).toBe("POST");
+		expect(JSON.parse(init.body as string)).toEqual({
+			decision: "adopted",
+			reason: null,
+		});
+	});
+
+	it("除外理由をbodyへ含めて送る", async () => {
+		const fetchMock = vi.fn().mockResolvedValue(
+			decisionResponse({
+				decision: "excluded",
+				reason: "出典が信頼できない",
+			}),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const result = await reviewCandidate(
+			"cand-1",
+			"excluded",
+			"出典が信頼できない",
+		);
+
+		expect(result.decision).toBe("excluded");
+		expect(result.reason).toBe("出典が信頼できない");
+		const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+		expect(JSON.parse(init.body as string)).toEqual({
+			decision: "excluded",
+			reason: "出典が信頼できない",
+		});
+	});
+
+	it("除外理由なしでAPIが400を返すとdetailメッセージ付きのApiErrorになる", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi
+				.fn()
+				.mockResolvedValue(
+					jsonResponse({ detail: "除外には理由の入力が必須" }, false),
+				),
+		);
+
+		await expect(reviewCandidate("cand-1", "excluded")).rejects.toMatchObject({
+			message: "除外には理由の入力が必須",
+		});
+	});
+
+	it("審査履歴は空配列を正常系として扱う", async () => {
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse([])));
+		await expect(getCandidateDecisions("cand-1")).resolves.toEqual([]);
+	});
+
+	it("形の壊れた審査結果応答はApiErrorになる", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(jsonResponse({ totally: "wrong shape" })),
+		);
+		await expect(reviewCandidate("cand-1", "adopted")).rejects.toBeInstanceOf(
+			ApiError,
+		);
 	});
 });

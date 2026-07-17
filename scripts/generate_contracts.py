@@ -20,6 +20,7 @@ sys.path.insert(0, str(rs.repo_root() / "services" / "pipeline" / "src"))
 from history_radio.domain import (  # noqa: E402
     AuditEvent,
     Candidate,
+    CandidateDecision,
     Claim,
     Episode,
     Job,
@@ -31,6 +32,7 @@ MODELS = [
     SourceRecord,
     RightsDecision,
     Candidate,
+    CandidateDecision,
     Claim,
     Episode,
     Job,
@@ -49,7 +51,7 @@ def main() -> int:
         out_path = schema_dir / f"{model.__name__}.schema.json"
         text = json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
         out_path.write_text(text, encoding="utf-8", newline="\n")
-        print(f"[generate-contracts] {out_path.relative_to(root)}")
+        print(f"[generate-contracts] {out_path.relative_to(root)}")  # noqa: T201
 
     return 0
 

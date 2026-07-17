@@ -38,6 +38,17 @@ const candidateSchema = z.object({
 });
 export type Candidate = z.infer<typeof candidateSchema>;
 
+const candidateDecisionSchema = z.object({
+	schema_version: z.literal(1),
+	decision_id: z.string(),
+	candidate_id: z.string(),
+	decision: z.enum(["adopted", "excluded"]),
+	reason: z.string(),
+	decided_at: z.string(),
+});
+export type CandidateDecision = z.infer<typeof candidateDecisionSchema>;
+export type CandidateDecisionValue = CandidateDecision["decision"];
+
 const jobSchema = z.object({
 	schema_version: z.literal(1),
 	job_id: z.string(),
@@ -50,12 +61,13 @@ const jobSchema = z.object({
 });
 export type Job = z.infer<typeof jobSchema>;
 
-async function fetchJson(path: string): Promise<unknown> {
+async function fetchJson(path: string, init?: RequestInit): Promise<unknown> {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 	let response: Response;
 	try {
 		response = await fetch(`${API_BASE_URL}${path}`, {
+			...init,
 			signal: controller.signal,
 		});
 	} catch (error) {
@@ -70,13 +82,33 @@ async function fetchJson(path: string): Promise<unknown> {
 		clearTimeout(timeoutId);
 	}
 	if (!response.ok) {
-		throw new ApiError(`APIがエラーを返しました(${response.status}): ${path}`);
+		// エラー応答のdetailを拾えれば理由をそのままユーザーへ見せる
+		// (例: 除外の理由未入力 — 除外理由が空でAPIに拒否された旨をUIに伝える)。
+		const detail = await response
+			.json()
+			.then((body: unknown) =>
+				typeof body === "object" && body !== null && "detail" in body
+					? String((body as { detail: unknown }).detail)
+					: null,
+			)
+			.catch(() => null);
+		throw new ApiError(
+			detail ?? `APIがエラーを返しました(${response.status}): ${path}`,
+		);
 	}
 	try {
 		return await response.json();
 	} catch (error) {
 		throw new ApiError(`APIの応答がJSONとして解釈できません: ${path}`, error);
 	}
+}
+
+async function postJson(path: string, body: unknown): Promise<unknown> {
+	return fetchJson(path, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(body),
+	});
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
@@ -93,6 +125,33 @@ export async function getCandidates(): Promise<Candidate[]> {
 	const result = z.array(candidateSchema).safeParse(json);
 	if (!result.success) {
 		throw new ApiError("候補一覧応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function reviewCandidate(
+	candidateId: string,
+	decision: CandidateDecisionValue,
+	reason?: string,
+): Promise<CandidateDecision> {
+	const json = await postJson(`/api/v1/candidates/${candidateId}/review`, {
+		decision,
+		reason: reason ?? null,
+	});
+	const result = candidateDecisionSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("審査結果応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function getCandidateDecisions(
+	candidateId: string,
+): Promise<CandidateDecision[]> {
+	const json = await fetchJson(`/api/v1/candidates/${candidateId}/decisions`);
+	const result = z.array(candidateDecisionSchema).safeParse(json);
+	if (!result.success) {
+		throw new ApiError("審査履歴応答の形式が不正です", result.error);
 	}
 	return result.data;
 }

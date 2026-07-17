@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "`topics`の審査結果（仕様書§12.3「採用／除外／再生成」のうち採用・除外・\nPhase 11タスク1・3）。除外にはreasonの入力が必須（select/candidate_review.pyが強制する\n——破壊的操作に理由入力を必須にする仕様書§12.4の方針を審査アクションにも適用する）。",
+  "properties": {
+    "candidate_id": {
+      "minLength": 1,
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "adopted",
+        "excluded"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "decision_id": {
+      "minLength": 1,
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "decision_id",
+    "candidate_id",
+    "decision",
+    "decided_at"
+  ],
+  "title": "CandidateDecision",
+  "type": "object"
+}
