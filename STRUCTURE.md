@@ -238,6 +238,8 @@
 - `services/pipeline/src/history_radio/media/voicevox.py`
 - `services/pipeline/src/history_radio/publish/__init__.py`
 - `services/pipeline/src/history_radio/publish/cloudflare_pages.py`
+- `services/pipeline/src/history_radio/publish/distribution_ledger.py`
+- `services/pipeline/src/history_radio/publish/distribution_metadata.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
 - `services/pipeline/src/history_radio/py.typed`
@@ -309,6 +311,8 @@
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/publish/__init__.py`
 - `services/pipeline/tests/publish/test_cloudflare_pages.py`
+- `services/pipeline/tests/publish/test_distribution_ledger.py`
+- `services/pipeline/tests/publish/test_distribution_metadata.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
 - `services/pipeline/tests/readings/__init__.py`
@@ -810,6 +814,23 @@
 - class Deployment
 - class PagesClient
 
+### `services/pipeline/src/history_radio/publish/distribution_ledger.py`
+- class DistributionError
+- class DistributionRecord
+- class DistributionLedger
+- def dispatch
+
+### `services/pipeline/src/history_radio/publish/distribution_metadata.py`
+- class DistributionMetadataError
+- class YouTubeMetadata
+- class PodcastMetadata
+- class AmazonMusicMetadata
+- class DistributionMetadataSet
+- def build_youtube_metadata
+- def build_podcast_metadata
+- def build_amazon_music_metadata
+- def build_all_distribution_metadata
+
 ### `services/pipeline/src/history_radio/publish/episode_page.py`
 - class EpisodePageError
 - class SourceEntry
@@ -1219,6 +1240,25 @@
 - def test_rollback_call_rejects_non_200_status
 - def test_network_error_during_list_is_rejected
 - def test_authorization_header_uses_bearer_token
+
+### `services/pipeline/tests/publish/test_distribution_ledger.py`
+- def test_dispatch_rejects_states_before_approved
+- def test_dispatch_succeeds_at_or_after_approved
+- def test_dispatch_records_success_with_external_id
+- def test_dispatch_does_not_reinvoke_publish_fn_after_success
+- def test_dispatch_records_failure_and_raises
+- def test_dispatch_retries_after_a_recorded_failure
+- def test_different_targets_for_same_episode_are_independent
+- def test_different_episodes_for_same_target_are_independent
+
+### `services/pipeline/tests/publish/test_distribution_metadata.py`
+- def test_youtube_metadata_places_page_url_near_top_of_description
+- def test_youtube_metadata_defaults_to_unlisted_privacy
+- def test_podcast_metadata_requires_audio_fields
+- def test_podcast_metadata_carries_enclosure_fields
+- def test_amazon_music_metadata_links_to_permanent_page
+- def test_all_distribution_metadata_share_the_same_episode_id
+- def test_build_all_fails_when_podcast_metadata_cannot_be_built
 
 ### `services/pipeline/tests/publish/test_episode_page.py`
 - def test_valid_data_passes_validation_and_renders

@@ -95,7 +95,9 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [x] Phase 8 — 公開ページ統合・Cloudflare（タスク5・6のCloudflareダッシュボード側の
   仕上げ〔独自ドメイン接続・Pagesプロジェクト作成・実クレデンシャルでの動作確認〕は
   HUMAN_TASKS.mdで依頼中——実装・テストは完了）
-- [ ] Phase 9 — RSS・配信先 `in_progress`
+- [x] Phase 9 — RSS・配信先（実配信は各配信先の実クライアント未実装——実装したのは
+  RSS生成・配信先ごとのメタデータ生成・approvedゲート・二重投稿防止台帳。
+  実クレデンシャルでの動作確認はHUMAN_TASKSで依頼中）
 - [ ] Phase 10 — 自動検査ゲート `backlog`
 - [ ] Phase 11 — 管理画面の実運用化 `backlog`
 - [ ] Phase 12 — バックアップ・障害対応 `backlog`
