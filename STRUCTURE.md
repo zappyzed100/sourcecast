@@ -279,6 +279,7 @@
 - `services/pipeline/src/history_radio/store/db.py`
 - `services/pipeline/src/history_radio/store/documents.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
+- `services/pipeline/src/history_radio/store/gate_results.py`
 - `services/pipeline/src/history_radio/store/orm.py`
 - `services/pipeline/src/history_radio/store/rights.py`
 - `services/pipeline/tests/__init__.py`
@@ -312,6 +313,7 @@
 - `services/pipeline/tests/media/test_slides.py`
 - `services/pipeline/tests/media/test_voicevox.py`
 - `services/pipeline/tests/publish/__init__.py`
+- `services/pipeline/tests/publish/test_artifact_lock.py`
 - `services/pipeline/tests/publish/test_cloudflare_pages.py`
 - `services/pipeline/tests/publish/test_distribution_ledger.py`
 - `services/pipeline/tests/publish/test_distribution_metadata.py`
@@ -349,6 +351,7 @@
 - `services/pipeline/tests/store/test_config_loader.py`
 - `services/pipeline/tests/store/test_documents.py`
 - `services/pipeline/tests/store/test_episodes.py`
+- `services/pipeline/tests/store/test_gate_results.py`
 - `services/pipeline/tests/store/test_rights.py`
 - `services/pipeline/tests/test_smoke.py`
 
@@ -854,6 +857,9 @@
 ### `services/pipeline/src/history_radio/publish/publish_gate.py`
 - class GateCheckResult
 - class PublishGateResult
+- class ArtifactLockError
+- def compute_artifact_hash
+- def verify_artifact_unchanged
 - def evaluate_publish_gate
 
 ### `services/pipeline/src/history_radio/readings/address_registry.py`
@@ -1008,6 +1014,11 @@
 - def get_episode
 - def update_episode_state
 
+### `services/pipeline/src/history_radio/store/gate_results.py`
+- def save_gate_result
+- def list_gate_results_for_episode
+- def latest_gate_result_for_revision
+
 ### `services/pipeline/src/history_radio/store/orm.py`
 - class Base
 - class EpisodeRow
@@ -1018,6 +1029,7 @@
 - class FetchSnapshotRow
 - class LlmRunRow
 - class TermsSnapshotRow
+- class PublishGateResultRow
 
 ### `services/pipeline/src/history_radio/store/rights.py`
 - def save_rights_decision
@@ -1242,6 +1254,15 @@
 - def test_inject_readings_with_no_resolutions_returns_text_unchanged
 - def test_credit_text_matches_spec_wording
 
+### `services/pipeline/tests/publish/test_artifact_lock.py`
+- def test_compute_artifact_hash_is_deterministic_for_identical_inputs
+- def test_compute_artifact_hash_changes_when_episode_title_changes
+- def test_compute_artifact_hash_changes_when_media_assets_change
+- def test_verify_artifact_unchanged_passes_when_nothing_changed
+- def test_verify_artifact_unchanged_rejects_a_changed_script
+- def test_verify_artifact_unchanged_rejects_changed_media
+- def test_verify_artifact_unchanged_rejects_changed_episode_metadata
+
 ### `services/pipeline/tests/publish/test_cloudflare_pages.py`
 - def test_list_deployments_filters_by_environment_and_sorts_newest_first
 - def test_rollback_to_previous_calls_rollback_with_second_newest_deployment_id
@@ -1304,6 +1325,8 @@
 
 ### `services/pipeline/tests/publish/test_publish_gate.py`
 - def test_all_checks_pass_and_publish_ready_is_true
+- def test_artifact_hash_is_computed_even_when_gate_fails
+- def test_artifact_hash_changes_when_script_changes
 - def test_rights_and_episode_schema_failure_alone_fails_the_gate
 - def test_script_and_claims_failure_alone_fails_the_gate
 - def test_reproduction_similarity_failure_alone_fails_the_gate
@@ -1535,6 +1558,16 @@
 - def engine
 - def test_writer_commits_while_two_readers_hold_open_transactions
 - def test_concurrent_update_with_stale_revision_is_rejected
+
+### `services/pipeline/tests/store/test_gate_results.py`
+- def engine
+- def test_gate_result_can_be_saved_and_retrieved_by_revision
+- def test_reevaluating_the_same_revision_keeps_the_old_result
+- def test_latest_result_for_revision_returns_the_most_recent_evaluation
+- def test_different_revisions_of_the_same_episode_are_independent
+- def test_no_result_returns_none
+- def test_saving_a_gate_result_also_appends_an_audit_event
+- def test_checks_with_reasons_round_trip_through_json
 
 ### `services/pipeline/tests/store/test_rights.py`
 - def engine

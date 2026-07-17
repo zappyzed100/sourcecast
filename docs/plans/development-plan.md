@@ -634,10 +634,32 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   `is_quoted: bool = False`を追加し、引用として明示・出所表示した文
   （仕様書§11「引用として明示・出所表示した箇所は除く」）を検査対象から
   除外できるようにした。単体テスト8件。
-* [ ] ゲート結果に規則版と全チェックの根拠を保存し、管理画面から追跡できるようにする。
+* [x] ゲート結果に規則版と全チェックの根拠を保存し、管理画面から追跡できるようにする。
   検証: 公開済み版から当時の検査結果を再表示できる。
-* [ ] ゲート通過後の成果物ハッシュを固定し、公開直前の差替えを拒否する。
+  実装メモ: `services/pipeline/src/history_radio/store/gate_results.py`
+  （`store/orm.py`の`PublishGateResultRow`・`publish_gate_results`テーブル）。
+  `store/rights.py`と同じ「追記のみ（append-only）」方針——更新・削除関数を
+  意図的に置かず、同じepisode_id・revisionを再評価しても過去の結果が消えない
+  ことを構造的に保証する。保存と同時に`AuditEventRow`も追記する（仕様書§15）。
+  `(episode_id, revision)`で検索する`latest_gate_result_for_revision()`が、
+  DoDの「公開済み版から当時の検査結果を再表示できる」を満たす——`revision`は
+  `PublishGateResult.revision`（評価対象の`EpisodePageData.revision`）から
+  来るため、`episode_publisher.py`のバージョン管理と同じ粒度で当時の検査結果を
+  特定できる。**「管理画面から追跡できる」というDoDの管理画面側UI配線は
+  本タスクの対象外**——apps/adminの実DB接続はPhase 11「Phase 2の画面を
+  実DBと実ジョブへ接続」で扱う。ここではその配線が使う永続化・参照関数
+  （save/list/latest）を用意した。単体テスト7件。
+* [x] ゲート通過後の成果物ハッシュを固定し、公開直前の差替えを拒否する。
   検証: 承認後に台本やmediaを変更すると再承認が必要になる。
+  実装メモ: `publish_gate.py`に`PublishGateResult.artifact_hash`
+  （episode/script/media_assets一式を正規化JSON化したsha256。`publish_ready`の
+  真偽に関わらず常に計算——不合格時の監査にも使える）と、公開直前に呼ぶ
+  `verify_artifact_unchanged()`を追加した。現在の成果物から計算したハッシュが
+  承認時のハッシュと食い違えばfail closedで`ArtifactLockError`を送出する
+  （=再承認が必要）。episode・script・media_assetsのどれか1つでも変更されれば
+  ハッシュが変わることを単体テストで直接確認した（`tests/publish/test_artifact_lock.py`
+  7件、うち3件は台本のみ/mediaのみ/episodeメタデータのみの変更をそれぞれ
+  個別に拒否することを確認）。
 
 ### Phase 11 — 管理画面の実運用化（仕様書 §12）
 
