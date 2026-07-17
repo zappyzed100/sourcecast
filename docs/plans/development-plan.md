@@ -665,7 +665,7 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 * [ ] Phase 2の画面を実DBと実ジョブへ接続し、候補→審査→承認→限定公開を一画面ずつ完成させる。
   検証: 1件を最初から限定公開まで操作するPlaywright E2Eが通る。
-  進捗（候補→審査まで実装済み。承認→限定公開は未着手）: `topics`（候補）・
+  進捗（候補→審査→承認まで実装済み。限定公開は未着手）: `topics`（候補）・
   候補審査結果の永続化を新設した——`store/candidates.py`・`store/candidate_decisions.py`
   （`store/rights.py`と同じ「追記のみ」方針。候補は選出パイプラインが1回生成した
   時点の点数を記録し更新しない、審査結果は再審査しても過去の判定が消えない）。
@@ -679,14 +679,35 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   接続し、`POST /api/v1/candidates/{id}/review`・
   `GET /api/v1/candidates/{id}/decisions`を新設。apps/adminの`Candidates.tsx`へ
   採用・除外ボタンを追加（除外は理由入力欄が必須で表示される）。
-  **未着手**: 承認（ゲート評価のトリガー・`publish_gate.evaluate_publish_gate`との
-  接続）、限定公開（`distribution_ledger.dispatch`との接続）、ダッシュボード・
-  ジョブ一覧は引き続きfixture（実ジョブ接続はタスク2）。DoD本体の
-  「1件を最初から限定公開まで操作するPlaywright E2Eが通る」は、承認・限定公開の
+
+  承認: `publish/episode_approval.py`の`approve_episode()`が承認操作を担う——
+  **ここでは検査を再実行しない**。Phase 10の`evaluate_publish_gate`が既に評価し
+  `store/gate_results.py`へ保存済みの結果を参照するだけにする（決定と実行の分離）。
+  fail closedの2条件: (1) エピソードの現在状態が`publish_ready`である
+  （`domain/episode_state.py`の`transition()`をそのまま呼ぶ——段階飛ばし・逆行の
+  防止を再実装しない）、(2) 直近のゲート評価結果が存在し`publish_ready=True`である。
+  **重要な設計上の発見**: `Episode.revision`（`store/episodes.py`の楽観ロック用
+  カウンタ・状態遷移のたびに増える）と`PublishGateResult.revision`
+  （`EpisodePageData.revision` = 公開コンテンツの版）は同名だが別概念——
+  承認フローがこれを混同してrevision不一致で常に失敗するバグを実装中に発見し、
+  `store/gate_results.py`へ`latest_gate_result_for_episode()`
+  （revisionを問わず直近の評価結果を返す）を追加して解消した。`store/episodes.py`へ
+  `list_episodes()`を追加。`POST /api/v1/episodes/{id}/approve`・
+  `GET /api/v1/episodes`を新設。apps/adminへ新規`Episodes.tsx`画面
+  （一覧・`publish_ready`状態にだけ承認ボタンを表示）を追加。
+
+  **未着手**: 限定公開（`distribution_ledger.dispatch`との接続）、候補採用時に
+  Episodeを自動作成する連携（現状は`store/episodes.create_episode`を独立に呼ぶ
+  想定——採用→Episode作成の自動連携は候補のtopic_titleから公開用の英語スラグを
+  機械的に導出する妥当な方法が無いため保留。人間かLLM翻訳が必要になった時点で
+  再検討する）、ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はタスク2）。
+  DoD本体の「1件を最初から限定公開まで操作するPlaywright E2Eが通る」は、限定公開の
   実装が揃うまで満たせない——後続コミットで着手する。
-  単体テスト: Python 26件（select/candidate_review 5件・store/candidates 4件・
-  store/candidate_decisions 4件・api/main 10件の追加＋既存3件更新）、
-  TypeScript 9件（api.test.ts 5件・Candidates.test.tsx 4件）。
+  本コミットでの追加分: Python単体テスト13件（publish/episode_approval 5件・
+  store/gate_results追加2件・api/main（episodes関連）追加6件）、TypeScript
+  単体テスト10件（Episodes.test.tsx 5件・api.test.ts（episode approval）4件・
+  App.test.tsx追加1件）。累計: Python 570件・TypeScript 28件
+  （apps-admin）。
 * [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。
 * [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。

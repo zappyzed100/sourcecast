@@ -99,6 +99,12 @@ def latest_gate_result_for_revision(
 
     development-plan.md Phase 10タスク3 DoD: 公開済み版から当時の検査結果を
     再表示できる——公開時のrevisionでこの関数を呼べば、その版に対する検査結果を得られる。
+
+    ここでの`revision`は`PublishGateResult.revision`（評価対象の
+    `EpisodePageData.revision` = 公開コンテンツの版）であり、`Episode.revision`
+    （`store/episodes.py`の楽観ロック用カウンタ・状態遷移のたびに増える）とは
+    別物なので混同しないこと——承認フロー（`publish/episode_approval.py`）が
+    「最新の評価結果」を引くときは`latest_gate_result_for_episode`を使う。
     """
     results = [
         r for r in list_gate_results_for_episode(session, episode_id) if r.revision == revision
@@ -106,7 +112,18 @@ def latest_gate_result_for_revision(
     return results[-1] if results else None
 
 
+def latest_gate_result_for_episode(session: Session, episode_id: str) -> PublishGateResult | None:
+    """revisionを問わず、あるエピソードの直近の評価結果を返す（無ければ`None`）。
+
+    承認操作（Phase 11タスク1）はコンテンツrevisionではなく「一番最近評価した結果」を
+    見るため、`latest_gate_result_for_revision`とは別に用意する。
+    """
+    results = list_gate_results_for_episode(session, episode_id)
+    return results[-1] if results else None
+
+
 __all__ = [
+    "latest_gate_result_for_episode",
     "latest_gate_result_for_revision",
     "list_gate_results_for_episode",
     "save_gate_result",

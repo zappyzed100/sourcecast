@@ -38,4 +38,14 @@ describe("App", () => {
 		);
 		expect(screen.getByTestId("jobs-loading")).toBeInTheDocument();
 	});
+
+	it("エピソード画面へのリンクで画面が切り替わる", () => {
+		vi.spyOn(api, "getEpisodes").mockReturnValue(new Promise(() => {}));
+		render(
+			<MemoryRouter initialEntries={["/episodes"]}>
+				<App />
+			</MemoryRouter>,
+		);
+		expect(screen.getByTestId("episodes-loading")).toBeInTheDocument();
+	});
 });

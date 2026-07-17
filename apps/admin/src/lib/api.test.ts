@@ -1,11 +1,13 @@
 // api.test.ts — Phase 2 DoD: API停止・タイムアウト・空データ・壊れた応答の4パターンを固定する
-// (Phase 11タスク1: 候補審査APIクライアントのテストも本ファイルに追加)
+// (Phase 11タスク1: 候補審査・エピソード承認APIクライアントのテストも本ファイルに追加)
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	ApiError,
+	approveEpisode,
 	getCandidateDecisions,
 	getCandidates,
 	getDashboardSummary,
+	getEpisodes,
 	getJobs,
 	reviewCandidate,
 } from "./api";
@@ -175,5 +177,66 @@ describe("candidate review", () => {
 		await expect(reviewCandidate("cand-1", "adopted")).rejects.toBeInstanceOf(
 			ApiError,
 		);
+	});
+});
+
+describe("episode approval", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	function episodeResponse(overrides: Record<string, unknown> = {}) {
+		return jsonResponse({
+			schema_version: 1,
+			episode_id: "ep-001",
+			state: "publish_ready",
+			revision: 1,
+			title: "缶切りより缶詰",
+			created_at: "2026-07-19T00:00:00Z",
+			updated_at: "2026-07-19T00:00:00Z",
+			...overrides,
+		});
+	}
+
+	it("空配列は正常系として扱う", async () => {
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse([])));
+		await expect(getEpisodes()).resolves.toEqual([]);
+	});
+
+	it("承認はPOSTしstateがapprovedのEpisodeを返す", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue(episodeResponse({ state: "approved" }));
+		vi.stubGlobal("fetch", fetchMock);
+
+		const result = await approveEpisode("ep-001");
+
+		expect(result.state).toBe("approved");
+		const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+		expect(url).toContain("/api/v1/episodes/ep-001/approve");
+		expect(init.method).toBe("POST");
+	});
+
+	it("ゲート不合格でAPIが400を返すとdetailメッセージ付きのApiErrorになる", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi
+				.fn()
+				.mockResolvedValue(
+					jsonResponse({ detail: "自動検査ゲートが不合格" }, false),
+				),
+		);
+
+		await expect(approveEpisode("ep-001")).rejects.toMatchObject({
+			message: "自動検査ゲートが不合格",
+		});
+	});
+
+	it("形の壊れたエピソード応答はApiErrorになる", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(jsonResponse({ totally: "wrong shape" })),
+		);
+		await expect(getEpisodes()).rejects.toBeInstanceOf(ApiError);
 	});
 });

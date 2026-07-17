@@ -49,6 +49,33 @@ const candidateDecisionSchema = z.object({
 export type CandidateDecision = z.infer<typeof candidateDecisionSchema>;
 export type CandidateDecisionValue = CandidateDecision["decision"];
 
+const episodeStateSchema = z.enum([
+	"collected",
+	"rights_passed",
+	"topic_selected",
+	"facts_verified",
+	"script_generated",
+	"script_verified",
+	"media_generated",
+	"publish_ready",
+	"approved",
+	"published",
+	"rejected",
+	"blocked",
+]);
+export type EpisodeState = z.infer<typeof episodeStateSchema>;
+
+const episodeSchema = z.object({
+	schema_version: z.literal(1),
+	episode_id: z.string(),
+	state: episodeStateSchema,
+	revision: z.number().int().positive(),
+	title: z.string(),
+	created_at: z.string(),
+	updated_at: z.string(),
+});
+export type Episode = z.infer<typeof episodeSchema>;
+
 const jobSchema = z.object({
 	schema_version: z.literal(1),
 	job_id: z.string(),
@@ -152,6 +179,24 @@ export async function getCandidateDecisions(
 	const result = z.array(candidateDecisionSchema).safeParse(json);
 	if (!result.success) {
 		throw new ApiError("審査履歴応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function getEpisodes(): Promise<Episode[]> {
+	const json = await fetchJson("/api/v1/episodes");
+	const result = z.array(episodeSchema).safeParse(json);
+	if (!result.success) {
+		throw new ApiError("エピソード一覧応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function approveEpisode(episodeId: string): Promise<Episode> {
+	const json = await postJson(`/api/v1/episodes/${episodeId}/approve`, {});
+	const result = episodeSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("承認結果応答の形式が不正です", result.error);
 	}
 	return result.data;
 }
