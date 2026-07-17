@@ -47,6 +47,9 @@ const episodes = defineCollection({
 		corrections: z.array(correctionSchema),
 		relatedBooks: z.array(relatedBookSchema),
 		audioUrl: z.string().optional(),
+		// RSS 2.0のenclosure要素が要求する実バイト数（development-plan.md Phase 9タスク1・
+		// 仕様書§10D）。audioUrlと対で必須（feed.xml.ts側でも両方揃っているかを検証する）。
+		audioLengthBytes: z.number().int().positive().optional(),
 		chapters: z
 			.array(
 				z.object({ title: z.string(), startSeconds: z.number().nonnegative() }),

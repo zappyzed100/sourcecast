@@ -81,6 +81,9 @@ class EpisodePageData(SchemaModel):
     corrections: list[CorrectionEntry] = Field(default_factory=list)
     related_books: list[RelatedBookEntry] = Field(default_factory=list)
     audio_url: str | None = None
+    # RSS 2.0のenclosure要素が要求する実バイト数（development-plan.md Phase 9タスク1・
+    # 仕様書§10D「enclosure、長さ...を固定する」）。audio_urlと対で必須。
+    audio_length_bytes: int | None = Field(default=None, gt=0)
     chapters: list[ChapterEntry] | None = None
 
 
@@ -108,6 +111,12 @@ def validate_episode_page(data: EpisodePageData) -> None:
                 f"claims[{i}] ({claim.text[:30]!r}...): "
                 f"存在しない出典indexを参照している: {out_of_range}"
             )
+
+    if (data.audio_url is None) != (data.audio_length_bytes is None):
+        problems.append(
+            "audio_urlとaudio_length_bytesは対で必須（RSSのenclosureが両方を要求する）: "
+            f"audio_url={data.audio_url!r}, audio_length_bytes={data.audio_length_bytes!r}"
+        )
 
     if problems:
         raise EpisodePageError(problems)

@@ -112,6 +112,7 @@
 - `apps/site/src/pages/episodes/[id]/script.md.ts` — script.md.ts — 原稿本文のMarkdownダウンロード用静的エンドポイント(仕様書§10B「原稿のMarkdownダウンロード」)
 - `apps/site/src/pages/episodes/[id]/versions/[revision]/index.astro`
 - `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts` — script.md.ts — 過去バージョンの原稿本文Markdownダウンロード用静的エンドポイント(仕様書§10B)
+- `apps/site/src/pages/feed.xml.ts` — feed.xml.ts — Podcast RSS 2.0フィード生成(仕様書§10D・development-plan.md Phase 9タスク1)。
 - `apps/site/src/pages/index.astro`
 - `apps/site/tsconfig.json`
 - `apps/site/vitest.config.ts` — <reference types="vitest/config" />
@@ -142,6 +143,7 @@
 - `e2e/episode-publish.spec.ts` — episode-publish.spec.ts — Phase 8タスク3 DoD: 主張‐出典対応・コピー・ダウンロード・過去版差分が
 - `e2e/known-pages.ts` — known-pages.ts — 全既知ページの一覧(accessibility.spec.tsとsite-health.spec.tsで共有する)。
 - `e2e/parse-headers-file.ts` — parse-headers-file.ts — Cloudflare Pagesの_headers構文をパースする(site-health.spec.tsで使用)。
+- `e2e/rss-feed.spec.ts` — rss-feed.spec.ts — Phase 9タスク1 DoD: RSS 2.0の標準バリデーターでエラー0件、
 - `e2e/site-health.spec.ts` — site-health.spec.ts — Phase 8タスク5 DoD: プレビューと本番でリンク切れ、mixed content、
 - `e2e/site-search.spec.ts` — site-search.spec.ts — Phase 2 DoD: fixtureの固有語を検索し、該当エピソードが返ることを確認する
 - `e2e/site-smoke.spec.ts` — site-smoke.spec.ts — Phase 0のブラウザsmoke test: 公開サイトのホームページが読み込めることだけを確認する
@@ -427,6 +429,9 @@
 
 ### `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts`
 - function getStaticPaths
+- const GET
+
+### `apps/site/src/pages/feed.xml.ts`
 - const GET
 
 ### `e2e/known-pages.ts`
@@ -1225,6 +1230,10 @@
 - def test_approvable_licenses_pass
 - def test_claim_referencing_out_of_range_source_index_is_rejected
 - def test_every_claim_reaches_at_least_one_valid_source_url
+- def test_audio_url_without_length_bytes_is_rejected
+- def test_audio_length_bytes_without_url_is_rejected
+- def test_audio_url_and_length_bytes_together_pass
+- def test_zero_or_negative_audio_length_bytes_is_rejected_at_schema_level
 - def test_malformed_episode_id_is_rejected
 - def test_all_problems_are_reported_at_once
 - def test_frontmatter_keys_are_camel_case
