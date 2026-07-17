@@ -566,12 +566,39 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   代わりに構造チェックを自前実装している——実際の配信登録後は各配信先の
   バリデーション結果も確認すること）。単体テスト4件を`tests/publish/test_episode_page.py`
   へ追加（audio_url/audio_length_bytesの対必須検証）。
-* [ ] YouTube、Podcast、Amazon Music/Audible向けメタデータを同じEpisodeから生成する。
+* [x] YouTube、Podcast、Amazon Music/Audible向けメタデータを同じEpisodeから生成する。
   検証: 全配信先で同じ `episode_id` を冪等キーとして使う。
-* [ ] 自動アップロードはMVPでは限定公開までとし、公開ボタンは最終ゲート通過後だけ有効化する。
+  実装メモ: `services/pipeline/src/history_radio/publish/distribution_metadata.py`。
+  `build_all_distribution_metadata()`が`EpisodePageData`という単一の正本から
+  YouTube/Podcast/Amazon Music向けメタデータを導出し、全てのepisode_idが
+  元データと一致することを構造的に検証する（決定と実行の分離——実際の
+  アップロードAPI呼び出しはここでは行わない）。YouTube説明欄は仕様書§10D
+  「説明欄の先頭付近に恒久エピソードページを掲載する」に合わせ先頭にpage_urlを置く。
+  privacy_statusは既定`unlisted`（§10D「自動投稿開始前は非公開または限定公開」）。
+  Podcastメタデータはaudio_url/audio_length_bytesが揃っていないとfail closedで
+  拒否する（RSSのenclosureと同じ前提）。単体テスト7件。
+* [x] 自動アップロードはMVPでは限定公開までとし、公開ボタンは最終ゲート通過後だけ有効化する。
   検証: `approved` 未満の状態から公開操作できない。
-* [ ] 外部配信の成功・失敗・外部IDを記録し、同じ配信先への二重投稿を防ぐ。
+  実装メモ: `distribution_ledger.py`の`dispatch()`が`episode_state`を検査し、
+  `approved`/`published`以外はfail closedで拒否する。`domain/episode_state.py`の
+  既存状態機械（Phase 1実装）が既に「publish_readyの次にapprovedを経ないと
+  publishedへ進めない」を保証しているため、ここでは配信操作自体を
+  approved以降へゲートするだけでよい（状態機械を再実装しない）。
+  全12状態（approved/published以外）に対してdispatchが拒否し、
+  `publish_fn`自体が一切呼ばれないことをパラメータ化テストで固定。
+* [x] 外部配信の成功・失敗・外部IDを記録し、同じ配信先への二重投稿を防ぐ。
   検証: タイムアウト後の再実行でも二重投稿しない。
+  実装メモ: `DistributionLedger`が`(episode_id, target)`単位で直近の配信結果を
+  保持し、既に`success`が記録済みの組み合わせへは`publish_fn`（実アップロード処理の
+  差し替え可能な注入関数——実クレデンシャル取得後に各配信先のクライアントへ
+  置き換える）を呼ばない。失敗（failed）は再送禁止の対象にせず次回`dispatch`で
+  再試行できる。**スコープの明示**: これが防ぐのは「呼び出し側がタイムアウト等で
+  再実行した場合に、こちらの記録に基づいて再送しない」という範囲であり、
+  「配信先サーバー側では実際に届いていたが呼び出し側だけタイムアウトした」という
+  真のat-least-once問題（配信先APIのidempotency key機能が必要）までは
+  解決しない——それは各配信先の実アップロードクライアント実装時に配信先固有の
+  冪等キー機構と組み合わせて対処する。単体テスト18件
+  （`tests/publish/test_distribution_ledger.py`）。
 
 ### Phase 10 — 自動検査ゲート（仕様書 §11）
 
