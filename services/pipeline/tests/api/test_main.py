@@ -108,6 +108,15 @@ def _seed_episode_ready_for_approval(
         )
 
 
+def _seed_approved_episode(engine: Engine, episode_id: str = "ep-001") -> None:
+    _seed_episode_ready_for_approval(engine, episode_id, gate_passed=True)
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        update_episode_state(
+            session, episode_id=episode_id, expected_revision=2, new_state="approved"
+        )
+
+
 def test_dashboard_returns_summary(client: TestClient) -> None:
     status_code, body = _get_json(client, "/api/v1/dashboard")
     assert status_code == 200
@@ -237,3 +246,34 @@ def test_approve_episode_rejected_when_not_publish_ready(
 def test_approve_unknown_episode_returns_404(client: TestClient) -> None:
     status_code, _body = _post_json(client, "/api/v1/episodes/does-not-exist/approve", {})
     assert status_code == 404
+
+
+def test_publish_episode_succeeds_when_approved(engine: Engine, client: TestClient) -> None:
+    _seed_approved_episode(engine)
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+    assert status_code == 200
+    assert body["state"] == "published"
+
+
+def test_publish_episode_rejected_when_not_approved(engine: Engine, client: TestClient) -> None:
+    _seed_episode_ready_for_approval(engine, gate_passed=True)  # publish_readyのまま
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+    assert status_code == 400
+    assert "限定公開できない" in body["detail"]
+
+
+def test_publish_unknown_episode_returns_404(client: TestClient) -> None:
+    status_code, _body = _post_json(client, "/api/v1/episodes/does-not-exist/publish", {})
+    assert status_code == 404
+
+
+def test_publish_episode_is_rejected_on_second_call(engine: Engine, client: TestClient) -> None:
+    """development-plan.md Phase 9タスク4 DoD: 同じ配信先への二重投稿を防ぐ
+    (publishedは終端状態のため再実行自体が拒否される)。"""
+    _seed_approved_episode(engine)
+    first_status, _first_body = _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+    assert first_status == 200
+
+    second_status, second_body = _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+    assert second_status == 400
+    assert "限定公開できない" in second_body["detail"]

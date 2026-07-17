@@ -201,6 +201,15 @@ export async function approveEpisode(episodeId: string): Promise<Episode> {
 	return result.data;
 }
 
+export async function publishEpisode(episodeId: string): Promise<Episode> {
+	const json = await postJson(`/api/v1/episodes/${episodeId}/publish`, {});
+	const result = episodeSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("限定公開結果応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
 export async function getJobs(): Promise<Job[]> {
 	const json = await fetchJson("/api/v1/jobs");
 	const result = z.array(jobSchema).safeParse(json);

@@ -208,3 +208,24 @@ class CandidateDecisionRow(Base):
     decision: Mapped[str] = mapped_column(String, nullable=False)
     reason: Mapped[str] = mapped_column(String, nullable=False, default="")
     decided_at: Mapped[datetime] = mapped_column(nullable=False)
+
+
+class DistributionRecordRow(Base):
+    """`(episode_id, target)`単位の直近の配信結果（仕様書§10D・Phase 9タスク4・
+    Phase 11タスク1「限定公開」）。
+
+    複合主キーは`(episode_id, target)`——`publish/distribution_ledger.py`の
+    インメモリ`DistributionLedger`と同じ「直近の状態だけ保持する」意味論を
+    そのままテーブルへ写す（同じ組み合わせへの再実行は行を上書きする）。
+    全試行の履歴は`audit_events`側で追記保存する
+    （`store/distribution_records.py`が保存と同時に記録する）。
+    """
+
+    __tablename__ = "distribution_records"
+
+    episode_id: Mapped[str] = mapped_column(String, primary_key=True)
+    target: Mapped[str] = mapped_column(String, primary_key=True)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    external_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    attempted_at: Mapped[str] = mapped_column(String, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(String, nullable=True)

@@ -665,7 +665,8 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 * [ ] Phase 2の画面を実DBと実ジョブへ接続し、候補→審査→承認→限定公開を一画面ずつ完成させる。
   検証: 1件を最初から限定公開まで操作するPlaywright E2Eが通る。
-  進捗（候補→審査→承認まで実装済み。限定公開は未着手）: `topics`（候補）・
+  進捗（候補→審査→承認→限定公開まで実装済み。残るはDoD本体のPlaywright E2Eのみ）:
+  `topics`（候補）・
   候補審査結果の永続化を新設した——`store/candidates.py`・`store/candidate_decisions.py`
   （`store/rights.py`と同じ「追記のみ」方針。候補は選出パイプラインが1回生成した
   時点の点数を記録し更新しない、審査結果は再審査しても過去の判定が消えない）。
@@ -696,17 +697,40 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   `GET /api/v1/episodes`を新設。apps/adminへ新規`Episodes.tsx`画面
   （一覧・`publish_ready`状態にだけ承認ボタンを表示）を追加。
 
-  **未着手**: 限定公開（`distribution_ledger.dispatch`との接続）、候補採用時に
-  Episodeを自動作成する連携（現状は`store/episodes.create_episode`を独立に呼ぶ
-  想定——採用→Episode作成の自動連携は候補のtopic_titleから公開用の英語スラグを
-  機械的に導出する妥当な方法が無いため保留。人間かLLM翻訳が必要になった時点で
-  再検討する）、ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はタスク2）。
-  DoD本体の「1件を最初から限定公開まで操作するPlaywright E2Eが通る」は、限定公開の
-  実装が揃うまで満たせない——後続コミットで着手する。
-  本コミットでの追加分: Python単体テスト13件（publish/episode_approval 5件・
-  store/gate_results追加2件・api/main（episodes関連）追加6件）、TypeScript
-  単体テスト10件（Episodes.test.tsx 5件・api.test.ts（episode approval）4件・
-  App.test.tsx追加1件）。累計: Python 570件・TypeScript 28件
+  限定公開: `publish/episode_publishing.py`の`publish_episode_limited()`が
+  `approved`状態のエピソードを`published`へ進め、配信台帳
+  （Phase 9の`distribution_ledger.dispatch`）へYouTube限定公開の試行を記録する。
+  YouTubeの「限定公開（unlisted）」が仕様書§10D「自動投稿開始前は非公開または
+  限定公開でアップロードする」に対応する公開区分そのもの
+  （`distribution_metadata.YouTubeMetadata.privacy_status`の既定値も`unlisted`）。
+  **`distribution_ledger.DistributionLedger`はPhase 9時点ではインメモリ実装
+  だったため、管理API経由での利用（プロセス再起動をまたぐ二重投稿防止）に耐えない
+  ——`store/distribution_records.py`へ同じインターフェースをDB永続化で実装する
+  `DbDistributionLedger`を追加し、`dispatch()`のロジック自体は再利用した**
+  （新テーブル`distribution_records`は`(episode_id, target)`複合主キーで直近状態
+  だけを保持——`DistributionLedger`と同じ意味論。全試行履歴は`audit_events`側に
+  追記される）。実際のYouTube Data APIへはまだ接続していない
+  （`publish_fn`はプレースホルダー識別子を返すだけ——HUMAN_TASKS.mdでYouTube連携の
+  認証情報取得を依頼するまでの暫定実装）。`POST /api/v1/episodes/{id}/publish`を
+  新設し、apps/adminの`Episodes.tsx`へ`approved`状態にだけ表示される限定公開
+  ボタンを追加した。
+
+  **未着手**: 候補採用時にEpisodeを自動作成する連携（現状は
+  `store/episodes.create_episode`を独立に呼ぶ想定——採用→Episode作成の自動連携は
+  候補のtopic_titleから公開用の英語スラグを機械的に導出する妥当な方法が無いため
+  保留。人間かLLM翻訳が必要になった時点で再検討する）、ダッシュボード・ジョブ一覧は
+  引き続きfixture（実ジョブ接続はタスク2）。**DoD本体の「1件を最初から限定公開まで
+  操作するPlaywright E2Eが通る」は依然として未実施**——候補→審査→承認→限定公開の
+  4操作すべてが実DB・実APIで動作することは単体・component testで確認済みだが、
+  実際のブラウザ操作でのE2Eには、FastAPI（uvicorn）とapps/adminのdev/preview
+  サーバーを同時起動するPlaywright `webServer`配列の拡張と、既知のepisode_idを
+  publish_ready状態まで進めておくシード手順が新たに必要——apps/site向けの既存
+  e2e基盤（`astro preview`単体）とは別立てのインフラが要る規模の作業のため、
+  後続コミットで着手する。
+  本コミットでの追加分: Python単体テスト13件
+  （publish/episode_publishing 3件・store/distribution_records 6件・
+  api/main（publish関連）追加4件）、TypeScript単体テスト3件
+  （Episodes.test.tsx追加3件）。累計: Python 583件・TypeScript 31件
   （apps-admin）。
 * [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。

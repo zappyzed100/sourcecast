@@ -1,13 +1,14 @@
-// Episodes.tsx — エピソード一覧・承認(仕様書§12.4「公開承認／差し戻し」のうち承認)。
+// Episodes.tsx — エピソード一覧・承認・限定公開(仕様書§12.4「公開承認／差し戻し」)。
 // API停止・タイムアウト・空データ・壊れた応答を安全に表示する(plan.md Phase 2 DoD)。
-// 承認はpublish_ready状態かつ自動検査ゲート合格が前提——それ以外はAPIがfail closedで
-// 拒否する(development-plan.md Phase 11タスク1)。
+// 承認はpublish_ready状態かつ自動検査ゲート合格が前提、限定公開はapproved状態が前提
+// ——それ以外はAPIがfail closedで拒否する(development-plan.md Phase 11タスク1)。
 import { useState } from "react";
 import {
 	ApiError,
 	approveEpisode,
 	type Episode,
 	getEpisodes,
+	publishEpisode,
 } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 
@@ -21,24 +22,32 @@ const STATE_LABELS: Record<Episode["state"], string> = {
 	media_generated: "media生成済み",
 	publish_ready: "公開準備完了",
 	approved: "承認済み",
-	published: "公開済み",
+	published: "公開済み(限定公開)",
 	rejected: "却下",
 	blocked: "障害停止",
 };
 
 export function Episodes() {
 	const state = useAsync<Episode[]>(getEpisodes);
-	// 承認成功後の行を上書き表示する(一覧の再取得はしない——Candidates.tsxと同じ方針)。
-	const [approved, setApproved] = useState<Record<string, Episode>>({});
+	// 承認・限定公開成功後の行を上書き表示する(一覧の再取得はしない——Candidates.tsxと同じ方針)。
+	const [overrides, setOverrides] = useState<Record<string, Episode>>({});
 	const [pendingId, setPendingId] = useState<string | null>(null);
 	const [rowError, setRowError] = useState<Record<string, string>>({});
 
 	async function handleApprove(episodeId: string) {
+		await runAction(episodeId, () => approveEpisode(episodeId));
+	}
+
+	async function handlePublish(episodeId: string) {
+		await runAction(episodeId, () => publishEpisode(episodeId));
+	}
+
+	async function runAction(episodeId: string, action: () => Promise<Episode>) {
 		setPendingId(episodeId);
 		setRowError((prev) => ({ ...prev, [episodeId]: "" }));
 		try {
-			const updated = await approveEpisode(episodeId);
-			setApproved((prev) => ({ ...prev, [episodeId]: updated }));
+			const updated = await action();
+			setOverrides((prev) => ({ ...prev, [episodeId]: updated }));
 		} catch (error) {
 			setRowError((prev) => ({
 				...prev,
@@ -78,12 +87,12 @@ export function Episodes() {
 				<tr>
 					<th scope="col">題名</th>
 					<th scope="col">状態</th>
-					<th scope="col">承認</th>
+					<th scope="col">操作</th>
 				</tr>
 			</thead>
 			<tbody>
 				{data.map((fetched) => {
-					const episode = approved[fetched.episode_id] ?? fetched;
+					const episode = overrides[fetched.episode_id] ?? fetched;
 					const isPending = pendingId === episode.episode_id;
 					const error = rowError[episode.episode_id];
 					return (
@@ -93,7 +102,7 @@ export function Episodes() {
 								{STATE_LABELS[episode.state]}
 							</td>
 							<td>
-								{episode.state === "publish_ready" ? (
+								{episode.state === "publish_ready" && (
 									<button
 										type="button"
 										disabled={isPending}
@@ -102,11 +111,23 @@ export function Episodes() {
 									>
 										承認
 									</button>
-								) : (
-									<span data-testid={`no-approve-action-${episode.episode_id}`}>
-										—
-									</span>
 								)}
+								{episode.state === "approved" && (
+									<button
+										type="button"
+										disabled={isPending}
+										data-testid={`publish-${episode.episode_id}`}
+										onClick={() => handlePublish(episode.episode_id)}
+									>
+										限定公開
+									</button>
+								)}
+								{episode.state !== "publish_ready" &&
+									episode.state !== "approved" && (
+										<span data-testid={`no-action-${episode.episode_id}`}>
+											—
+										</span>
+									)}
 								{error && (
 									<p
 										role="alert"
