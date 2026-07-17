@@ -10,6 +10,7 @@ from sqlalchemy import Engine, select
 from history_radio.publish.publish_gate import GateCheckResult, PublishGateResult
 from history_radio.store.db import create_sqlite_engine, session_factory
 from history_radio.store.gate_results import (
+    latest_gate_result_for_episode,
     latest_gate_result_for_revision,
     list_gate_results_for_episode,
     save_gate_result,
@@ -213,3 +214,41 @@ def test_checks_with_reasons_round_trip_through_json(engine: Engine) -> None:
 
     assert loaded is not None
     assert loaded.checks[0].reasons == ("クレジット欠落", "出典URL欠落")
+
+
+def test_latest_gate_result_for_episode_ignores_revision_and_returns_most_recent(
+    engine: Engine,
+) -> None:
+    """Phase 11タスク1の前提: Episode.revision(楽観ロック用カウンタ)とは無関係に、
+    直近の評価結果を返す(承認フローが使う)。"""
+    session_maker = session_factory(engine)
+
+    with session_maker() as session:
+        save_gate_result(
+            session,
+            _gate_result(
+                episode_id="ep-7", revision=1, publish_ready=False, artifact_hash="hash-a"
+            ),
+            result_id="gate-7-a",
+            evaluated_at=datetime(2026, 7, 19, tzinfo=timezone.utc),
+        )
+        # revisionが変わっても(楽観ロックの増分等)最新の評価結果として扱われる
+        save_gate_result(
+            session,
+            _gate_result(episode_id="ep-7", revision=9, publish_ready=True, artifact_hash="hash-b"),
+            result_id="gate-7-b",
+            evaluated_at=datetime(2026, 7, 20, tzinfo=timezone.utc),
+        )
+
+    with session_maker() as session:
+        latest = latest_gate_result_for_episode(session, "ep-7")
+
+    assert latest is not None
+    assert latest.artifact_hash == "hash-b"
+    assert latest.publish_ready is True
+
+
+def test_latest_gate_result_for_episode_returns_none_when_nothing_saved(engine: Engine) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        assert latest_gate_result_for_episode(session, "ep-missing") is None

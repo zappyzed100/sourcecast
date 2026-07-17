@@ -78,6 +78,8 @@
 - `apps/admin/src/pages/Candidates.test.tsx` — Candidates.test.tsx — Phase 11タスク1・3 DoD: 採用・除外(理由必須)の審査UIを固定する
 - `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧・審査(仕様書§12.3「採用／除外／再生成」のうち採用・除外)。
 - `apps/admin/src/pages/Dashboard.tsx` — Dashboard.tsx — 管理画面ホーム(仕様書§12.1)。API停止・タイムアウト・壊れた応答を安全に表示する。
+- `apps/admin/src/pages/Episodes.test.tsx` — Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態のエピソードだけ承認できる
+- `apps/admin/src/pages/Episodes.tsx` — Episodes.tsx — エピソード一覧・承認(仕様書§12.4「公開承認／差し戻し」のうち承認)。
 - `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
 - `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する。
 - `apps/admin/tsconfig.app.json`
@@ -243,6 +245,7 @@
 - `services/pipeline/src/history_radio/publish/cloudflare_pages.py`
 - `services/pipeline/src/history_radio/publish/distribution_ledger.py`
 - `services/pipeline/src/history_radio/publish/distribution_metadata.py`
+- `services/pipeline/src/history_radio/publish/episode_approval.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
 - `services/pipeline/src/history_radio/publish/publish_gate.py`
@@ -323,6 +326,7 @@
 - `services/pipeline/tests/publish/test_cloudflare_pages.py`
 - `services/pipeline/tests/publish/test_distribution_ledger.py`
 - `services/pipeline/tests/publish/test_distribution_metadata.py`
+- `services/pipeline/tests/publish/test_episode_approval.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
 - `services/pipeline/tests/publish/test_publish_gate.py`
@@ -419,11 +423,15 @@
 - type Candidate
 - type CandidateDecision
 - type CandidateDecisionValue
+- type EpisodeState
+- type Episode
 - type Job
 - function getDashboardSummary
 - function getCandidates
 - function reviewCandidate
 - function getCandidateDecisions
+- function getEpisodes
+- function approveEpisode
 - function getJobs
 
 ### `apps/admin/src/lib/useAsync.ts`
@@ -435,6 +443,9 @@
 
 ### `apps/admin/src/pages/Dashboard.tsx`
 - function Dashboard
+
+### `apps/admin/src/pages/Episodes.tsx`
+- function Episodes
 
 ### `apps/admin/src/pages/Jobs.tsx`
 - function Jobs
@@ -704,6 +715,8 @@
 - def get_candidates
 - def get_candidate_decisions
 - def review_candidate_endpoint
+- def get_episodes
+- def approve_episode_endpoint
 - def get_jobs
 
 ### `services/pipeline/src/history_radio/api/schemas.py`
@@ -857,6 +870,10 @@
 - def build_podcast_metadata
 - def build_amazon_music_metadata
 - def build_all_distribution_metadata
+
+### `services/pipeline/src/history_radio/publish/episode_approval.py`
+- class EpisodeApprovalError
+- def approve_episode
 
 ### `services/pipeline/src/history_radio/publish/episode_page.py`
 - class EpisodePageError
@@ -1046,12 +1063,14 @@
 - class EpisodeNotFoundError
 - def create_episode
 - def get_episode
+- def list_episodes
 - def update_episode_state
 
 ### `services/pipeline/src/history_radio/store/gate_results.py`
 - def save_gate_result
 - def list_gate_results_for_episode
 - def latest_gate_result_for_revision
+- def latest_gate_result_for_episode
 
 ### `services/pipeline/src/history_radio/store/orm.py`
 - class Base
@@ -1085,6 +1104,12 @@
 - def test_review_unknown_candidate_returns_404
 - def test_get_decisions_for_unknown_candidate_returns_404
 - def test_get_decisions_returns_review_history
+- def test_episodes_returns_empty_list_when_db_is_empty
+- def test_episodes_returns_seeded_data
+- def test_approve_episode_succeeds_when_gate_passed
+- def test_approve_episode_rejected_when_gate_failed
+- def test_approve_episode_rejected_when_not_publish_ready
+- def test_approve_unknown_episode_returns_404
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1338,6 +1363,14 @@
 - def test_amazon_music_metadata_links_to_permanent_page
 - def test_all_distribution_metadata_share_the_same_episode_id
 - def test_build_all_fails_when_podcast_metadata_cannot_be_built
+
+### `services/pipeline/tests/publish/test_episode_approval.py`
+- def engine
+- def test_approve_succeeds_when_publish_ready_and_gate_passed
+- def test_approve_rejects_episode_not_in_publish_ready_state
+- def test_approve_rejects_when_no_gate_result_exists
+- def test_approve_rejects_when_gate_result_failed
+- def test_approve_uses_the_latest_gate_result_for_the_current_revision
 
 ### `services/pipeline/tests/publish/test_episode_page.py`
 - def test_valid_data_passes_validation_and_renders
@@ -1634,6 +1667,8 @@
 - def test_no_result_returns_none
 - def test_saving_a_gate_result_also_appends_an_audit_event
 - def test_checks_with_reasons_round_trip_through_json
+- def test_latest_gate_result_for_episode_ignores_revision_and_returns_most_recent
+- def test_latest_gate_result_for_episode_returns_none_when_nothing_saved
 
 ### `services/pipeline/tests/store/test_rights.py`
 - def engine

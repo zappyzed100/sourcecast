@@ -12,8 +12,11 @@ from sqlalchemy import Engine
 from history_radio.api.db import get_session
 from history_radio.api.main import app
 from history_radio.domain.models import Candidate
+from history_radio.publish.publish_gate import GateCheckResult, PublishGateResult
 from history_radio.store.candidates import save_candidate
 from history_radio.store.db import create_sqlite_engine, session_factory
+from history_radio.store.episodes import create_episode, update_episode_state
+from history_radio.store.gate_results import save_gate_result
 from history_radio.store.orm import Base
 
 
@@ -78,6 +81,30 @@ def _seed_candidate(engine: Engine, candidate_id: str = "cand-001") -> None:
                 independent_source_families=2,
             ),
             created_at=datetime(2026, 7, 19, tzinfo=timezone.utc),
+        )
+
+
+def _seed_episode_ready_for_approval(
+    engine: Engine, episode_id: str = "ep-001", *, gate_passed: bool = True
+) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_episode(session, episode_id=episode_id, title="缶切りより缶詰")
+        update_episode_state(
+            session, episode_id=episode_id, expected_revision=1, new_state="publish_ready"
+        )
+        save_gate_result(
+            session,
+            PublishGateResult(
+                episode_id=episode_id,
+                revision=1,
+                rule_version="2026-07-19.1",
+                publish_ready=gate_passed,
+                checks=(GateCheckResult(name="rights_and_episode_schema", passed=gate_passed),),
+                artifact_hash="hash-x",
+            ),
+            result_id=f"gate-{episode_id}",
+            evaluated_at=datetime(2026, 7, 19, tzinfo=timezone.utc),
         )
 
 
@@ -165,3 +192,48 @@ def test_get_decisions_returns_review_history(engine: Engine, client: TestClient
     assert status_code == 200
     assert len(body) == 1
     assert body[0]["decision"] == "adopted"
+
+
+def test_episodes_returns_empty_list_when_db_is_empty(client: TestClient) -> None:
+    status_code, body = _get_json(client, "/api/v1/episodes")
+    assert status_code == 200
+    assert body == []
+
+
+def test_episodes_returns_seeded_data(engine: Engine, client: TestClient) -> None:
+    _seed_episode_ready_for_approval(engine)
+    status_code, body = _get_json(client, "/api/v1/episodes")
+    assert status_code == 200
+    assert len(body) == 1
+    assert body[0]["episode_id"] == "ep-001"
+    assert body[0]["state"] == "publish_ready"
+
+
+def test_approve_episode_succeeds_when_gate_passed(engine: Engine, client: TestClient) -> None:
+    _seed_episode_ready_for_approval(engine, gate_passed=True)
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/approve", {})
+    assert status_code == 200
+    assert body["state"] == "approved"
+
+
+def test_approve_episode_rejected_when_gate_failed(engine: Engine, client: TestClient) -> None:
+    _seed_episode_ready_for_approval(engine, gate_passed=False)
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/approve", {})
+    assert status_code == 400
+    assert "不合格" in body["detail"]
+
+
+def test_approve_episode_rejected_when_not_publish_ready(
+    engine: Engine, client: TestClient
+) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_episode(session, episode_id="ep-002", title="準備中")
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-002/approve", {})
+    assert status_code == 400
+    assert "承認できない" in body["detail"]
+
+
+def test_approve_unknown_episode_returns_404(client: TestClient) -> None:
+    status_code, _body = _post_json(client, "/api/v1/episodes/does-not-exist/approve", {})
+    assert status_code == 404

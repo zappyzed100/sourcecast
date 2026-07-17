@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import cast
 
-from sqlalchemy import CursorResult, update
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
 from history_radio.domain.episode_state import EpisodeState
@@ -68,6 +68,12 @@ def get_episode(session: Session, episode_id: str) -> Episode:
     if row is None:
         raise EpisodeNotFoundError(episode_id)
     return _row_to_domain(row)
+
+
+def list_episodes(session: Session) -> list[Episode]:
+    """全エピソードを作成順（古い順）に返す（Phase 11タスク1: 管理画面の一覧表示用）。"""
+    rows = session.execute(select(EpisodeRow).order_by(EpisodeRow.created_at)).scalars().all()
+    return [_row_to_domain(row) for row in rows]
 
 
 def update_episode_state(
