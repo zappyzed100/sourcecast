@@ -255,6 +255,12 @@ ruleset登録を終えれば人間側の作業は無い。**
 1. **独自ドメイン名を決める**: 使いたいドメインを決め、未取得なら取得する
    （Cloudflare Registrar経由でもよいし、他のレジストラで取得して
    Cloudflareへネームサーバーを向けてもよい）。
+   **決定（2026-07-19）**: `itsuwawa.com`。「逸話（itsuwa）」＋「〜のわ」
+   （輪＝community/circleを表す語尾。`rekishinowa.com`等の既存サイトで
+   見られる命名パターンと同型）——対象ジャンルを歴史に限定しないための
+   意図的な選定（「歴史」という語を含めない）。取得はCloudflare Registrar
+   （`.com`は上乗せ手数料なしの卸価格・年$10前後で購入可能——調査済み。
+   `.jp`はCloudflare Registrar非対応のため今回は不採用）。
 2. **Cloudflareアカウントを作成する**: `https://dash.cloudflare.com/sign-up`。
    ドメインをアカウントに追加し、ネームサーバーの向き先を確認する。
 3. **Cloudflare R2バケットを作成する**: Cloudflareダッシュボード →
