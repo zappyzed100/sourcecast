@@ -36,6 +36,11 @@ artifacts/
 *.sqlite3
 *.sqlite3-*
 
+# 秘密情報（development-plan.md §2・§7ログ規則: APIキー等はGitへ絶対に保存しない）
+.env
+.env.local
+.env.*.local
+
 # >>> guardrails-kit >>>（この区画はキットの正本。既存 .gitignore がある場合、
 # install_kit.py はこの区画ごと末尾へ追記する——区画外は各プロジェクトの自由領域）
 __pycache__/
