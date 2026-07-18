@@ -742,10 +742,9 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   （api/main.py 候補採用時のEpisode自動作成関連）、Playwright E2E 1件
   （admin project新設）。累計: Python 586件・TypeScript 31件（apps-admin）・
   Playwright 32件（site 31・admin 1）。
-* [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
+* [x] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。
-  進捗（バックエンドのジョブ実行基盤まで実装済み。残るはSSE配信と管理画面UI・
-  DoD本体のブラウザ再読込検証）:
+  進捗（DoD本体のPlaywright E2Eまで完了）:
   `store/jobs.py`を新設し`jobs`テーブルを実際に読み書きするようにした
   （`GET /api/v1/jobs`はfixtureから実DBへ切替。Job行は`job_id`単位で1行を持ち
   status/progress/errorをその場で更新する——append-onlyではない。ログだけは
@@ -786,15 +785,51 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   `HISTORY_RADIO_JOB_STEP_DELAY_SECONDS=0`環境変数でテスト実行を高速化した
   （本番既定値は1秒/工程）。
 
-  **未着手**: SSE配信エンドポイント（`GET /api/v1/jobs/{id}/events`）、
-  管理画面のJobs.tsxからのジョブ開始・進捗購読・キャンセル/再実行ボタン・
-  ログ表示、およびDoD本体の「ブラウザ再読込後も正しいジョブ状態へ復帰する」
-  ことを検証するPlaywright E2E——後続コミットで着手する
-  （バックエンドはDBが正本のため、SSEは単にDBを配信するだけでよいはずだが、
-  実装・検証はまだ行っていない）。
-  本コミットでの追加分: Python単体テスト26件
-  （store/jobs 11件・jobs/runner 5件・api/main(ジョブ関連) 10件）。
-  累計: Python 620件。
+  SSE配信エンドポイント`GET /api/v1/jobs/{id}/events`を実装した
+  （`jobs/events.py`の`stream_job_events()`が`jobs`/`job_log_entries`を
+  一定間隔でポーリングして`data: {...}\n\n`形式で配信するだけ——配信側は状態を
+  持たない）。**実機で踏んだ罠**: 最初は同期`time.sleep()`ループとして書いていた
+  ——FastAPIは同期`def`のパスオペレーションを限られたスレッドプールで実行するため、
+  SSE接続1本がジョブの生存期間まるごとスレッドを1つ占有し続け、同時に複数の
+  SSE接続が開くとスレッドプールが枯渇して`/dashboard`のようなDB無関係の
+  エンドポイントまで応答不能になった（Playwright E2Eで実際に発生・再現）。
+  `asyncio.sleep()`を使う非同期ジェネレータへ書き換え、`request.is_disconnected()`で
+  クライアント切断も検出するようにして解消した。
+
+  管理画面: `Episodes.tsx`の生成対象状態（publish_ready未満）に「生成開始」ボタンを
+  追加し`POST /episodes/{id}/generate`を呼ぶ（返るのはJobでありEpisodeではないため、
+  承認・限定公開とは別に「開始済み」フラグだけ持ち、ジョブ一覧への導線を示す）。
+  `Jobs.tsx`はGET /jobs（DBの正本）を初回取得したうえで、その時点でqueued/running
+  だったジョブだけEventSourceで購読し続け、進捗バー・状態・ログをその場で更新する
+  ——ブラウザ再読込時はこの初回取得が常に正しい現在値を返すため、購読も
+  そこから再開されるだけで状態が失われない（Phase 11タスク2 DoD本体）。
+  キャンセル・再実行ボタンをジョブ行へ追加した。
+
+  DoD本体を検証するPlaywright E2E（`e2e/admin/job-progress-reload.spec.ts`）を追加:
+  候補採用→生成開始→実行中の進捗を確認→**ブラウザ再読込**→再読込後も
+  queuedへ戻らず正しい状態(実行中/成功)であること→最終的にpublish_readyまで
+  到達することを検証する1件と、キャンセル→再読込後もキャンセル済みとして
+  復帰することを検証する1件の計2件。実行時間を現実的にするため
+  `playwright.config.ts`のuvicorn起動envで`HISTORY_RADIO_JOB_STEP_DELAY_SECONDS=0.3`・
+  `HISTORY_RADIO_JOB_SSE_POLL_SECONDS=0.1`を設定した（0にすると一瞬で完了し
+  「実行中の途中」を観測できないため）。
+
+  **実機で踏んだもう1つの罠**: このE2E追加中、開発機のポート5173が別プロジェクトの
+  devサーバーと衝突し、Playwrightの`reuseExistingServer`がそれを「起動済み」と
+  誤認してadmin E2Eが全滅する事故が発生した——admin用vite devサーバーを
+  `--port 5183 --strictPort`でE2E専用ポートに固定し（ポートが埋まっていたら
+  黙って次のポートへ逃げず即失敗させる）、`api/main.py`のCORS許可オリジンへ
+  5183を追加して解消した。
+
+  実際のLLM台本生成・VOICEVOX音声合成・FFmpeg動画生成・自動検査ゲート評価
+  （Phase 6〜10）は依然としてこのジョブへ未接続——本タスクが提供したのは
+  状態遷移の実行とSSE進捗・キャンセル・再実行・ログの枠組みであり、各段階の
+  実処理を接続するのは各段階を実際に統合する後続フェーズの仕事。
+  本コミットでの追加分: Python単体テスト3件
+  （jobs/events 3件・test_main.pyのSSEエンドポイント関連2件は既存カウントに含む）、
+  TypeScript単体テスト8件（Jobs.test.tsx新規）・既存Episodes.test.tsx4件追加、
+  Playwright E2E 2件。累計: Python 625件・TypeScript 42件（apps-admin）・
+  Playwright 34件（site 31・admin 3）。
 * [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。
   検証: 理由なしの却下、削除、公開取消をAPIが拒否する。
   進捗（却下のみ実装済み。削除・公開取消は対応するAPI自体が未実装）:

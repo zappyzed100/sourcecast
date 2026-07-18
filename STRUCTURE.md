@@ -79,8 +79,9 @@
 - `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧・審査(仕様書§12.3「採用／除外／再生成」のうち採用・除外)。
 - `apps/admin/src/pages/Dashboard.tsx` — Dashboard.tsx — 管理画面ホーム(仕様書§12.1)。API停止・タイムアウト・壊れた応答を安全に表示する。
 - `apps/admin/src/pages/Episodes.test.tsx` — Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態だけ承認でき、
-- `apps/admin/src/pages/Episodes.tsx` — Episodes.tsx — エピソード一覧・承認・限定公開(仕様書§12.4「公開承認／差し戻し」)。
-- `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
+- `apps/admin/src/pages/Episodes.tsx` — Episodes.tsx — エピソード一覧・生成開始・承認・限定公開(仕様書§12.4「公開承認／差し戻し」・
+- `apps/admin/src/pages/Jobs.test.tsx` — Jobs.test.tsx — Phase 11タスク2 DoD: 進捗・キャンセル・再実行・ログ追跡が
+- `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14・development-plan.md Phase 11タスク2)。
 - `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する。
 - `apps/admin/tsconfig.app.json`
 - `apps/admin/tsconfig.json`
@@ -143,6 +144,7 @@
 
 - `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
 - `e2e/admin/candidate-to-published.spec.ts` — candidate-to-published.spec.ts — Phase 11タスク1 DoD: 1件を最初から限定公開まで
+- `e2e/admin/job-progress-reload.spec.ts` — job-progress-reload.spec.ts — Phase 11タスク2 DoD: 長時間ジョブのSSE進捗・キャンセルが
 - `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
 - `e2e/episode-publish.spec.ts` — episode-publish.spec.ts — Phase 8タスク3 DoD: 主張‐出典対応・コピー・ダウンロード・過去版差分が
 - `e2e/known-pages.ts` — known-pages.ts — 全既知ページの一覧(accessibility.spec.tsとsite-health.spec.tsで共有する)。
@@ -234,6 +236,7 @@
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/jobs/__init__.py`
+- `services/pipeline/src/history_radio/jobs/events.py`
 - `services/pipeline/src/history_radio/jobs/runner.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/llm/cache.py`
@@ -319,6 +322,7 @@
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
 - `services/pipeline/tests/jobs/__init__.py`
+- `services/pipeline/tests/jobs/test_events.py`
 - `services/pipeline/tests/jobs/test_runner.py`
 - `services/pipeline/tests/llm/__init__.py`
 - `services/pipeline/tests/llm/test_cache.py`
@@ -439,7 +443,11 @@
 - type CandidateDecisionValue
 - type EpisodeState
 - type Episode
+- type JobStatus
+- const TERMINAL_JOB_STATUSES
 - type Job
+- type JobLogEntry
+- type JobEvent
 - function getDashboardSummary
 - function getCandidates
 - function reviewCandidate
@@ -448,6 +456,11 @@
 - function approveEpisode
 - function publishEpisode
 - function getJobs
+- function startEpisodeGeneration
+- function getJobLogs
+- function cancelJob
+- function retryJob
+- function subscribeToJobEvents
 
 ### `apps/admin/src/lib/useAsync.ts`
 - type AsyncState
@@ -743,6 +756,7 @@
 - def get_jobs
 - def get_job_endpoint
 - def get_job_logs_endpoint
+- def job_events_endpoint
 - def cancel_job_endpoint
 - def retry_job_endpoint
 
@@ -816,6 +830,9 @@
 - class RightsEvidence
 - class FetchResponseInfo
 - class FetchedDocument
+
+### `services/pipeline/src/history_radio/jobs/events.py`
+- def stream_job_events
 
 ### `services/pipeline/src/history_radio/jobs/runner.py`
 - def run_episode_generation_job
@@ -1190,6 +1207,8 @@
 - def test_retry_job_endpoint_creates_new_job_linked_to_original
 - def test_retry_job_endpoint_returns_404_for_unknown_job
 - def test_retry_job_endpoint_rejected_for_non_terminal_failure_job
+- def test_job_events_endpoint_streams_current_state_for_terminal_job
+- def test_job_events_endpoint_returns_404_for_unknown_job
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1292,6 +1311,12 @@
 - def test_storage_and_publication_permissions_are_independent
 - def test_locator_rejects_reversed_offsets
 - def test_response_info_rejects_out_of_range_http_status
+
+### `services/pipeline/tests/jobs/test_events.py`
+- def engine
+- def test_stream_closes_immediately_for_an_already_terminal_job
+- def test_stream_delivers_incremental_updates_across_polls
+- def test_stream_returns_404_worthy_error_for_unknown_job
 
 ### `services/pipeline/tests/jobs/test_runner.py`
 - def engine
