@@ -31,6 +31,7 @@ from uuid import uuid4
 import typer
 
 from history_radio.api.db import get_db_path, get_session_maker
+from history_radio.jobs.recovery import recover_orphaned_jobs
 from history_radio.jobs.runner import run_episode_generation_job
 from history_radio.store.episodes import list_episodes
 from history_radio.store.jobs import (
