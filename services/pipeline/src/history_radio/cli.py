@@ -43,9 +43,11 @@ from history_radio.store.jobs import (
 
 # Windowsのcp932コンソール対策(日本語出力の文字化け防止 — scripts/repo_scan.pyの
 # reconfigure_stdio()と同じ理由。scripts/配下ではないためここへ直接書く)。
-if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
+# isinstance判定はbasedpyright strict対応(TextIOにはreconfigure()が無く、
+# 実際の標準ストリームの型であるTextIOWrapperにのみ存在する)。
+for _stream in (sys.stdout, sys.stderr):
+    if isinstance(_stream, io.TextIOWrapper) and _stream.encoding.lower() != "utf-8":
+        _stream.reconfigure(encoding="utf-8")
 
 app = typer.Typer(
     help="history-radio 運用CLI（管理画面が使えない時の復旧操作）", no_args_is_help=True
