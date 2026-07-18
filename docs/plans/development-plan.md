@@ -869,8 +869,45 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   （publish/episode_deletion 4件・publish/episode_revocation 5件・
   api/main(削除・取消関連) 8件）、TypeScript単体テスト7件
   （Episodes.test.tsx追加）。累計: Python 642件・TypeScript 48件（apps-admin）。
-* [ ] CLIは残し、管理画面障害時にも状態確認、停止、再開、バックアップを実行できるようにする。
+* [x] CLIは残し、管理画面障害時にも状態確認、停止、再開、バックアップを実行できるようにする。
   検証: Reactを起動せず主要な復旧操作ができる。
+  仕様書は具体的なCLI要件を持たない（§12はReact画面の仕様のみ・§15公開停止スイッチも
+  UI要素として指定）——本タスクは開発計画自体が要求する運用の安全網として、
+  新設`history_radio/cli.py`（typer——pyproject.tomlに既存依存だが未使用だったため
+  新規依存追加なし）を実装した。管理API（`api/main.py`）と同じDB
+  （`HISTORY_RADIO_DB_PATH`・`api/db.py`の`get_session_maker()`）へ直接アクセスする
+  ——FastAPIサーバーが落ちていてもCLI単体で動く。
+
+  4サブコマンド: `status`(ジョブ・エピソードの現在状態一覧)、`stop <job_id>`
+  (`POST /jobs/{id}/cancel`と同じ`store/jobs.request_cancel()`をそのまま呼ぶ——
+  ロジックを再実装しない)、`resume <job_id>`(`POST /jobs/{id}/retry`と同じ
+  「新しいjob_idで作り直す」意味論だが、CLIはバックグラウンドスレッドを持たないため
+  `jobs/runner.run_episode_generation_job()`をこのプロセス内で同期的に実行し
+  完了まで待つ)、`backup [--out-dir]`(SQLiteの`Connection.backup()` APIでローカルへ
+  一貫性のあるスナップショットを1ファイル作る——単純なファイルコピーだと書き込み中の
+  torn readになり得るため。Google Drive/NAS等クラウド先への日次同期はPhase 12の仕事、
+  ここではローカルバックアップのみ)。
+
+  **実機で踏んだ罠**: Windowsのコンソール既定コードページ(cp932系)では、
+  `typer.echo()`が出力する日本語がそのままだと文字化けした
+  （`PYTHONUTF8=1`を明示的に設定すれば正しく表示されるが、既定では化ける）。
+  `scripts/repo_scan.py`の`reconfigure_stdio()`・`scripts/install_workbench.py`等
+  scripts/配下の複数スクリプトに同じ対策が既にあった（Windows文字化け対策として
+  確立済みのパターン）——`sys.stdout`/`sys.stderr`を`io.TextIOWrapper`かどうか
+  `isinstance`判定してから`reconfigure(encoding="utf-8")`する同じ対策を
+  `cli.py`冒頭へ追加した（`isinstance`判定はbasedpyright strict対応——`TextIO`型には
+  `reconfigure()`が無く、実際の標準ストリームの型である`TextIOWrapper`にのみ存在する）。
+
+  呼び出し: `uv run python -m history_radio.cli <status|stop|resume|backup>`。
+  DoD「Reactを起動せず主要な復旧操作ができる」は、React・FastAPIのどちらも
+  起動しない状態で4コマンドすべてを実機実行して確認した（ジョブのstop→resume→
+  backupの一連を通し、resumeが実際にpublish_readyまでエピソードを進め、backupが
+  実ファイルを作ることを確認）。
+  本コミットでの追加分: Python単体テスト9件（test_cli.py新設）。
+  累計: Python 651件。
+
+  **Phase 11完了**——4タスク（候補→審査→承認→限定公開の一連画面、ジョブのSSE進捗・
+  キャンセル・再実行・ログ、破壊的操作の理由必須化、CLIによる復旧操作）すべて完了。
 
 ### Phase 12 — バックアップ・障害対応（仕様書 §13〜§15）
 

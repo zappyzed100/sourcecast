@@ -100,6 +100,7 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
   実クレデンシャルでの動作確認はHUMAN_TASKSで依頼中）
 - [x] Phase 10 — 自動検査ゲート（管理画面からゲート結果を追跡するUI配線はPhase 11で
   実DB接続と併せて行う——永続化・参照関数は実装・テスト済み）
-- [ ] Phase 11 — 管理画面の実運用化 `in_progress`
-- [ ] Phase 12 — バックアップ・障害対応 `backlog`
+- [x] Phase 11 — 管理画面の実運用化（候補→審査→承認→限定公開・ジョブのSSE進捗/
+  キャンセル/再実行/ログ・破壊的操作の理由必須化・管理画面障害時の復旧CLI）
+- [ ] Phase 12 — バックアップ・障害対応 `next`
 - [ ] Phase 13 — 受入検証 `backlog`
