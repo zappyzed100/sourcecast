@@ -243,27 +243,18 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 1. 上記「Phase 8までに決めること」の1〜4（ドメイン・Cloudflareアカウント・
    R2バケット作成・公開URL方針）が未了なら先に進める。
-2. **Cloudflare Workers（静的サイト配信）プロジェクトを作成する**（2026-07時点、
-   Cloudflareダッシュボードの新規Git連携作成フローは旧来の「Pages」単独メニューでは
-   なく「Workers & Pages」→ **Create application** → **Import a repository**
-   経由の「Worker」作成に統合されている——挙動は旧Pagesと同等で、静的サイトの
-   配信先としてそのまま使える）:
-   - **Workers & Pages** → **Create application** → **Import a repository**（または
-     **Connect to Git**）でこのGitHubリポジトリ（`zappyzed100/sourcecast`）を選ぶ。
-   - 設定画面で **Advanced settings** を開き、**Root directory** に `apps/site`
-     を入力する（モノレポのため——これを設定しないとリポジトリ直下を見てしまう）。
-   - **Build command**: `pnpm run build`
-   - **Deploy command**: デフォルトの `npx wrangler deploy` のままでよい
-     （`apps/site/wrangler.jsonc`をコミット済みで、静的アセット配信先として
-     `./dist`を指定してある——これがあることで初めて**Deploy**ボタンが押せる
-     ようになる。この設定ファイルが無いとダッシュボードがデプロイ対象を検出できず
-     ボタンがグレーアウトしたままになる、という既知の詰まりポイントだった）。
-   - **Deploy** をクリックしてビルドを実行する。モノレポでのpnpm workspace解決が
-     Root directory設定と噛み合わずビルドが失敗する可能性があるので、失敗したら
-     ビルドログをそのまま実装側に共有してほしい（設定側で追加調整する）。
-   - プロジェクト名（画面上部の入力欄、例: `sourcecast-site`。
-     `apps/site/wrangler.jsonc`の`name`と揃えてある）——これは
-     `CLOUDFLARE_PAGES_PROJECT`として教えてほしい（秘密情報ではない）。
+2. **Cloudflare Pagesプロジェクトは`itsuwawa`という名前ですでに作成・GitHub連携
+   済み**（判明: 2026-07-19。GitHub PRのステータスチェック一覧に
+   `Cloudflare Pages`という項目が既に現れ、push毎に自動ビルドが走っている。
+   Root directory=`apps/site`・Build command=`pnpm install && pnpm run build`も
+   ダッシュボード側で既に正しく設定済みだった——**追加のプロジェクト作成操作は
+   不要**。ダッシュボードで「Create a Worker」フローに進んでも別物ができるだけ
+   なので、そちらは無視してよい）。
+   - `CLOUDFLARE_PAGES_PROJECT`は`itsuwawa`で確定。
+   - ビルドが`node scripts/check-bundle-budget.ts`の`.ts`直接実行で失敗する
+     問題（Cloudflareのビルド環境がNode 22系でtype strippingがデフォルト無効
+     なため）があったが、`--experimental-strip-types`フラグ付与で実装側で
+     修正済み（`apps/site/package.json`）。
 3. **独自ドメインをPagesプロジェクトへ接続する**（上記1でドメインが決まっていれば）:
    Pagesプロジェクトの **Custom domains** タブ → **Set up a custom domain**。
    HTTPS証明書はCloudflareが自動発行する（追加操作は基本不要）。

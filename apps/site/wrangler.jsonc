@@ -1,7 +1,0 @@
-{
-	"name": "sourcecast-site",
-	"compatibility_date": "2026-07-19",
-	"assets": {
-		"directory": "./dist"
-	}
-}
