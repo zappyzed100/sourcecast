@@ -15,7 +15,7 @@ from history_radio.domain.models import Candidate
 from history_radio.publish.publish_gate import GateCheckResult, PublishGateResult
 from history_radio.store.candidates import save_candidate
 from history_radio.store.db import create_sqlite_engine, session_factory
-from history_radio.store.episodes import create_episode, update_episode_state
+from history_radio.store.episodes import create_episode, get_episode, update_episode_state
 from history_radio.store.gate_results import save_gate_result
 from history_radio.store.orm import Base
 
@@ -156,6 +156,46 @@ def test_review_candidate_adopted_succeeds_without_reason(
     assert status_code == 200
     assert body["decision"] == "adopted"
     assert body["candidate_id"] == "cand-001"
+
+
+def test_adopting_a_candidate_creates_an_episode(engine: Engine, client: TestClient) -> None:
+    """Phase 11タスク1: 候補→審査→承認→限定公開を1件のエピソードとして繋げる連携。"""
+    _seed_candidate(engine)
+    status_code, _body = _post_json(
+        client, "/api/v1/candidates/cand-001/review", {"decision": "adopted"}
+    )
+    assert status_code == 200
+
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        episode = get_episode(session, "cand-001")
+    assert episode.state == "collected"
+    assert episode.title == "缶切りより缶詰の方が50年も先に生まれていた"
+
+
+def test_adopting_the_same_candidate_twice_does_not_duplicate_the_episode(
+    engine: Engine, client: TestClient
+) -> None:
+    _seed_candidate(engine)
+    _post_json(client, "/api/v1/candidates/cand-001/review", {"decision": "adopted"})
+    status_code, _body = _post_json(
+        client, "/api/v1/candidates/cand-001/review", {"decision": "adopted"}
+    )
+    assert status_code == 200  # 2回目もエラーにならない(既存エピソードを再作成しない)
+
+
+def test_excluding_a_candidate_does_not_create_an_episode(
+    engine: Engine, client: TestClient
+) -> None:
+    _seed_candidate(engine)
+    _post_json(
+        client,
+        "/api/v1/candidates/cand-001/review",
+        {"decision": "excluded", "reason": "出典が信頼できない"},
+    )
+    status_code, body = _get_json(client, "/api/v1/episodes")
+    assert status_code == 200
+    assert body == []
 
 
 def test_review_candidate_excluded_without_reason_is_rejected(
