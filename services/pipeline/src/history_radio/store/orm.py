@@ -2,8 +2,9 @@
 
 domain/models.py のPydanticモデルとは別物として持つ（DTOとORM行を混同しない —
 plan.md §2.2「domain/ = 副作用のない型」「store/ = DB・ファイル実装」の分離）。
-Job・AuditEventのテーブルはPhase 1では定義のみ（実際のリポジトリ関数は、ジョブや
-監査ログを実際に書き込む後続フェーズで追加する）。
+AuditEventのテーブルはPhase 1では定義のみ（実際のリポジトリ関数は、監査ログを
+実際に書き込む後続フェーズで追加する）。Jobは`store/jobs.py`（Phase 11タスク2）が
+実際のリポジトリ関数を持つ。
 """
 
 from __future__ import annotations
@@ -36,9 +37,28 @@ class JobRow(Base):
     episode_id: Mapped[str | None] = mapped_column(String, nullable=True)
     kind: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
+    progress: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    cancel_requested: Mapped[bool] = mapped_column(nullable=False, default=False)
+    retry_of: Mapped[str | None] = mapped_column(String, nullable=True)
     error: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class JobLogRow(Base):
+    """`jobs`1件分の実行ログ（Phase 11タスク2「ログ追跡」）。主キーは`(job_id, seq)`——
+    ジョブ内で1始まりの連番を振り、追記のみ（更新・削除関数を置かない。他のappend-only
+    テーブルと同じ方針）。
+    """
+
+    __tablename__ = "job_log_entries"
+
+    job_id: Mapped[str] = mapped_column(String, primary_key=True)
+    seq: Mapped[int] = mapped_column(primary_key=True)
+    level: Mapped[str] = mapped_column(String, nullable=False)
+    message: Mapped[str] = mapped_column(String, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(nullable=False)
 
 
 class AuditEventRow(Base):

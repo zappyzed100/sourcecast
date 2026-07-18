@@ -1,8 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "description": "`jobs`（仕様書§13・§14）: 処理工程単位の実行状態とエラー。",
+  "description": "`jobs`（仕様書§13・§14・Phase 11タスク2）: 処理工程単位の実行状態とエラー。\n\n`retry_of`は再実行元のjob_id（仕様書§14「工程単位で再実行」——失敗したジョブの行は\n書き換えず、新しいjob_idで再実行することで実行履歴を保つ。エピソードの状態遷移自体は\ndomain/episode_state.pyのtransition()が保証するため、再実行は現在の状態から続きを\n行うだけでよい）。",
   "properties": {
+    "cancel_requested": {
+      "default": false,
+      "title": "Cancel Requested",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
     "episode_id": {
       "anyOf": [
         {
@@ -50,6 +60,25 @@
       "title": "Kind",
       "type": "string"
     },
+    "progress": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Progress",
+      "type": "number"
+    },
+    "retry_of": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retry Of"
+    },
     "schema_version": {
       "const": 1,
       "default": 1,
@@ -75,7 +104,8 @@
         "running",
         "succeeded",
         "failed",
-        "blocked"
+        "blocked",
+        "cancelled"
       ],
       "title": "Status",
       "type": "string"
@@ -84,7 +114,8 @@
   "required": [
     "job_id",
     "kind",
-    "status"
+    "status",
+    "created_at"
   ],
   "title": "Job",
   "type": "object"

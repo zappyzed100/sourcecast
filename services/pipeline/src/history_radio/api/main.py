@@ -10,22 +10,28 @@ publish/episode_approval.py・publish/episode_publishing.py・
 store/distribution_records.py）へ接続済み。承認はPhase 10の自動検査ゲート結果
 （store/gate_results.py）を参照するだけで、ここで検査を再実行しない。限定公開の
 実際のYouTube Data APIへはまだ接続していない（HUMAN_TASKS.md参照——プレースホルダー
-実装）。ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はPhase 11タスク2）。
+実装）。エピソード生成ジョブ（Phase 11タスク2）は実DB（store/jobs.py）へ接続済み——
+実行はバックグラウンドスレッド（jobs/runner.py）で行い、状態・進捗・ログはDBへ都度
+反映する（ブラウザ再読込後もDBの現在値を読むだけで正しい状態へ復帰する）。
+ダッシュボードは引き続きfixture。
 """
 
 from __future__ import annotations
 
+import threading
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from history_radio.api import fixtures
-from history_radio.api.db import get_session
+from history_radio.api.db import get_session, get_session_maker
 from history_radio.api.schemas import DashboardSummary, ReviewCandidateRequest
-from history_radio.domain.models import Candidate, CandidateDecision, Episode, Job
+from history_radio.domain.episode_state import FAILURE_STATES
+from history_radio.domain.models import Candidate, CandidateDecision, Episode, Job, JobLogEntry
+from history_radio.jobs.runner import run_episode_generation_job
 from history_radio.publish.episode_approval import EpisodeApprovalError, approve_episode
 from history_radio.publish.episode_publishing import EpisodePublishError, publish_episode_limited
 from history_radio.select.candidate_review import CandidateReviewError, review_candidate
@@ -39,6 +45,15 @@ from history_radio.store.episodes import (
     create_episode,
     get_episode,
     list_episodes,
+)
+from history_radio.store.jobs import (
+    JobAlreadyTerminalError,
+    JobNotFoundError,
+    create_job,
+    get_job,
+    list_job_logs,
+    list_jobs,
+    request_cancel,
 )
 
 app = FastAPI(title="history-radio admin API", version="1")
@@ -140,6 +155,104 @@ def publish_episode_endpoint(episode_id: str, session: Session = Depends(get_ses
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.post("/api/v1/episodes/{episode_id}/generate", response_model=Job, status_code=202)
+def start_episode_generation_endpoint(
+    episode_id: str,
+    session: Session = Depends(get_session),
+    session_maker: sessionmaker[Session] = Depends(get_session_maker),
+) -> Job:
+    try:
+        episode = get_episode(session, episode_id)
+    except EpisodeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if episode.state in FAILURE_STATES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"エピソードは終端の失敗状態（{episode.state}）にあるため生成を開始できない",
+        )
+    job = create_job(
+        session,
+        job_id=f"job-{episode_id}-{uuid4().hex[:8]}",
+        episode_id=episode_id,
+        kind="episode_generation",
+    )
+    threading.Thread(
+        target=run_episode_generation_job,
+        kwargs={
+            "session_maker": session_maker,
+            "job_id": job.job_id,
+            "episode_id": episode_id,
+        },
+        daemon=True,
+    ).start()
+    return job
+
+
 @app.get("/api/v1/jobs", response_model=list[Job])
-def get_jobs() -> list[Job]:
-    return fixtures.jobs()
+def get_jobs(session: Session = Depends(get_session)) -> list[Job]:
+    return list_jobs(session)
+
+
+@app.get("/api/v1/jobs/{job_id}", response_model=Job)
+def get_job_endpoint(job_id: str, session: Session = Depends(get_session)) -> Job:
+    try:
+        return get_job(session, job_id)
+    except JobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/jobs/{job_id}/logs", response_model=list[JobLogEntry])
+def get_job_logs_endpoint(
+    job_id: str, session: Session = Depends(get_session)
+) -> list[JobLogEntry]:
+    try:
+        get_job(session, job_id)
+    except JobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return list_job_logs(session, job_id)
+
+
+@app.post("/api/v1/jobs/{job_id}/cancel", response_model=Job)
+def cancel_job_endpoint(job_id: str, session: Session = Depends(get_session)) -> Job:
+    try:
+        return request_cancel(session, job_id)
+    except JobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except JobAlreadyTerminalError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/jobs/{job_id}/retry", response_model=Job, status_code=202)
+def retry_job_endpoint(
+    job_id: str,
+    session: Session = Depends(get_session),
+    session_maker: sessionmaker[Session] = Depends(get_session_maker),
+) -> Job:
+    try:
+        original = get_job(session, job_id)
+    except JobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if original.status not in ("failed", "blocked", "cancelled"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"終端の失敗状態のジョブのみ再実行できる（現在: {original.status}）",
+        )
+    if original.episode_id is None:
+        raise HTTPException(status_code=400, detail="episode_idの無いジョブは再実行できない")
+    new_job = create_job(
+        session,
+        job_id=f"job-{original.episode_id}-{uuid4().hex[:8]}",
+        episode_id=original.episode_id,
+        kind=original.kind,
+        retry_of=original.job_id,
+    )
+    threading.Thread(
+        target=run_episode_generation_job,
+        kwargs={
+            "session_maker": session_maker,
+            "job_id": new_job.job_id,
+            "episode_id": original.episode_id,
+        },
+        daemon=True,
+    ).start()
+    return new_job

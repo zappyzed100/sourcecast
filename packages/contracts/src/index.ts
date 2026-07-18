@@ -7,6 +7,7 @@ export type { CandidateDecision } from "./generated/CandidateDecision.ts";
 export type { Claim } from "./generated/Claim.ts";
 export type { Episode } from "./generated/Episode.ts";
 export type { Job } from "./generated/Job.ts";
+export type { JobLogEntry } from "./generated/JobLogEntry.ts";
 export type { RightsDecision } from "./generated/RightsDecision.ts";
 export type { SourceRecord } from "./generated/SourceRecord.ts";
 

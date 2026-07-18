@@ -24,6 +24,7 @@ from history_radio.domain import (  # noqa: E402
     Claim,
     Episode,
     Job,
+    JobLogEntry,
     RightsDecision,
     SourceRecord,
 )
@@ -36,6 +37,7 @@ MODELS = [
     Claim,
     Episode,
     Job,
+    JobLogEntry,
     AuditEvent,
 ]
 

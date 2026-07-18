@@ -12,6 +12,7 @@ from history_radio.domain import (
     Claim,
     Episode,
     Job,
+    JobLogEntry,
     RightsDecision,
     SourceRecord,
 )
@@ -71,6 +72,14 @@ VALID_PAYLOADS: dict[type, dict[str, Any]] = {
         "job_id": "job-001",
         "kind": "ingest",
         "status": "queued",
+        "created_at": NOW,
+    },
+    JobLogEntry: {
+        "job_id": "job-001",
+        "seq": 1,
+        "level": "info",
+        "message": "開始",
+        "occurred_at": NOW,
     },
     AuditEvent: {
         "event_id": "audit-001",
