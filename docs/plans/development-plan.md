@@ -663,9 +663,9 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 
 ### Phase 11 — 管理画面の実運用化（仕様書 §12）
 
-* [ ] Phase 2の画面を実DBと実ジョブへ接続し、候補→審査→承認→限定公開を一画面ずつ完成させる。
+* [x] Phase 2の画面を実DBと実ジョブへ接続し、候補→審査→承認→限定公開を一画面ずつ完成させる。
   検証: 1件を最初から限定公開まで操作するPlaywright E2Eが通る。
-  進捗（候補→審査→承認→限定公開まで実装済み。残るはDoD本体のPlaywright E2Eのみ）:
+  進捗（DoD本体のPlaywright E2Eまで完了）:
   `topics`（候補）・
   候補審査結果の永続化を新設した——`store/candidates.py`・`store/candidate_decisions.py`
   （`store/rights.py`と同じ「追記のみ」方針。候補は選出パイプラインが1回生成した
@@ -715,23 +715,33 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   新設し、apps/adminの`Episodes.tsx`へ`approved`状態にだけ表示される限定公開
   ボタンを追加した。
 
-  **未着手**: 候補採用時にEpisodeを自動作成する連携（現状は
-  `store/episodes.create_episode`を独立に呼ぶ想定——採用→Episode作成の自動連携は
-  候補のtopic_titleから公開用の英語スラグを機械的に導出する妥当な方法が無いため
-  保留。人間かLLM翻訳が必要になった時点で再検討する）、ダッシュボード・ジョブ一覧は
-  引き続きfixture（実ジョブ接続はタスク2）。**DoD本体の「1件を最初から限定公開まで
-  操作するPlaywright E2Eが通る」は依然として未実施**——候補→審査→承認→限定公開の
-  4操作すべてが実DB・実APIで動作することは単体・component testで確認済みだが、
-  実際のブラウザ操作でのE2Eには、FastAPI（uvicorn）とapps/adminのdev/preview
-  サーバーを同時起動するPlaywright `webServer`配列の拡張と、既知のepisode_idを
-  publish_ready状態まで進めておくシード手順が新たに必要——apps/site向けの既存
-  e2e基盤（`astro preview`単体）とは別立てのインフラが要る規模の作業のため、
-  後続コミットで着手する。
-  本コミットでの追加分: Python単体テスト13件
-  （publish/episode_publishing 3件・store/distribution_records 6件・
-  api/main（publish関連）追加4件）、TypeScript単体テスト3件
-  （Episodes.test.tsx追加3件）。累計: Python 583件・TypeScript 31件
-  （apps-admin）。
+  候補採用時にEpisodeを自動作成する連携を実装: `api/main.py`の
+  `_ensure_episode_for_adopted_candidate()`が採用決定の直後に呼ばれ、
+  `episode_id`には`candidate_id`をそのまま流用する
+  （`Episode.episode_id`には公開ページ用`<公開日>-<英語スラグ>`形式のような
+  制約が無い——スラグ変換は実際に公開する段になってから検討すればよいと判明し、
+  当初懸念していた「topic_titleからの英語スラグ導出」問題は前提から外れた）。
+  再審査での重複作成は既存エピソードの有無チェックで防ぐ。
+
+  **DoD本体の「1件を最初から限定公開まで操作するPlaywright E2Eが通る」を実施・
+  合格**: `playwright.config.ts`を`projects`（`site`/`admin`でbaseURLを分離）＋
+  共通`webServer`配列（astro preview・`apps-admin`のvite dev・
+  `uv run uvicorn`の3プロセス、admin用FastAPIは`HISTORY_RADIO_DB_PATH`で
+  専用DB`data/e2e-admin.sqlite3`を使い開発用DBを汚さない）へ拡張した。
+  実際の収集・選出・台本生成・音声合成・自動検査ゲート実行（Phase 4〜10）は
+  まだ管理画面に接続されていないため、それらを飛ばす2本のテスト専用シード
+  スクリプト（本番コードから呼ばれない）を追加: `scripts/e2e_seed_candidate.py`
+  （候補を1件DBへ直接投入）、`scripts/e2e_fast_forward_episode.py`
+  （エピソードを`publish_ready`まで状態遷移させ合格ゲート結果を記録）。
+  `e2e/admin/candidate-to-published.spec.ts`が候補一覧での採用クリック→
+  （シードでpublish_readyへ進める）→エピソード一覧での承認クリック→
+  限定公開クリックまでを実ブラウザ操作・実API呼び出しで検証し合格した
+  （`uv run scripts/dev.py e2e`で site 31件・admin 1件の計32件通過）。
+  ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はタスク2）。
+  本コミットでの追加分: Python単体テスト4件
+  （api/main.py 候補採用時のEpisode自動作成関連）、Playwright E2E 1件
+  （admin project新設）。累計: Python 586件・TypeScript 31件（apps-admin）・
+  Playwright 32件（site 31・admin 1）。
 * [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。
 * [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。

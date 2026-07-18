@@ -34,7 +34,12 @@ from history_radio.store.candidate_decisions import (
     save_candidate_decision,
 )
 from history_radio.store.candidates import get_candidate, list_candidates
-from history_radio.store.episodes import EpisodeNotFoundError, list_episodes
+from history_radio.store.episodes import (
+    EpisodeNotFoundError,
+    create_episode,
+    get_episode,
+    list_episodes,
+)
 
 app = FastAPI(title="history-radio admin API", version="1")
 
@@ -68,13 +73,31 @@ def get_candidate_decisions(
     return list_decisions_for_candidate(session, candidate_id)
 
 
+def _ensure_episode_for_adopted_candidate(session: Session, candidate: Candidate) -> None:
+    """採用された候補にエピソードが無ければ作る（Phase 11タスク1「候補→審査→承認→
+    限定公開」を1件のエピソードとして繋げるための連携）。
+
+    `episode_id`には`candidate_id`をそのまま流用する——公開ページ用の
+    `<公開日>-<英語スラグ>`形式（episode_page.pyの`_EPISODE_ID_PATTERN`）は
+    実際の公開直前（Phase 8）で確定すればよく、管理画面の状態管理用`Episode.episode_id`
+    （domain/models.pyの`Episode`）には形式の制約が無い——両者は別の識別子として
+    扱ってよい（公開用IDへの変換は将来、実際に公開する段になってから行う）。
+    再審査（採用のあとの再度の採用操作）で重複作成しないよう、既存チェックを行う。
+    """
+    try:
+        get_episode(session, candidate.candidate_id)
+    except EpisodeNotFoundError:
+        create_episode(session, episode_id=candidate.candidate_id, title=candidate.topic_title)
+
+
 @app.post("/api/v1/candidates/{candidate_id}/review", response_model=CandidateDecision)
 def review_candidate_endpoint(
     candidate_id: str,
     body: ReviewCandidateRequest,
     session: Session = Depends(get_session),
 ) -> CandidateDecision:
-    if get_candidate(session, candidate_id) is None:
+    candidate = get_candidate(session, candidate_id)
+    if candidate is None:
         raise HTTPException(status_code=404, detail=f"候補が見つからない: {candidate_id}")
     try:
         decision = review_candidate(
@@ -86,7 +109,10 @@ def review_candidate_endpoint(
         )
     except CandidateReviewError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return save_candidate_decision(session, decision)
+    saved = save_candidate_decision(session, decision)
+    if saved.decision == "adopted":
+        _ensure_episode_for_adopted_candidate(session, candidate)
+    return saved
 
 
 @app.get("/api/v1/episodes", response_model=list[Episode])

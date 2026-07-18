@@ -21,7 +21,7 @@
 - `biome.jsonc`
 - `history_radio_spec_v0_4.md`
 - `package.json`
-- `playwright.config.ts` — playwright.config.ts — Phase 0 のブラウザ smoke test 設定（plan.md §5 CI必須ゲート「Browser: Playwright smoke」）
+- `playwright.config.ts` — playwright.config.ts — Phase 0 のブラウザ smoke test 設定（plan.md §5 CI必須ゲート「Browser: Playwright smoke」）。
 - `pnpm-lock.yaml`
 - `pnpm-workspace.yaml`
 - `pyproject.toml`
@@ -142,6 +142,7 @@
 ## `e2e/`
 
 - `e2e/accessibility.spec.ts` — accessibility.spec.ts — Phase 2 DoD: 重大なaxe違反はCIを落とす(plan.md §3.3・§5)
+- `e2e/admin/candidate-to-published.spec.ts` — candidate-to-published.spec.ts — Phase 11タスク1 DoD: 1件を最初から限定公開まで
 - `e2e/audio-player.spec.ts` — audio-player.spec.ts — Phase 2 DoD: キーボードのみで再生・停止・章移動が通ることを確認する
 - `e2e/episode-publish.spec.ts` — episode-publish.spec.ts — Phase 8タスク3 DoD: 主張‐出典対応・コピー・ダウンロード・過去版差分が
 - `e2e/known-pages.ts` — known-pages.ts — 全既知ページの一覧(accessibility.spec.tsとsite-health.spec.tsで共有する)。
@@ -192,6 +193,8 @@
 - `scripts/check_workflow_integrity.py` — check_workflow_integrity.py — base branch から PR 側 CI workflow の不変条件を検査する
 - `scripts/db_query.py`
 - `scripts/dev.py` — dev.py — ランタイム共通動詞のルーター: 全プロジェクト同名の動詞で環境を操作する（契約: .guardrails/GUARDRAILS.md §12.1）
+- `scripts/e2e_fast_forward_episode.py`
+- `scripts/e2e_seed_candidate.py`
 - `scripts/fill_bindings.py` — fill_bindings.py — 採用列の paste-block を管理区画へ機械充填する（契約: .guardrails/GUARDRAILS.md §11 前段・Phase 47）
 - `scripts/generate_contracts.py`
 - `scripts/generate_structure.py` — generate_structure.py — STRUCTURE.md を実ツリー・実シンボルから再生成する唯一の主体（契約: .guardrails/GUARDRAILS.md §7.4）
@@ -622,6 +625,12 @@
 - def main
 
 ### `scripts/dev.py`
+- def main
+
+### `scripts/e2e_fast_forward_episode.py`
+- def main
+
+### `scripts/e2e_seed_candidate.py`
 - def main
 
 ### `scripts/fill_bindings.py`
@@ -1115,6 +1124,9 @@
 - def test_candidates_returns_seeded_data
 - def test_jobs_returns_list_with_failed_job_error_detail
 - def test_review_candidate_adopted_succeeds_without_reason
+- def test_adopting_a_candidate_creates_an_episode
+- def test_adopting_the_same_candidate_twice_does_not_duplicate_the_episode
+- def test_excluding_a_candidate_does_not_create_an_episode
 - def test_review_candidate_excluded_without_reason_is_rejected
 - def test_review_candidate_excluded_with_reason_succeeds
 - def test_review_unknown_candidate_returns_404
