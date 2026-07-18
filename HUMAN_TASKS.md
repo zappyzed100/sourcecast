@@ -243,18 +243,18 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 1. 上記「Phase 8までに決めること」の1〜4（ドメイン・Cloudflareアカウント・
    R2バケット作成・公開URL方針）が未了なら先に進める。
-2. **Cloudflare Pagesプロジェクトを作成する**: Cloudflareダッシュボード →
-   **Workers & Pages** → **Create** → **Pages** →
-   **Connect to Git**でこのGitHubリポジトリ（`zappyzed100/sourcecast`）を選ぶ。
-   ビルド設定は次の通り:
-   - **Framework preset**: Astro
-   - **Build command**: `cd apps/site && pnpm install && pnpm run build`
-     （モノレポなのでルートではなく`apps/site`でビルドする——正確なコマンドは
-     ルートの`pnpm-lock.yaml`を使うため実際には`pnpm --filter apps-site... run build`
-     系になる可能性があり、実装側で最終調整する）
-   - **Build output directory**: `apps/site/dist`
-   プロジェクト名を決める（例: `history-radio-site`）——これは
-   `CLOUDFLARE_PAGES_PROJECT`として教えてほしい（秘密情報ではない）。
+2. **Cloudflare Pagesプロジェクトは`itsuwawa`という名前ですでに作成・GitHub連携
+   済み**（判明: 2026-07-19。GitHub PRのステータスチェック一覧に
+   `Cloudflare Pages`という項目が既に現れ、push毎に自動ビルドが走っている。
+   Root directory=`apps/site`・Build command=`pnpm install && pnpm run build`も
+   ダッシュボード側で既に正しく設定済みだった——**追加のプロジェクト作成操作は
+   不要**。ダッシュボードで「Create a Worker」フローに進んでも別物ができるだけ
+   なので、そちらは無視してよい）。
+   - `CLOUDFLARE_PAGES_PROJECT`は`itsuwawa`で確定。
+   - ビルドが`node scripts/check-bundle-budget.ts`の`.ts`直接実行で失敗する
+     問題（Cloudflareのビルド環境がNode 22系でtype strippingがデフォルト無効
+     なため）があったが、`--experimental-strip-types`フラグ付与で実装側で
+     修正済み（`apps/site/package.json`）。
 3. **独自ドメインをPagesプロジェクトへ接続する**（上記1でドメインが決まっていれば）:
    Pagesプロジェクトの **Custom domains** タブ → **Set up a custom domain**。
    HTTPS証明書はCloudflareが自動発行する（追加操作は基本不要）。
