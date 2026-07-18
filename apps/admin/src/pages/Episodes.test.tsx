@@ -54,14 +54,15 @@ describe("Episodes", () => {
 		expect(screen.queryByTestId("publish-ep-001")).not.toBeInTheDocument();
 	});
 
-	it("生成対象でも承認対象でもない状態(publishedなど)には操作ボタンが表示されない", async () => {
+	it("published状態には生成・承認・限定公開ボタンが表示されず公開取消ボタンが出る", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([PUBLISHED_EPISODE]);
 		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 		expect(screen.queryByTestId("generate-ep-004")).not.toBeInTheDocument();
 		expect(screen.queryByTestId("approve-ep-004")).not.toBeInTheDocument();
 		expect(screen.queryByTestId("publish-ep-004")).not.toBeInTheDocument();
-		expect(screen.getByTestId("no-action-ep-004")).toBeInTheDocument();
+		expect(screen.queryByTestId("delete-ep-004")).not.toBeInTheDocument();
+		expect(screen.getByTestId("revoke-ep-004")).toBeInTheDocument();
 	});
 
 	it("collected状態のエピソードには生成開始ボタンが表示される(Phase 11タスク2)", async () => {
@@ -219,5 +220,123 @@ describe("Episodes", () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([]);
 		renderEpisodes();
 		expect(await screen.findByTestId("episodes-empty")).toBeInTheDocument();
+	});
+
+	it("公開済みでない状態には削除ボタンが表示される(Phase 11タスク3)", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+		expect(screen.getByTestId("delete-ep-002")).toBeInTheDocument();
+	});
+
+	it("削除ボタンをクリックすると理由入力欄が現れ、理由付きで削除される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		vi.spyOn(api, "deleteEpisode").mockResolvedValue(undefined);
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("delete-ep-002"));
+		expect(screen.getByTestId("delete-reason-ep-002")).toBeInTheDocument();
+
+		fireEvent.change(screen.getByTestId("delete-reason-ep-002"), {
+			target: { value: "重複作成のため" },
+		});
+		fireEvent.click(screen.getByTestId("confirm-delete-ep-002"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episodes-empty")).toBeInTheDocument();
+		});
+		expect(api.deleteEpisode).toHaveBeenCalledWith("ep-002", "重複作成のため");
+	});
+
+	it("削除キャンセルボタンで理由入力欄が閉じ、行はそのまま残る", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("delete-ep-002"));
+		fireEvent.click(screen.getByTestId("cancel-delete-ep-002"));
+
+		expect(
+			screen.queryByTestId("delete-reason-ep-002"),
+		).not.toBeInTheDocument();
+		expect(screen.getByTestId("delete-ep-002")).toBeInTheDocument();
+	});
+
+	it("削除失敗時はエラーメッセージが行内に表示され行は残る", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		vi.spyOn(api, "deleteEpisode").mockRejectedValue(
+			new api.ApiError("削除には理由の入力が必須"),
+		);
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("delete-ep-002"));
+		fireEvent.click(screen.getByTestId("confirm-delete-ep-002"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episode-error-ep-002")).toHaveTextContent(
+				"削除には理由の入力が必須",
+			);
+		});
+		expect(screen.getByTestId("episodes-table")).toBeInTheDocument();
+	});
+
+	it("公開取消ボタンをクリックすると理由入力欄が現れ、理由付きで取消される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([PUBLISHED_EPISODE]);
+		vi.spyOn(api, "revokeEpisodePublication").mockResolvedValue({
+			schema_version: 1,
+			event_id: "audit-episode-revoke-ep-004-abc123",
+			entity_type: "episode",
+			entity_id: "ep-004",
+			action: "publish_revoked",
+			actor: "admin_review",
+			occurred_at: "2026-07-19T00:00:00Z",
+			detail: "reason='権利者からの削除要請'",
+		});
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("revoke-ep-004"));
+		fireEvent.change(screen.getByTestId("revoke-reason-ep-004"), {
+			target: { value: "権利者からの削除要請" },
+		});
+		fireEvent.click(screen.getByTestId("confirm-revoke-ep-004"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("revoked-ep-004")).toBeInTheDocument();
+		});
+		expect(api.revokeEpisodePublication).toHaveBeenCalledWith(
+			"ep-004",
+			"権利者からの削除要請",
+		);
+		expect(screen.queryByTestId("revoke-ep-004")).not.toBeInTheDocument();
+		// 公開取消はEpisode自体を変更しない(仕様書§10B)——行は一覧に残る。
+		expect(screen.getByTestId("episode-state-ep-004")).toHaveTextContent(
+			"公開済み(限定公開)",
+		);
+	});
+
+	it("公開取消失敗時はエラーメッセージが行内に表示される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([PUBLISHED_EPISODE]);
+		vi.spyOn(api, "revokeEpisodePublication").mockRejectedValue(
+			new api.ApiError("公開取消には理由の入力が必須"),
+		);
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("revoke-ep-004"));
+		fireEvent.click(screen.getByTestId("confirm-revoke-ep-004"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episode-error-ep-004")).toHaveTextContent(
+				"公開取消には理由の入力が必須",
+			);
+		});
+		expect(screen.getByTestId("revoke-reason-ep-004")).toBeInTheDocument();
 	});
 });

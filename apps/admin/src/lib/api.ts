@@ -163,6 +163,9 @@ async function fetchJson(path: string, init?: RequestInit): Promise<unknown> {
 			detail ?? `APIがエラーを返しました(${response.status}): ${path}`,
 		);
 	}
+	if (response.status === 204) {
+		return undefined;
+	}
 	try {
 		return await response.json();
 	} catch (error) {
@@ -246,6 +249,41 @@ export async function publishEpisode(episodeId: string): Promise<Episode> {
 	const result = episodeSchema.safeParse(json);
 	if (!result.success) {
 		throw new ApiError("限定公開結果応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+// 削除・公開取消(development-plan.md Phase 11タスク3「破壊的操作は確認、理由入力、
+// 監査ログを必須にする」)——理由が空だとAPIがfail closedで拒否する。
+export async function deleteEpisode(
+	episodeId: string,
+	reason: string,
+): Promise<void> {
+	await postJson(`/api/v1/episodes/${episodeId}/delete`, { reason });
+}
+
+const auditEventSchema = z.object({
+	schema_version: z.literal(1),
+	event_id: z.string(),
+	entity_type: z.string(),
+	entity_id: z.string(),
+	action: z.string(),
+	actor: z.string(),
+	occurred_at: z.string(),
+	detail: z.string(),
+});
+export type AuditEvent = z.infer<typeof auditEventSchema>;
+
+export async function revokeEpisodePublication(
+	episodeId: string,
+	reason: string,
+): Promise<AuditEvent> {
+	const json = await postJson(`/api/v1/episodes/${episodeId}/revoke`, {
+		reason,
+	});
+	const result = auditEventSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("公開取消結果応答の形式が不正です", result.error);
 	}
 	return result.data;
 }

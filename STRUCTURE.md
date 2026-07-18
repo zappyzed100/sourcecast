@@ -255,9 +255,11 @@
 - `services/pipeline/src/history_radio/publish/distribution_ledger.py`
 - `services/pipeline/src/history_radio/publish/distribution_metadata.py`
 - `services/pipeline/src/history_radio/publish/episode_approval.py`
+- `services/pipeline/src/history_radio/publish/episode_deletion.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
 - `services/pipeline/src/history_radio/publish/episode_publishing.py`
+- `services/pipeline/src/history_radio/publish/episode_revocation.py`
 - `services/pipeline/src/history_radio/publish/publish_gate.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
@@ -298,6 +300,8 @@
 - `services/pipeline/src/history_radio/store/db.py`
 - `services/pipeline/src/history_radio/store/distribution_records.py`
 - `services/pipeline/src/history_radio/store/documents.py`
+- `services/pipeline/src/history_radio/store/episode_deletion.py`
+- `services/pipeline/src/history_radio/store/episode_revocations.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
 - `services/pipeline/src/history_radio/store/gate_results.py`
 - `services/pipeline/src/history_radio/store/jobs.py`
@@ -342,9 +346,11 @@
 - `services/pipeline/tests/publish/test_distribution_ledger.py`
 - `services/pipeline/tests/publish/test_distribution_metadata.py`
 - `services/pipeline/tests/publish/test_episode_approval.py`
+- `services/pipeline/tests/publish/test_episode_deletion.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
 - `services/pipeline/tests/publish/test_episode_publishing.py`
+- `services/pipeline/tests/publish/test_episode_revocation.py`
 - `services/pipeline/tests/publish/test_publish_gate.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
@@ -455,6 +461,9 @@
 - function getEpisodes
 - function approveEpisode
 - function publishEpisode
+- function deleteEpisode
+- type AuditEvent
+- function revokeEpisodePublication
 - function getJobs
 - function startEpisodeGeneration
 - function getJobLogs
@@ -752,6 +761,8 @@
 - def get_episodes
 - def approve_episode_endpoint
 - def publish_episode_endpoint
+- def delete_episode_endpoint
+- def revoke_episode_publication_endpoint
 - def start_episode_generation_endpoint
 - def get_jobs
 - def get_job_endpoint
@@ -763,6 +774,8 @@
 ### `services/pipeline/src/history_radio/api/schemas.py`
 - class DashboardSummary
 - class ReviewCandidateRequest
+- class DeleteEpisodeRequest
+- class RevokeEpisodePublicationRequest
 
 ### `services/pipeline/src/history_radio/books/search.py`
 - class BookCandidate
@@ -924,6 +937,10 @@
 - class EpisodeApprovalError
 - def approve_episode
 
+### `services/pipeline/src/history_radio/publish/episode_deletion.py`
+- class EpisodeDeletionError
+- def delete_episode_with_reason
+
 ### `services/pipeline/src/history_radio/publish/episode_page.py`
 - class EpisodePageError
 - class SourceEntry
@@ -943,6 +960,10 @@
 ### `services/pipeline/src/history_radio/publish/episode_publishing.py`
 - class EpisodePublishError
 - def publish_episode_limited
+
+### `services/pipeline/src/history_radio/publish/episode_revocation.py`
+- class EpisodeRevocationError
+- def revoke_publication_with_reason
 
 ### `services/pipeline/src/history_radio/publish/publish_gate.py`
 - class GateCheckResult
@@ -1116,6 +1137,13 @@
 - def get_document
 - def list_snapshots
 
+### `services/pipeline/src/history_radio/store/episode_deletion.py`
+- def delete_episode
+
+### `services/pipeline/src/history_radio/store/episode_revocations.py`
+- def is_publish_revoked
+- def revoke_episode_publication
+
 ### `services/pipeline/src/history_radio/store/episodes.py`
 - class EpisodeConflictError
 - class EpisodeNotFoundError
@@ -1209,6 +1237,14 @@
 - def test_retry_job_endpoint_rejected_for_non_terminal_failure_job
 - def test_job_events_endpoint_streams_current_state_for_terminal_job
 - def test_job_events_endpoint_returns_404_for_unknown_job
+- def test_delete_episode_endpoint_rejects_without_reason
+- def test_delete_episode_endpoint_rejects_published_episode
+- def test_delete_episode_endpoint_returns_404_for_unknown_episode
+- def test_delete_episode_endpoint_succeeds_and_removes_the_episode
+- def test_revoke_episode_endpoint_rejects_without_reason
+- def test_revoke_episode_endpoint_rejects_unpublished_episode
+- def test_revoke_episode_endpoint_returns_404_for_unknown_episode
+- def test_revoke_episode_endpoint_succeeds_without_changing_episode_state
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1485,6 +1521,13 @@
 - def test_approve_rejects_when_gate_result_failed
 - def test_approve_uses_the_latest_gate_result_for_the_current_revision
 
+### `services/pipeline/tests/publish/test_episode_deletion.py`
+- def engine
+- def test_delete_without_reason_is_rejected
+- def test_delete_published_episode_is_rejected
+- def test_delete_unknown_episode_raises_not_found
+- def test_delete_removes_the_row_and_records_an_audit_event
+
 ### `services/pipeline/tests/publish/test_episode_page.py`
 - def test_valid_data_passes_validation_and_renders
 - def test_missing_sources_is_rejected_at_schema_level
@@ -1519,6 +1562,14 @@
 - def test_publish_succeeds_when_approved
 - def test_publish_rejects_episode_not_approved
 - def test_publish_again_after_already_published_is_rejected_by_the_state_machine
+
+### `services/pipeline/tests/publish/test_episode_revocation.py`
+- def engine
+- def test_revoke_without_reason_is_rejected
+- def test_revoke_unpublished_episode_is_rejected
+- def test_revoke_unknown_episode_raises_not_found
+- def test_revoke_succeeds_and_does_not_change_episode_state
+- def test_revoke_twice_is_rejected
 
 ### `services/pipeline/tests/publish/test_publish_gate.py`
 - def test_all_checks_pass_and_publish_ready_is_true

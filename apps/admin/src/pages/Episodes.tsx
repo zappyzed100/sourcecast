@@ -7,9 +7,11 @@ import { Link } from "react-router-dom";
 import {
 	ApiError,
 	approveEpisode,
+	deleteEpisode,
 	type Episode,
 	getEpisodes,
 	publishEpisode,
+	revokeEpisodePublication,
 	startEpisodeGeneration,
 } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
@@ -53,6 +55,17 @@ export function Episodes() {
 	const [startedJobIds, setStartedJobIds] = useState<Record<string, string>>(
 		{},
 	);
+	// 削除・公開取消(Phase 11タスク3「破壊的操作は確認、理由入力、監査ログを必須にする」)
+	// ——Candidates.tsxの除外フローと同じ「クリックで理由入力欄を開き、確定で送信する」
+	// 2段階UXにする。削除成功後の行は一覧から消す(APIが実際に行を削除するため)。
+	// 公開取消はEpisode自体を変更しない(監査ログのみ)ため、成功をローカルの
+	// フラグだけで示す(GET /episodesの応答には反映されない)。
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [deleteReason, setDeleteReason] = useState("");
+	const [deletedIds, setDeletedIds] = useState<ReadonlySet<string>>(new Set());
+	const [revokingId, setRevokingId] = useState<string | null>(null);
+	const [revokeReason, setRevokeReason] = useState("");
+	const [revokedIds, setRevokedIds] = useState<ReadonlySet<string>>(new Set());
 
 	async function handleApprove(episodeId: string) {
 		await runAction(episodeId, () => approveEpisode(episodeId));
@@ -94,6 +107,42 @@ export function Episodes() {
 		}
 	}
 
+	async function handleDelete(episodeId: string) {
+		setPendingId(episodeId);
+		setRowError((prev) => ({ ...prev, [episodeId]: "" }));
+		try {
+			await deleteEpisode(episodeId, deleteReason);
+			setDeletedIds((prev) => new Set(prev).add(episodeId));
+			setDeletingId(null);
+			setDeleteReason("");
+		} catch (error) {
+			setRowError((prev) => ({
+				...prev,
+				[episodeId]: error instanceof ApiError ? error.message : "不明なエラー",
+			}));
+		} finally {
+			setPendingId(null);
+		}
+	}
+
+	async function handleRevoke(episodeId: string) {
+		setPendingId(episodeId);
+		setRowError((prev) => ({ ...prev, [episodeId]: "" }));
+		try {
+			await revokeEpisodePublication(episodeId, revokeReason);
+			setRevokedIds((prev) => new Set(prev).add(episodeId));
+			setRevokingId(null);
+			setRevokeReason("");
+		} catch (error) {
+			setRowError((prev) => ({
+				...prev,
+				[episodeId]: error instanceof ApiError ? error.message : "不明なエラー",
+			}));
+		} finally {
+			setPendingId(null);
+		}
+	}
+
 	if (state.status === "loading") {
 		return (
 			<p role="status" data-testid="episodes-loading">
@@ -112,7 +161,10 @@ export function Episodes() {
 		);
 	}
 
-	const { data } = state;
+	// 削除成功後の行は一覧から消す(APIが実際に行を削除するため)。
+	const data = state.data.filter(
+		(episode) => !deletedIds.has(episode.episode_id),
+	);
 	if (data.length === 0) {
 		return <p data-testid="episodes-empty">エピソードはまだありません。</p>;
 	}
@@ -177,13 +229,99 @@ export function Episodes() {
 										限定公開
 									</button>
 								)}
-								{!GENERATABLE_STATES.has(episode.state) &&
-									episode.state !== "publish_ready" &&
-									episode.state !== "approved" && (
-										<span data-testid={`no-action-${episode.episode_id}`}>
-											—
+								{episode.state === "published" ? (
+									revokedIds.has(episode.episode_id) ? (
+										<span data-testid={`revoked-${episode.episode_id}`}>
+											取消済み
 										</span>
-									)}
+									) : revokingId === episode.episode_id ? (
+										<>
+											<label>
+												取消理由
+												<input
+													type="text"
+													value={revokeReason}
+													data-testid={`revoke-reason-${episode.episode_id}`}
+													onChange={(e) => setRevokeReason(e.target.value)}
+												/>
+											</label>
+											<button
+												type="button"
+												disabled={isPending}
+												data-testid={`confirm-revoke-${episode.episode_id}`}
+												onClick={() => handleRevoke(episode.episode_id)}
+											>
+												取消を確定
+											</button>
+											<button
+												type="button"
+												disabled={isPending}
+												data-testid={`cancel-revoke-${episode.episode_id}`}
+												onClick={() => {
+													setRevokingId(null);
+													setRevokeReason("");
+												}}
+											>
+												キャンセル
+											</button>
+										</>
+									) : (
+										<button
+											type="button"
+											disabled={isPending}
+											data-testid={`revoke-${episode.episode_id}`}
+											onClick={() => {
+												setRevokingId(episode.episode_id);
+												setRevokeReason("");
+											}}
+										>
+											公開取消
+										</button>
+									)
+								) : deletingId === episode.episode_id ? (
+									<>
+										<label>
+											削除理由
+											<input
+												type="text"
+												value={deleteReason}
+												data-testid={`delete-reason-${episode.episode_id}`}
+												onChange={(e) => setDeleteReason(e.target.value)}
+											/>
+										</label>
+										<button
+											type="button"
+											disabled={isPending}
+											data-testid={`confirm-delete-${episode.episode_id}`}
+											onClick={() => handleDelete(episode.episode_id)}
+										>
+											削除を確定
+										</button>
+										<button
+											type="button"
+											disabled={isPending}
+											data-testid={`cancel-delete-${episode.episode_id}`}
+											onClick={() => {
+												setDeletingId(null);
+												setDeleteReason("");
+											}}
+										>
+											キャンセル
+										</button>
+									</>
+								) : (
+									<button
+										type="button"
+										disabled={isPending}
+										data-testid={`delete-${episode.episode_id}`}
+										onClick={() => {
+											setDeletingId(episode.episode_id);
+											setDeleteReason("");
+										}}
+									>
+										削除
+									</button>
+								)}
 								{error && (
 									<p
 										role="alert"

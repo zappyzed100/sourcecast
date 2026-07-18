@@ -29,3 +29,15 @@ class ReviewCandidateRequest(SchemaModel):
 
     decision: CandidateDecisionValue
     reason: str | None = None
+
+
+class DeleteEpisodeRequest(SchemaModel):
+    """`POST /api/v1/episodes/{episode_id}/delete`（Phase 11タスク3「削除」）の入力。"""
+
+    reason: str | None = None
+
+
+class RevokeEpisodePublicationRequest(SchemaModel):
+    """`POST /api/v1/episodes/{episode_id}/revoke`（Phase 11タスク3「公開取消」）の入力。"""
+
+    reason: str | None = None
