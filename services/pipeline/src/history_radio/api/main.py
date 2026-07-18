@@ -22,8 +22,9 @@ import threading
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, sessionmaker
 
 from history_radio.api import fixtures
@@ -31,6 +32,7 @@ from history_radio.api.db import get_session, get_session_maker
 from history_radio.api.schemas import DashboardSummary, ReviewCandidateRequest
 from history_radio.domain.episode_state import FAILURE_STATES
 from history_radio.domain.models import Candidate, CandidateDecision, Episode, Job, JobLogEntry
+from history_radio.jobs.events import stream_job_events
 from history_radio.jobs.runner import run_episode_generation_job
 from history_radio.publish.episode_approval import EpisodeApprovalError, approve_episode
 from history_radio.publish.episode_publishing import EpisodePublishError, publish_episode_limited
@@ -63,6 +65,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        # E2E専用ポート(playwright.config.ts) — 既定の5173は開発機で別プロジェクトの
+        # devサーバーと衝突し得るため、Playwrightは--strictPortで専用ポートに固定する。
+        "http://localhost:5183",
+        "http://127.0.0.1:5183",
     ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -210,6 +216,23 @@ def get_job_logs_endpoint(
     except JobNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return list_job_logs(session, job_id)
+
+
+@app.get("/api/v1/jobs/{job_id}/events")
+def job_events_endpoint(
+    request: Request,
+    job_id: str,
+    session: Session = Depends(get_session),
+    session_maker: sessionmaker[Session] = Depends(get_session_maker),
+) -> StreamingResponse:
+    try:
+        get_job(session, job_id)
+    except JobNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return StreamingResponse(
+        stream_job_events(session_maker, job_id, is_disconnected=request.is_disconnected),
+        media_type="text/event-stream",
+    )
 
 
 @app.post("/api/v1/jobs/{job_id}/cancel", response_model=Job)

@@ -1,5 +1,6 @@
 """test_main.py — 管理APIのfixtureエンドポイントとDB接続の候補審査エンドポイントを固定する"""
 
+import json as json_lib
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,6 +42,7 @@ def client(engine: Engine, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
     HISTORY_RADIO_JOB_STEP_DELAY_SECONDS参照）。
     """
     monkeypatch.setenv("HISTORY_RADIO_JOB_STEP_DELAY_SECONDS", "0")
+    monkeypatch.setenv("HISTORY_RADIO_JOB_SSE_POLL_SECONDS", "0")
     session_maker = session_factory(engine)
 
     def _override_get_session() -> Iterator[Any]:
@@ -67,6 +69,16 @@ def _get_json(client: TestClient, path: str) -> tuple[int, Any]:
         Any,
         response.json(),  # pyright: ignore[reportUnknownMemberType]
     )
+
+
+def _stream_lines(client: TestClient, path: str) -> tuple[int, str, list[str]]:
+    """SSEエンドポイント用: `_get_json`と同じ理由でstrict型検査の境界をここへ閉じ込める。"""
+    with client.stream("GET", path) as response:  # pyright: ignore[reportUnknownVariableType,reportUnknownMemberType]
+        response_any: Any = response  # pyright: ignore[reportUnknownVariableType]
+        status_code = cast(int, response_any.status_code)
+        content_type = cast(str, response_any.headers["content-type"])
+        lines = cast(list[str], list(response_any.iter_lines()))  # pyright: ignore[reportUnknownArgumentType,reportUnknownMemberType]
+    return status_code, content_type, lines
 
 
 def _post_json(client: TestClient, path: str, json: dict[str, Any]) -> tuple[int, Any]:
@@ -481,3 +493,25 @@ def test_retry_job_endpoint_rejected_for_non_terminal_failure_job(
     status_code, body = _post_json(client, "/api/v1/jobs/job-001/retry", {})
     assert status_code == 400
     assert "終端の失敗状態" in body["detail"]
+
+
+def test_job_events_endpoint_streams_current_state_for_terminal_job(
+    engine: Engine, client: TestClient
+) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_job(session, job_id="job-001", episode_id="ep-001", kind="episode_generation")
+        mark_succeeded(session, "job-001")
+
+    status_code, content_type, lines = _stream_lines(client, "/api/v1/jobs/job-001/events")
+    assert status_code == 200
+    assert content_type.startswith("text/event-stream")
+
+    events = [json_lib.loads(line[len("data: ") :]) for line in lines if line.startswith("data: ")]
+    assert len(events) == 1
+    assert events[0]["job"]["status"] == "succeeded"
+
+
+def test_job_events_endpoint_returns_404_for_unknown_job(client: TestClient) -> None:
+    status_code, _body = _get_json(client, "/api/v1/jobs/does-not-exist/events")
+    assert status_code == 404

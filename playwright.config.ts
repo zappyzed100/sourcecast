@@ -27,7 +27,7 @@ export default defineConfig({
 		{
 			name: "admin",
 			testDir: "./e2e/admin",
-			use: { baseURL: "http://localhost:5173" },
+			use: { baseURL: "http://localhost:5183" },
 		},
 	],
 	webServer: [
@@ -40,19 +40,30 @@ export default defineConfig({
 			timeout: 60_000,
 		},
 		{
-			// apps/adminからのCORSはapi/main.pyでlocalhost:5173限定で許可しているため、
-			// viteの既定devポート(5173)のまま起動する(明示指定しない)。
-			command: "pnpm --filter apps-admin run dev",
-			url: "http://localhost:5173",
+			// viteの既定devポート(5173)は開発機で別プロジェクトのdevサーバーと衝突し得る
+			// （実機で発生済み: 別ポートの何かがreuseExistingServerに拾われ、admin一式が
+			// 全滅した）。E2E専用ポート5183へ--strictPortで固定する
+			// （ポートが埋まっていたら黙って次のポートへ逃げず即失敗させる——
+			// 「別アプリを誤って読み込む」事故を起動時点で検出する）。
+			// api/main.pyのCORS許可オリジンにも5183を追加済み。
+			command: "pnpm --filter apps-admin exec vite --port 5183 --strictPort",
+			url: "http://localhost:5183",
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,
 		},
 		{
 			// e2e専用DBを使う(開発用の既定パスdata/history_radio.sqlite3を汚さない)。
+			// ジョブのstep delay/SSEポーリング間隔は既定値(1秒/0.2秒)だとE2E一式が
+			// 数十秒がかりになるため短縮する——0にはしない(job-progress-reload.spec.tsが
+			// 「実行中の途中」を実際に観測する必要があるため、0だと一瞬で完了してしまう)。
 			command:
 				"uv run uvicorn history_radio.api.main:app --host 127.0.0.1 --port 8000",
 			url: "http://127.0.0.1:8000/api/v1/dashboard",
-			env: { HISTORY_RADIO_DB_PATH: "data/e2e-admin.sqlite3" },
+			env: {
+				HISTORY_RADIO_DB_PATH: "data/e2e-admin.sqlite3",
+				HISTORY_RADIO_JOB_STEP_DELAY_SECONDS: "0.3",
+				HISTORY_RADIO_JOB_SSE_POLL_SECONDS: "0.1",
+			},
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,
 		},

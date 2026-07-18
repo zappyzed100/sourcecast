@@ -76,17 +76,57 @@ const episodeSchema = z.object({
 });
 export type Episode = z.infer<typeof episodeSchema>;
 
+const jobStatusSchema = z.enum([
+	"queued",
+	"running",
+	"succeeded",
+	"failed",
+	"blocked",
+	"cancelled",
+]);
+export type JobStatus = z.infer<typeof jobStatusSchema>;
+
+// SSE再接続時にクライアント側で購読を止める判断に使う(サーバー側の
+// jobs/events.pyのTERMINAL_JOB_STATUSESと同じ集合——値が食い違うとブラウザが
+// 終了済みジョブへ無駄な再接続を続けてしまう)。
+export const TERMINAL_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
+	"succeeded",
+	"failed",
+	"blocked",
+	"cancelled",
+]);
+
 const jobSchema = z.object({
 	schema_version: z.literal(1),
 	job_id: z.string(),
 	episode_id: z.string().nullable(),
 	kind: z.string(),
-	status: z.enum(["queued", "running", "succeeded", "failed", "blocked"]),
+	status: jobStatusSchema,
+	progress: z.number().min(0).max(1),
+	cancel_requested: z.boolean(),
+	retry_of: z.string().nullable(),
 	error: z.string().nullable(),
+	created_at: z.string(),
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
 });
 export type Job = z.infer<typeof jobSchema>;
+
+const jobLogEntrySchema = z.object({
+	schema_version: z.literal(1),
+	job_id: z.string(),
+	seq: z.number().int().positive(),
+	level: z.enum(["info", "warning", "error"]),
+	message: z.string(),
+	occurred_at: z.string(),
+});
+export type JobLogEntry = z.infer<typeof jobLogEntrySchema>;
+
+const jobEventSchema = z.object({
+	job: jobSchema,
+	logs: z.array(jobLogEntrySchema),
+});
+export type JobEvent = z.infer<typeof jobEventSchema>;
 
 async function fetchJson(path: string, init?: RequestInit): Promise<unknown> {
 	const controller = new AbortController();
@@ -217,4 +257,68 @@ export async function getJobs(): Promise<Job[]> {
 		throw new ApiError("ジョブ一覧応答の形式が不正です", result.error);
 	}
 	return result.data;
+}
+
+export async function startEpisodeGeneration(episodeId: string): Promise<Job> {
+	const json = await postJson(`/api/v1/episodes/${episodeId}/generate`, {});
+	const result = jobSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("生成ジョブ開始応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function getJobLogs(jobId: string): Promise<JobLogEntry[]> {
+	const json = await fetchJson(`/api/v1/jobs/${jobId}/logs`);
+	const result = z.array(jobLogEntrySchema).safeParse(json);
+	if (!result.success) {
+		throw new ApiError("ジョブログ応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function cancelJob(jobId: string): Promise<Job> {
+	const json = await postJson(`/api/v1/jobs/${jobId}/cancel`, {});
+	const result = jobSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("キャンセル結果応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+export async function retryJob(jobId: string): Promise<Job> {
+	const json = await postJson(`/api/v1/jobs/${jobId}/retry`, {});
+	const result = jobSchema.safeParse(json);
+	if (!result.success) {
+		throw new ApiError("再実行結果応答の形式が不正です", result.error);
+	}
+	return result.data;
+}
+
+// subscribeToJobEvents — GET /api/v1/jobs/{id}/eventsをEventSourceで購読する
+// (仕様書§14・Phase 11タスク2「SSE進捗」)。ジョブが終端状態(succeeded/failed/
+// blocked/cancelled)へ達したイベントを受け取ったら、サーバー側がストリームを
+// 閉じた後もブラウザのEventSourceが自動再接続を試み続けてしまう既定動作を
+// 避けるため、ここで明示的にclose()する。戻り値の関数を呼べば購読を中断できる
+// (ReactのuseEffectクリーンアップから呼ぶ想定)。
+export function subscribeToJobEvents(
+	jobId: string,
+	onUpdate: (event: JobEvent) => void,
+): () => void {
+	const source = new EventSource(`${API_BASE_URL}/api/v1/jobs/${jobId}/events`);
+	source.onmessage = (message) => {
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(message.data as string);
+		} catch {
+			return; // 壊れたイベントは無視し、次のイベントで復帰を待つ
+		}
+		const result = jobEventSchema.safeParse(parsed);
+		if (!result.success) return;
+		onUpdate(result.data);
+		if (TERMINAL_JOB_STATUSES.has(result.data.job.status)) {
+			source.close();
+		}
+	};
+	return () => source.close();
 }

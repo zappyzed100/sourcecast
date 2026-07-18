@@ -1,9 +1,18 @@
 // Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態だけ承認でき、
-// approved状態だけ限定公開できる
+// approved状態だけ限定公開できる。Phase 11タスク2: 生成対象の状態には生成開始ボタンが出る
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import * as api from "../lib/api";
 import { Episodes } from "./Episodes";
+
+function renderEpisodes() {
+	return render(
+		<MemoryRouter>
+			<Episodes />
+		</MemoryRouter>,
+	);
+}
 
 const READY_EPISODE = {
 	schema_version: 1 as const,
@@ -29,22 +38,90 @@ const APPROVED_EPISODE = {
 	title: "承認済みのエピソード",
 };
 
+const PUBLISHED_EPISODE = {
+	...READY_EPISODE,
+	episode_id: "ep-004",
+	state: "published" as const,
+	title: "公開済みのエピソード",
+};
+
 describe("Episodes", () => {
 	it("publish_ready状態のエピソードには承認ボタンが表示される", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([READY_EPISODE]);
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 		expect(screen.getByTestId("approve-ep-001")).toBeInTheDocument();
 		expect(screen.queryByTestId("publish-ep-001")).not.toBeInTheDocument();
 	});
 
-	it("publish_ready/approved以外の状態には操作ボタンが表示されない", async () => {
-		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
-		render(<Episodes />);
+	it("生成対象でも承認対象でもない状態(publishedなど)には操作ボタンが表示されない", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([PUBLISHED_EPISODE]);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
-		expect(screen.queryByTestId("approve-ep-002")).not.toBeInTheDocument();
-		expect(screen.queryByTestId("publish-ep-002")).not.toBeInTheDocument();
-		expect(screen.getByTestId("no-action-ep-002")).toBeInTheDocument();
+		expect(screen.queryByTestId("generate-ep-004")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("approve-ep-004")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("publish-ep-004")).not.toBeInTheDocument();
+		expect(screen.getByTestId("no-action-ep-004")).toBeInTheDocument();
+	});
+
+	it("collected状態のエピソードには生成開始ボタンが表示される(Phase 11タスク2)", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+		expect(screen.getByTestId("generate-ep-002")).toBeInTheDocument();
+		expect(screen.queryByTestId("no-action-ep-002")).not.toBeInTheDocument();
+	});
+
+	it("生成開始ボタンをクリックするとジョブ一覧へのリンクに切り替わる", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		vi.spyOn(api, "startEpisodeGeneration").mockResolvedValue({
+			schema_version: 1,
+			job_id: "job-001",
+			episode_id: "ep-002",
+			kind: "episode_generation",
+			status: "queued",
+			progress: 0,
+			cancel_requested: false,
+			retry_of: null,
+			error: null,
+			created_at: "2026-07-19T00:00:00Z",
+			started_at: null,
+			finished_at: null,
+		});
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("generate-ep-002"));
+
+		await waitFor(() => {
+			expect(
+				screen.getByTestId("generation-started-ep-002"),
+			).toBeInTheDocument();
+		});
+		expect(api.startEpisodeGeneration).toHaveBeenCalledWith("ep-002");
+		expect(screen.queryByTestId("generate-ep-002")).not.toBeInTheDocument();
+	});
+
+	it("生成開始失敗時はエラーメッセージが行内に表示される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
+		vi.spyOn(api, "startEpisodeGeneration").mockRejectedValue(
+			new api.ApiError(
+				"エピソードは終端の失敗状態にあるため生成を開始できない",
+			),
+		);
+
+		renderEpisodes();
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("generate-ep-002"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episode-error-ep-002")).toHaveTextContent(
+				"エピソードは終端の失敗状態にあるため生成を開始できない",
+			);
+		});
+		expect(screen.getByTestId("generate-ep-002")).toBeInTheDocument();
 	});
 
 	it("承認ボタンで状態がapprovedに更新される", async () => {
@@ -55,7 +132,7 @@ describe("Episodes", () => {
 			revision: 2,
 		});
 
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 
 		fireEvent.click(screen.getByTestId("approve-ep-001"));
@@ -75,7 +152,7 @@ describe("Episodes", () => {
 			new api.ApiError("自動検査ゲートが不合格"),
 		);
 
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 
 		fireEvent.click(screen.getByTestId("approve-ep-001"));
@@ -91,7 +168,7 @@ describe("Episodes", () => {
 
 	it("approved状態のエピソードには限定公開ボタンが表示される", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([APPROVED_EPISODE]);
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 		expect(screen.getByTestId("publish-ep-003")).toBeInTheDocument();
 		expect(screen.queryByTestId("approve-ep-003")).not.toBeInTheDocument();
@@ -105,7 +182,7 @@ describe("Episodes", () => {
 			revision: 3,
 		});
 
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 
 		fireEvent.click(screen.getByTestId("publish-ep-003"));
@@ -125,7 +202,7 @@ describe("Episodes", () => {
 			new api.ApiError("限定公開できない"),
 		);
 
-		render(<Episodes />);
+		renderEpisodes();
 		await screen.findByTestId("episodes-table");
 
 		fireEvent.click(screen.getByTestId("publish-ep-003"));
@@ -140,7 +217,7 @@ describe("Episodes", () => {
 
 	it("エピソードが0件なら空メッセージを表示する", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([]);
-		render(<Episodes />);
+		renderEpisodes();
 		expect(await screen.findByTestId("episodes-empty")).toBeInTheDocument();
 	});
 });
