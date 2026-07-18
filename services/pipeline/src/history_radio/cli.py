@@ -31,6 +31,7 @@ from uuid import uuid4
 import typer
 
 from history_radio.api.db import get_db_path, get_session_maker
+from history_radio.jobs.recovery import recover_orphaned_jobs
 from history_radio.jobs.runner import run_episode_generation_job
 from history_radio.store.episodes import list_episodes
 from history_radio.store.jobs import (
@@ -78,6 +79,23 @@ def status() -> None:
     typer.echo(f"エピソード: {len(episodes)}件")
     for episode in episodes:
         typer.echo(f"  [{episode.state}] {episode.episode_id} {episode.title}")
+
+
+@app.command()
+def recover_orphans() -> None:
+    """PC再起動・クラッシュで中断されたジョブ（起動時点でrunningのまま残っているもの）を
+    検出し`blocked`へ落とす（development-plan.md Phase 12タスク4）——FastAPIも起動時に
+    自動で同じ処理を行うが、CLIだけで運用している場合や手動での即時確認にも使える。
+    二重実行を避けるため自動再開はしない——`resume <job_id>`で手動確認のうえ再開する。
+    """
+    session_maker = get_session_maker()
+    recovered = recover_orphaned_jobs(session_maker)
+    if not recovered:
+        typer.echo("中断されたジョブは無かった")
+        return
+    typer.echo(f"中断を検出しblockedへ変更した: {len(recovered)}件")
+    for job in recovered:
+        typer.echo(f"  {job.job_id} episode={job.episode_id}")
 
 
 @app.command()

@@ -914,12 +914,58 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
 * [ ] SQLite、設定、公開データ、必要なartifactsをGoogle Drive/NASへ日次バックアップする。
   R2とGitの内容は参照情報と復元手順を保存する。
   検証: 空の環境へ復元し、恒久ページとRSSを同一ハッシュで再構築できる。
+  **未着手**: HUMAN_TASKS.md「Phase 12までに決めること」でバックアップ保存先
+  （Google Drive/NAS）の決定と容量見積りを依頼中——実クレデンシャル・実保存先が
+  無いと着手できない（Phase 9のYouTube連携と同じ「先送り」構造）。
+  ローカルバックアップ自体はPhase 11タスク4の`cli.py backup`で既に実装済み
+  （`sqlite3.Connection.backup()`でローカルへスナップショットを作る）——本タスクは
+  そのスナップショットをクラウド先へ日次同期する部分が範囲。
 * [ ] 月次復元試験をジョブ化し、結果と所要時間を監査ログへ残す。
   検証: 失敗をダッシュボードと終了コードで通知する。
+  **未着手**: タスク1（クラウドバックアップ）が前提のため、それが無いと復元試験の
+  対象が無い。
 * [ ] 429、LLM JSON不正、クロール失敗、VOICEVOX停止、FFmpeg失敗、Git/R2失敗を状態遷移へ反映する。
   検証: 各障害が `blocked`、`rejected`、または上限付きretryへ遷移する。
-* [ ] PC再起動後に中断ジョブを検出し、二重実行せず再開または手動確認へ送る。
+  **未着手**: `jobs/runner.py`の実際のLLM呼び出し・VOICEVOX呼び出し・FFmpeg呼び出しは
+  まだ未接続（Phase 6〜8の生成処理そのものを接続するのは別フェーズの仕事——
+  development-plan.md Phase 11タスク2の進捗note参照）。429等の障害はこれらの実呼び出しが
+  無いと実際には発生し得ないため、実接続と同時に着手するのが自然。現状の
+  `run_episode_generation_job()`は例外を種別問わず`failed`へ一括変換するだけ
+  （`except Exception`一括捕捉）——本タスクは例外種別ごとに`blocked`/`rejected`/
+  上限付きretryへ出し分ける分岐と、リトライ上限のカウント機構を追加する。
+* [x] PC再起動後に中断ジョブを検出し、二重実行せず再開または手動確認へ送る。
   検証: 各工程で強制終了して再起動するfault injectionテスト。
+  このシステムは単一プロセス・単一マシン前提（plan.md §1.3・store/db.pyのSQLite
+  単一writer前提）——分散ワーカーが存在しないため、「アプリ起動時点で
+  status='running'のジョブが残っている」こと自体が「前回のプロセスが異常終了した」
+  ことの十分な証拠になる。ハートビートやPID記録の仕組みは無かった（新設もしていない）
+  ——起動時の一括スキャンだけで検出できるため不要と判断した。
+
+  新設`jobs/recovery.py`の`recover_orphaned_jobs()`が起動時に1回呼ばれ、
+  `status='running'`のジョブをすべて`blocked`へ落とし、監査ログ
+  （`entity_type="job", action="orphan_recovered", actor="system_startup"`）へ記録する。
+  **二重実行せず**（DoD）: 自動では再実行しない——`blocked`は既存の`JobStatus`の一つで、
+  Phase 11タスク2で実装済みの`cli.py resume`/管理画面の再実行ボタンがそのまま使える
+  （`blocked`は`_RETRYABLE_JOB_STATUSES`に既に含まれている）。**手動確認へ送る**（DoD）は
+  この「操作者が意図的に再開するまで何もしない」設計で満たす。再開時に工程を
+  重複実行しないのは、`run_episode_generation_job()`が元々「エピソードの現在の状態から
+  続きを行う」設計だったため（Phase 11タスク2で実装済み・再実装不要）。
+
+  `store/jobs.py`へ`mark_blocked()`を追加。`api/main.py`のFastAPI `lifespan`
+  （新規追加——起動時フックがこれまで無かった）から呼ぶ。`cli.py`へも
+  `recover-orphans`コマンドを追加した（FastAPIを一度も起動せずCLIだけで運用している
+  場合や、手動での即時確認にも使える）。
+
+  fault injectionテストは実際にプロセスを強制終了させる代わりに、
+  `mark_running()`で「クラッシュ直前の状態」を直接再現し、`recover_orphaned_jobs()`が
+  確実にそれを検出することを検証する形にした（実プロセスクラッシュの再現は
+  テストの決定性を損なう——§8「テスト内の外部I/O直呼びは検疫」と同じ考え方）。
+  API層は`with TestClient(app):`でlifespanのstartupを実際に発火させる統合テストで
+  配線自体を検証している。
+
+  本コミットでの追加分: Python単体テスト19件（jobs/recovery 4件・store/jobs
+  mark_blocked 1件・api/main lifespan統合 1件・test_cli.py recover-orphans 2件、
+  既存ファイルへの追加分含む）。累計: Python 659件。
 
 ### Phase 13 — 受入検証（仕様書 §17 段階0〜3）
 

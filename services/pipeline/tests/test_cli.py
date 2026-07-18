@@ -16,7 +16,7 @@ from history_radio.api import db as db_module
 from history_radio.api.db import get_session_maker
 from history_radio.cli import app
 from history_radio.store.episodes import create_episode, get_episode
-from history_radio.store.jobs import create_job, get_job, mark_failed, mark_running
+from history_radio.store.jobs import create_job, get_job, mark_failed, mark_running, mark_succeeded
 
 runner = CliRunner()
 
@@ -158,3 +158,34 @@ def test_backup_errors_when_db_file_does_not_exist(isolated_db: None, tmp_path: 
 
     assert result.exit_code == 1
     assert "エラー" in result.output
+
+
+def test_recover_orphans_blocks_a_running_job_left_from_a_crash(isolated_db: None) -> None:
+    del isolated_db
+    _seed_episode_and_job()
+    session_maker = get_session_maker()
+    with session_maker() as session:
+        mark_running(session, "job-001")
+
+    result = runner.invoke(app, ["recover-orphans"])
+
+    assert result.exit_code == 0
+    assert "中断を検出しblockedへ変更した: 1件" in result.output
+    assert "job-001" in result.output
+
+    with session_maker() as session:
+        assert get_job(session, "job-001").status == "blocked"
+
+
+def test_recover_orphans_with_nothing_to_recover_says_so(isolated_db: None) -> None:
+    del isolated_db
+    _seed_episode_and_job()
+    session_maker = get_session_maker()
+    with session_maker() as session:
+        mark_running(session, "job-001")
+        mark_succeeded(session, "job-001")
+
+    result = runner.invoke(app, ["recover-orphans"])
+
+    assert result.exit_code == 0
+    assert "中断されたジョブは無かった" in result.output

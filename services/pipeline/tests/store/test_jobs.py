@@ -16,6 +16,7 @@ from history_radio.store.jobs import (
     is_cancel_requested,
     list_job_logs,
     list_jobs,
+    mark_blocked,
     mark_cancelled,
     mark_failed,
     mark_running,
@@ -148,3 +149,14 @@ def test_list_job_logs_filters_by_since_seq(engine: Engine) -> None:
 
     assert [log.message for log in all_logs] == ["1", "2", "3"]
     assert [log.message for log in since_1] == ["2", "3"]
+
+
+def test_mark_blocked_sets_terminal_status_and_error(engine: Engine) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_job(session, job_id="job-1", episode_id="ep-1", kind="episode_generation")
+        mark_running(session, "job-1")
+        blocked = mark_blocked(session, "job-1", error="外部要因により中断された")
+    assert blocked.status == "blocked"
+    assert blocked.error == "外部要因により中断された"
+    assert blocked.finished_at is not None
