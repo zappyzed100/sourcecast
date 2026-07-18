@@ -130,13 +130,12 @@
    全トピック1コミット=1ブランチ=1PRへ統一。現rulesetはstatus checksのみで、
    PR自体の必須化が入っていない——直接pushはstrict checksで実質防がれているが、
    Phase 51の監査はPR必須設定そのものを確認する）。
-4. **CODEOWNERSのplaceholder（判断が必要）**: 新設の `.github/CODEOWNERS` は
-   workflow信頼境界のため `@GUARDRAILS-HUMAN-REVIEWER` というplaceholderを
-   PR作成者とは別の実在の人間へ置き換える設計（Phase 53）。**個人運用で
-   別の人間ownerを用意できない場合、この置換とcode owner review必須化は
-   スキップしてよい**——その場合の帰結はGUARDRAILS.md Phase 53の境界どおり
-   「workflow自己改変の封鎖が不完全なままStep 9を✅にしない」だけで、
-   他の門は全て機能する。どうするか決めたら実装側に伝えてほしい
+4. **CODEOWNERSのplaceholder（決定済み・2026-07-19）**: 新設の
+   `.github/CODEOWNERS` は workflow信頼境界のため `@GUARDRAILS-HUMAN-REVIEWER`
+   というplaceholderをPR作成者とは別の実在の人間へ置き換える設計（Phase 53）。
+   **個人運用のため別の人間ownerを用意せず、placeholderのままスキップする方針で
+   確定**。帰結はGUARDRAILS.md Phase 53の境界どおり「workflow自己改変の封鎖が
+   不完全なままStep 9を✅にしない」だけで、他の門は全て機能する
    （placeholderのままでも検査はbase/headバイト一致のみなので日常作業は通る）。
 
 ## Phase 4〜5（収集・題材選出）は追加の外部アカウント不要
