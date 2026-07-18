@@ -238,6 +238,7 @@
 - `services/pipeline/src/history_radio/ingest/schema.py`
 - `services/pipeline/src/history_radio/jobs/__init__.py`
 - `services/pipeline/src/history_radio/jobs/events.py`
+- `services/pipeline/src/history_radio/jobs/recovery.py`
 - `services/pipeline/src/history_radio/jobs/runner.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/llm/cache.py`
@@ -328,6 +329,7 @@
 - `services/pipeline/tests/ingest/test_schema.py`
 - `services/pipeline/tests/jobs/__init__.py`
 - `services/pipeline/tests/jobs/test_events.py`
+- `services/pipeline/tests/jobs/test_recovery.py`
 - `services/pipeline/tests/jobs/test_runner.py`
 - `services/pipeline/tests/llm/__init__.py`
 - `services/pipeline/tests/llm/test_cache.py`
@@ -757,6 +759,7 @@
 - def candidates
 
 ### `services/pipeline/src/history_radio/api/main.py`
+- def lifespan
 - def get_dashboard
 - def get_candidates
 - def get_candidate_decisions
@@ -793,6 +796,7 @@
 
 ### `services/pipeline/src/history_radio/cli.py`
 - def status
+- def recover_orphans
 - def stop
 - def resume
 - def backup
@@ -855,6 +859,9 @@
 
 ### `services/pipeline/src/history_radio/jobs/events.py`
 - def stream_job_events
+
+### `services/pipeline/src/history_radio/jobs/recovery.py`
+- def recover_orphaned_jobs
 
 ### `services/pipeline/src/history_radio/jobs/runner.py`
 - def run_episode_generation_job
@@ -1177,6 +1184,7 @@
 - def mark_succeeded
 - def mark_failed
 - def mark_cancelled
+- def mark_blocked
 - def update_progress
 - def request_cancel
 - def is_cancel_requested
@@ -1254,6 +1262,7 @@
 - def test_revoke_episode_endpoint_rejects_unpublished_episode
 - def test_revoke_episode_endpoint_returns_404_for_unknown_episode
 - def test_revoke_episode_endpoint_succeeds_without_changing_episode_state
+- def test_app_startup_recovers_orphaned_jobs
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1362,6 +1371,13 @@
 - def test_stream_closes_immediately_for_an_already_terminal_job
 - def test_stream_delivers_incremental_updates_across_polls
 - def test_stream_returns_404_worthy_error_for_unknown_job
+
+### `services/pipeline/tests/jobs/test_recovery.py`
+- def engine
+- def test_running_job_is_blocked_and_others_are_untouched
+- def test_recovery_records_an_audit_event_per_orphaned_job
+- def test_recovery_with_no_orphaned_jobs_is_a_no_op
+- def test_recovery_is_idempotent_across_repeated_startups
 
 ### `services/pipeline/tests/jobs/test_runner.py`
 - def engine
@@ -1871,6 +1887,7 @@
 - def test_create_job_with_retry_of_links_to_original
 - def test_append_job_log_assigns_incrementing_seq
 - def test_list_job_logs_filters_by_since_seq
+- def test_mark_blocked_sets_terminal_status_and_error
 
 ### `services/pipeline/tests/store/test_rights.py`
 - def engine
@@ -1890,6 +1907,8 @@
 - def test_resume_unknown_job_exits_with_error
 - def test_backup_creates_a_snapshot_file
 - def test_backup_errors_when_db_file_does_not_exist
+- def test_recover_orphans_blocks_a_running_job_left_from_a_crash
+- def test_recover_orphans_with_nothing_to_recover_says_so
 
 ### `services/pipeline/tests/test_smoke.py`
 - def test_package_imports

@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine
 
+from history_radio.api import db as db_module
 from history_radio.api.db import get_session, get_session_maker
 from history_radio.api.main import app
 from history_radio.domain.models import Candidate
@@ -18,7 +19,7 @@ from history_radio.store.candidates import save_candidate
 from history_radio.store.db import create_sqlite_engine, session_factory
 from history_radio.store.episodes import create_episode, get_episode, update_episode_state
 from history_radio.store.gate_results import save_gate_result
-from history_radio.store.jobs import create_job, mark_failed, mark_running, mark_succeeded
+from history_radio.store.jobs import create_job, get_job, mark_failed, mark_running, mark_succeeded
 from history_radio.store.orm import Base
 
 
@@ -617,3 +618,33 @@ def test_revoke_episode_endpoint_succeeds_without_changing_episode_state(
 
     status_code, episodes = _get_json(client, "/api/v1/episodes")
     assert episodes[0]["state"] == "published"
+
+
+def test_app_startup_recovers_orphaned_jobs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Phase 12タスク4 DoD: サーバー起動時に前回プロセスの中断ジョブ(status='running'の
+    まま残っている行)を検出しblockedへ落とすことを固定する。
+
+    lifespanは`get_session_maker()`をFastAPIの依存性注入を経由せず直接呼ぶため
+    （バックグラウンドのjobs/runner.pyと同じ理由——リクエストスコープを超えて動く）、
+    他のテストが使う`app.dependency_overrides`では差し替えられない。
+    `history_radio.api.db`モジュールの遅延初期化グローバルを直接リセットし、
+    `HISTORY_RADIO_DB_PATH`をtmp_path配下へ向けることで本番既定パスへの接触を防ぐ
+    （tests/test_cli.pyのisolated_dbと同じ手法）。
+    """
+    monkeypatch.setenv("HISTORY_RADIO_DB_PATH", str(tmp_path / "test.db"))
+    monkeypatch.setattr(db_module, "_engine", None)
+    monkeypatch.setattr(db_module, "_session_maker", None)
+
+    session_maker = get_session_maker()
+    with session_maker() as session:
+        create_episode(session, episode_id="ep-1", title="中断されたジョブのエピソード")
+        create_job(session, job_id="job-orphaned", episode_id="ep-1", kind="episode_generation")
+        mark_running(session, "job-orphaned")
+
+    with TestClient(app):
+        pass  # withブロックへ入るだけでlifespanのstartupが走る
+
+    with session_maker() as session:
+        assert get_job(session, "job-orphaned").status == "blocked"

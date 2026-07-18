@@ -124,6 +124,19 @@ def mark_cancelled(session: Session, job_id: str) -> Job:
     return _row_to_domain(row)
 
 
+def mark_blocked(session: Session, job_id: str, *, error: str) -> Job:
+    """外部要因（クラッシュ後の中断検出 — jobs/recovery.py・Phase 12タスク4、
+    将来的には429上限到達等 — Phase 12タスク3）でジョブを止める。手動確認が必要な
+    終端状態——`failed`と違い「もう一度自動で試して直る種類の失敗ではない」ことを表す。
+    """
+    row = _get_row(session, job_id)
+    row.status = "blocked"
+    row.error = error
+    row.finished_at = datetime.now(timezone.utc)
+    session.commit()
+    return _row_to_domain(row)
+
+
 def update_progress(session: Session, job_id: str, *, progress: float) -> Job:
     row = _get_row(session, job_id)
     row.progress = progress
@@ -193,6 +206,7 @@ __all__ = [
     "is_cancel_requested",
     "list_job_logs",
     "list_jobs",
+    "mark_blocked",
     "mark_cancelled",
     "mark_failed",
     "mark_running",
