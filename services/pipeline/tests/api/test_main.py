@@ -89,6 +89,16 @@ def _post_json(client: TestClient, path: str, json: dict[str, Any]) -> tuple[int
     )
 
 
+def _post_no_content(client: TestClient, path: str, json: dict[str, Any]) -> tuple[int, Any]:
+    """204応答の削除エンドポイント用: 空ボディに`.json()`を呼ばない。"""
+    response: Any = client.post(path, json=json)  # pyright: ignore[reportUnknownVariableType,reportUnknownMemberType]
+    return cast(int, response.status_code), (
+        cast(Any, response.json())  # pyright: ignore[reportUnknownMemberType]
+        if response.status_code != 204  # pyright: ignore[reportUnknownMemberType]
+        else None
+    )
+
+
 def _seed_candidate(engine: Engine, candidate_id: str = "cand-001") -> None:
     session_maker = session_factory(engine)
     with session_maker() as session:
@@ -515,3 +525,95 @@ def test_job_events_endpoint_streams_current_state_for_terminal_job(
 def test_job_events_endpoint_returns_404_for_unknown_job(client: TestClient) -> None:
     status_code, _body = _get_json(client, "/api/v1/jobs/does-not-exist/events")
     assert status_code == 404
+
+
+def test_delete_episode_endpoint_rejects_without_reason(engine: Engine, client: TestClient) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_episode(session, episode_id="ep-001", title="削除対象")
+
+    status_code, body = _post_no_content(client, "/api/v1/episodes/ep-001/delete", {})
+    assert status_code == 400
+    assert "理由の入力が必須" in body["detail"]
+
+
+def test_delete_episode_endpoint_rejects_published_episode(
+    engine: Engine, client: TestClient
+) -> None:
+    _seed_approved_episode(engine)
+    _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+
+    status_code, body = _post_no_content(
+        client, "/api/v1/episodes/ep-001/delete", {"reason": "気が変わった"}
+    )
+    assert status_code == 400
+    assert "公開済み" in body["detail"]
+
+
+def test_delete_episode_endpoint_returns_404_for_unknown_episode(client: TestClient) -> None:
+    status_code, _body = _post_no_content(
+        client, "/api/v1/episodes/does-not-exist/delete", {"reason": "理由あり"}
+    )
+    assert status_code == 404
+
+
+def test_delete_episode_endpoint_succeeds_and_removes_the_episode(
+    engine: Engine, client: TestClient
+) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_episode(session, episode_id="ep-001", title="削除対象")
+
+    status_code, _body = _post_no_content(
+        client, "/api/v1/episodes/ep-001/delete", {"reason": "重複作成のため"}
+    )
+    assert status_code == 204
+
+    status_code, body = _get_json(client, "/api/v1/episodes")
+    assert status_code == 200
+    assert body == []
+
+
+def test_revoke_episode_endpoint_rejects_without_reason(engine: Engine, client: TestClient) -> None:
+    _seed_approved_episode(engine)
+    _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/revoke", {})
+    assert status_code == 400
+    assert "理由の入力が必須" in body["detail"]
+
+
+def test_revoke_episode_endpoint_rejects_unpublished_episode(
+    engine: Engine, client: TestClient
+) -> None:
+    session_maker = session_factory(engine)
+    with session_maker() as session:
+        create_episode(session, episode_id="ep-001", title="未公開")
+
+    status_code, body = _post_json(client, "/api/v1/episodes/ep-001/revoke", {"reason": "理由あり"})
+    assert status_code == 400
+    assert "公開済みでない" in body["detail"]
+
+
+def test_revoke_episode_endpoint_returns_404_for_unknown_episode(client: TestClient) -> None:
+    status_code, _body = _post_json(
+        client, "/api/v1/episodes/does-not-exist/revoke", {"reason": "理由あり"}
+    )
+    assert status_code == 404
+
+
+def test_revoke_episode_endpoint_succeeds_without_changing_episode_state(
+    engine: Engine, client: TestClient
+) -> None:
+    _seed_approved_episode(engine)
+    _post_json(client, "/api/v1/episodes/ep-001/publish", {})
+
+    status_code, body = _post_json(
+        client, "/api/v1/episodes/ep-001/revoke", {"reason": "権利者からの削除要請"}
+    )
+    assert status_code == 200
+    assert body["action"] == "publish_revoked"
+    assert "権利者からの削除要請" in body["detail"]
+
+    status_code, episodes = _get_json(client, "/api/v1/episodes")
+    assert episodes[0]["state"] == "published"

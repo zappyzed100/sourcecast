@@ -830,13 +830,45 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   TypeScript単体テスト8件（Jobs.test.tsx新規）・既存Episodes.test.tsx4件追加、
   Playwright E2E 2件。累計: Python 625件・TypeScript 42件（apps-admin）・
   Playwright 34件（site 31・admin 3）。
-* [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。
+* [x] 破壊的操作は確認、理由入力、監査ログを必須にする。
   検証: 理由なしの却下、削除、公開取消をAPIが拒否する。
-  進捗（却下のみ実装済み。削除・公開取消は対応するAPI自体が未実装）:
   候補の除外（却下）は`select/candidate_review.py`が理由なしをfail closedで
   拒否し、`store/candidate_decisions.py`が判定と同一トランザクションで
-  `AuditEventRow`を追記する（仕様書§15）。削除・公開取消は対応する操作自体が
-  まだ無いため、それらの実装時に同じ「理由入力必須＋監査ログ」方針を適用する。
+  `AuditEventRow`を追記する（仕様書§15・Phase 11タスク1で実装済み）。
+
+  削除・公開取消は仕様書に具体的なUI操作としての定義が無い
+  （§15は「公開・訂正・削除・権利判定変更を追記型監査ログへ記録する」という
+  一般原則のみ）ため、本タスクで対象・意味論を決めた。§10B「公開済みページの
+  削除・URL変更を原則禁止する」「法的削除要請や重大な権利問題では本文・
+  メディアを非公開化できるが、可能な範囲でURLに理由と履歴を残す」から、
+  削除と公開取消を対照的な操作として設計した:
+  - **削除**（`publish/episode_deletion.py`）: `published`でないエピソードの行を
+    実際に削除する（`store/episode_deletion.py`）。理由なし・公開済みは
+    fail closedで拒否する。関連するjob・ゲート結果の行はカスケード削除しない
+    （実行履歴として独立に価値を持つため）。削除の事実と理由は行の削除と
+    同一トランザクションで`AuditEventRow`へ記録する——行が消えた後も
+    「いつ・誰が・なぜ削除したか」だけは監査ログに残る。
+  - **公開取消**（`publish/episode_revocation.py`）: `published`状態のエピソードに
+    対してのみ許可し、理由なし・未公開・二重取消はfail closedで拒否する
+    （`store/episode_revocations.py`）。**episodeの行・状態は変更しない**
+    ——公開済みページのURL変更を原則禁止する仕様書の方針に従い、取消の事実は
+    `audit_events`への追記だけで表現する（`action="publish_revoked"`）。
+    実際のYouTube動画取り下げ・サイトページの非公開化はまだ接続していない
+    （限定公開のYouTube Data API連携と同じくプレースホルダー段階——
+    HUMAN_TASKS.md参照）。
+
+  新設エンドポイント: `POST /episodes/{id}/delete`（`reason`必須・成功時204、
+  行が実際に消えるため`response_model`なし）・`POST /episodes/{id}/revoke`
+  （`reason`必須・成功時200でAuditEventを返す）。管理画面`Episodes.tsx`へ
+  `published`以外の行に削除ボタン、`published`の行に公開取消ボタンを追加
+  ——どちらもCandidates.tsxの除外フローと同じ「クリックで理由入力欄を開き、
+  確定ボタンで送信する」2段階UXにした（`破壊的操作は確認、理由入力…を必須に
+  する」の「確認」に相当）。削除成功後の行は一覧から消え、公開取消成功後は
+  「取消済み」表示に変わる。
+  本コミットでの追加分: Python単体テスト17件
+  （publish/episode_deletion 4件・publish/episode_revocation 5件・
+  api/main(削除・取消関連) 8件）、TypeScript単体テスト7件
+  （Episodes.test.tsx追加）。累計: Python 642件・TypeScript 48件（apps-admin）。
 * [ ] CLIは残し、管理画面障害時にも状態確認、停止、再開、バックアップを実行できるようにする。
   検証: Reactを起動せず主要な復旧操作ができる。
 
