@@ -127,6 +127,7 @@
 
 ## `config/`
 
+- `config/external_tools.yaml`
 - `config/license_rules.yaml`
 - `config/model_registry.yaml`
 - `config/readings/README.md`

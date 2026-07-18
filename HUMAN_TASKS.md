@@ -167,7 +167,7 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 ## Phase 7（音声・スライド動画）までに準備するもの
 
-1. **VOICEVOXエンジンをローカル導入する**: `https://voicevox.hiroshiba.jp/` から
+1. **VOICEVOXエンジンをローカル導入する**（完了: 2026-07-19）: `https://voicevox.hiroshiba.jp/` から
    OS（Windows/macOS/Linux）に合ったエンジンをダウンロードする。GPU版/CPU版の
    選択肢があるので、使用するマシンのGPU有無に応じて選ぶ。
 2. **使用する話者のクレジット表記条件を確認する**: 使う予定の話者（例:
@@ -209,16 +209,13 @@ ruleset登録を終えれば人間側の作業は無い。**
 
    本プロジェクトの計画（個人運営・YouTube広告での収益化・立ち絵をそのまま
    または軽微な加工で使用）は、上記のいずれの許可範囲にも収まる。
-3. **バージョン・取得元URL・SHA-256を控えておく**: ダウンロードしたインストーラー
-   のファイルに対して次を実行し、結果を控える（記録先は実装側と相談——
-   `config/`か`README`かはPhase 7着手時に決める）。
-   ```bash
-   # Windowsの場合(PowerShell)
-   Get-FileHash .\VOICEVOX-Installer.exe -Algorithm SHA256
-   ```
-4. **FFmpegをローカル導入する**: `https://ffmpeg.org/download.html` から
+3. **バージョン・取得元URL・SHA-256を控えておく**（完了: 2026-07-19。
+   `config/external_tools.yaml`に記録済み——`config/`側を採用。
+   アプリケーションが起動時に読み込む設定ファイルではなく、改ざん検知・
+   再現性のための人間向け台帳）。
+4. **FFmpegをローカル導入する**（完了: 2026-07-19）: `https://ffmpeg.org/download.html` から
    ビルド済みバイナリを取得する（Windowsは`gyan.dev`や`BtbN`のビルドが一般的）。
-   同様にバージョン・取得元URL・SHA-256を控える。
+   同様にバージョン・取得元URL・SHA-256を控える（`config/external_tools.yaml`に記録済み）。
 5. 読み辞書（development-plan.md §8・§8.4）で使う外部データソースのうち、
    **アカウント登録が要るものは無い**（SudachiDict/JMnedict/Wikidata/Web NDL
    Authorities/デジタル庁アドレス・ベース・レジストリはいずれも登録不要の
@@ -338,9 +335,7 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 ## Phase 12（バックアップ・障害対応）までに決めること
 
-1. **バックアップ保存先を決める**: Google DriveかNAS（自宅サーバー等）かを
-   決める。Google Driveの場合はバックアップ専用のフォルダとアカウントを
-   用意しておくと、他の個人データと混ざらない。
+1. **バックアップ保存先を決める**（決定: 2026-07-19。**NAS**を採用）。
 2. **容量の見積もり**: SQLite・設定・公開データ・必要なartifactsの合計サイズを
    Phase 12着手時に実測してから、無料枠で足りるか判断する
    （development-plan.md §7・運用節）。
