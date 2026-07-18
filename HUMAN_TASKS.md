@@ -244,18 +244,27 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 1. 上記「Phase 8までに決めること」の1〜4（ドメイン・Cloudflareアカウント・
    R2バケット作成・公開URL方針）が未了なら先に進める。
-2. **Cloudflare Pagesプロジェクトを作成する**: Cloudflareダッシュボード →
-   **Workers & Pages** → **Create** → **Pages** →
-   **Connect to Git**でこのGitHubリポジトリ（`zappyzed100/sourcecast`）を選ぶ。
-   ビルド設定は次の通り:
-   - **Framework preset**: Astro
-   - **Build command**: `cd apps/site && pnpm install && pnpm run build`
-     （モノレポなのでルートではなく`apps/site`でビルドする——正確なコマンドは
-     ルートの`pnpm-lock.yaml`を使うため実際には`pnpm --filter apps-site... run build`
-     系になる可能性があり、実装側で最終調整する）
-   - **Build output directory**: `apps/site/dist`
-   プロジェクト名を決める（例: `history-radio-site`）——これは
-   `CLOUDFLARE_PAGES_PROJECT`として教えてほしい（秘密情報ではない）。
+2. **Cloudflare Workers（静的サイト配信）プロジェクトを作成する**（2026-07時点、
+   Cloudflareダッシュボードの新規Git連携作成フローは旧来の「Pages」単独メニューでは
+   なく「Workers & Pages」→ **Create application** → **Import a repository**
+   経由の「Worker」作成に統合されている——挙動は旧Pagesと同等で、静的サイトの
+   配信先としてそのまま使える）:
+   - **Workers & Pages** → **Create application** → **Import a repository**（または
+     **Connect to Git**）でこのGitHubリポジトリ（`zappyzed100/sourcecast`）を選ぶ。
+   - 設定画面で **Advanced settings** を開き、**Root directory** に `apps/site`
+     を入力する（モノレポのため——これを設定しないとリポジトリ直下を見てしまう）。
+   - **Build command**: `pnpm run build`
+   - **Deploy command**: デフォルトの `npx wrangler deploy` のままでよい
+     （`apps/site/wrangler.jsonc`をコミット済みで、静的アセット配信先として
+     `./dist`を指定してある——これがあることで初めて**Deploy**ボタンが押せる
+     ようになる。この設定ファイルが無いとダッシュボードがデプロイ対象を検出できず
+     ボタンがグレーアウトしたままになる、という既知の詰まりポイントだった）。
+   - **Deploy** をクリックしてビルドを実行する。モノレポでのpnpm workspace解決が
+     Root directory設定と噛み合わずビルドが失敗する可能性があるので、失敗したら
+     ビルドログをそのまま実装側に共有してほしい（設定側で追加調整する）。
+   - プロジェクト名（画面上部の入力欄、例: `sourcecast-site`。
+     `apps/site/wrangler.jsonc`の`name`と揃えてある）——これは
+     `CLOUDFLARE_PAGES_PROJECT`として教えてほしい（秘密情報ではない）。
 3. **独自ドメインをPagesプロジェクトへ接続する**（上記1でドメインが決まっていれば）:
    Pagesプロジェクトの **Custom domains** タブ → **Set up a custom domain**。
    HTTPS証明書はCloudflareが自動発行する（追加操作は基本不要）。

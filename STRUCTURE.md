@@ -120,6 +120,7 @@
 - `apps/site/src/pages/index.astro`
 - `apps/site/tsconfig.json`
 - `apps/site/vitest.config.ts` — <reference types="vitest/config" />
+- `apps/site/wrangler.jsonc`
 
 ## `bindings/`
 
