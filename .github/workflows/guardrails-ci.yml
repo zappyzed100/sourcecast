@@ -138,6 +138,10 @@ jobs:
         with: { version: "11.9.0" }
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
+      # Phase 11タスク1のadmin project（playwright.config.ts）がFastAPI（uv run uvicorn）を
+      # webServerとして起動するため、Python/uvもここでセットアップする。
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter apps-site run build
       - run: pnpm exec playwright install --with-deps chromium
