@@ -1,4 +1,5 @@
-// Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態のエピソードだけ承認できる
+// Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態だけ承認でき、
+// approved状態だけ限定公開できる
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import * as api from "../lib/api";
@@ -21,20 +22,29 @@ const COLLECTED_EPISODE = {
 	title: "収集直後のエピソード",
 };
 
+const APPROVED_EPISODE = {
+	...READY_EPISODE,
+	episode_id: "ep-003",
+	state: "approved" as const,
+	title: "承認済みのエピソード",
+};
+
 describe("Episodes", () => {
 	it("publish_ready状態のエピソードには承認ボタンが表示される", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([READY_EPISODE]);
 		render(<Episodes />);
 		await screen.findByTestId("episodes-table");
 		expect(screen.getByTestId("approve-ep-001")).toBeInTheDocument();
+		expect(screen.queryByTestId("publish-ep-001")).not.toBeInTheDocument();
 	});
 
-	it("publish_ready以外の状態には承認ボタンが表示されない", async () => {
+	it("publish_ready/approved以外の状態には操作ボタンが表示されない", async () => {
 		vi.spyOn(api, "getEpisodes").mockResolvedValue([COLLECTED_EPISODE]);
 		render(<Episodes />);
 		await screen.findByTestId("episodes-table");
 		expect(screen.queryByTestId("approve-ep-002")).not.toBeInTheDocument();
-		expect(screen.getByTestId("no-approve-action-ep-002")).toBeInTheDocument();
+		expect(screen.queryByTestId("publish-ep-002")).not.toBeInTheDocument();
+		expect(screen.getByTestId("no-action-ep-002")).toBeInTheDocument();
 	});
 
 	it("承認ボタンで状態がapprovedに更新される", async () => {
@@ -77,6 +87,55 @@ describe("Episodes", () => {
 		});
 		// 失敗時は承認前の状態のまま、ボタンから再試行できる
 		expect(screen.getByTestId("approve-ep-001")).toBeInTheDocument();
+	});
+
+	it("approved状態のエピソードには限定公開ボタンが表示される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([APPROVED_EPISODE]);
+		render(<Episodes />);
+		await screen.findByTestId("episodes-table");
+		expect(screen.getByTestId("publish-ep-003")).toBeInTheDocument();
+		expect(screen.queryByTestId("approve-ep-003")).not.toBeInTheDocument();
+	});
+
+	it("限定公開ボタンで状態がpublishedに更新される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([APPROVED_EPISODE]);
+		vi.spyOn(api, "publishEpisode").mockResolvedValue({
+			...APPROVED_EPISODE,
+			state: "published",
+			revision: 3,
+		});
+
+		render(<Episodes />);
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("publish-ep-003"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episode-state-ep-003")).toHaveTextContent(
+				"公開済み(限定公開)",
+			);
+		});
+		expect(api.publishEpisode).toHaveBeenCalledWith("ep-003");
+		expect(screen.queryByTestId("publish-ep-003")).not.toBeInTheDocument();
+	});
+
+	it("限定公開失敗時はエラーメッセージが行内に表示される", async () => {
+		vi.spyOn(api, "getEpisodes").mockResolvedValue([APPROVED_EPISODE]);
+		vi.spyOn(api, "publishEpisode").mockRejectedValue(
+			new api.ApiError("限定公開できない"),
+		);
+
+		render(<Episodes />);
+		await screen.findByTestId("episodes-table");
+
+		fireEvent.click(screen.getByTestId("publish-ep-003"));
+
+		await waitFor(() => {
+			expect(screen.getByTestId("episode-error-ep-003")).toHaveTextContent(
+				"限定公開できない",
+			);
+		});
+		expect(screen.getByTestId("publish-ep-003")).toBeInTheDocument();
 	});
 
 	it("エピソードが0件なら空メッセージを表示する", async () => {

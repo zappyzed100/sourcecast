@@ -4,11 +4,13 @@
 開発時クロスオリジン呼び出しのみCORSを許可する——本番はビルド済み管理画面を同一オリジンで
 配信する構成を想定し、許可オリジンはlocalhost/127.0.0.1の開発用ポートに限定する。
 
-候補一覧・審査、エピソード一覧・承認（Phase 11タスク1）は実DB
+候補一覧・審査、エピソード一覧・承認・限定公開（Phase 11タスク1）は実DB
 （store/candidates.py・store/candidate_decisions.py・store/episodes.py・
-publish/episode_approval.py）へ接続済み。承認はPhase 10の自動検査ゲート結果
-（store/gate_results.py）を参照するだけで、ここで検査を再実行しない。
-ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はPhase 11タスク2）。
+publish/episode_approval.py・publish/episode_publishing.py・
+store/distribution_records.py）へ接続済み。承認はPhase 10の自動検査ゲート結果
+（store/gate_results.py）を参照するだけで、ここで検査を再実行しない。限定公開の
+実際のYouTube Data APIへはまだ接続していない（HUMAN_TASKS.md参照——プレースホルダー
+実装）。ダッシュボード・ジョブ一覧は引き続きfixture（実ジョブ接続はPhase 11タスク2）。
 """
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ from history_radio.api.db import get_session
 from history_radio.api.schemas import DashboardSummary, ReviewCandidateRequest
 from history_radio.domain.models import Candidate, CandidateDecision, Episode, Job
 from history_radio.publish.episode_approval import EpisodeApprovalError, approve_episode
+from history_radio.publish.episode_publishing import EpisodePublishError, publish_episode_limited
 from history_radio.select.candidate_review import CandidateReviewError, review_candidate
 from history_radio.store.candidate_decisions import (
     list_decisions_for_candidate,
@@ -98,6 +101,16 @@ def approve_episode_endpoint(episode_id: str, session: Session = Depends(get_ses
     except EpisodeNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except EpisodeApprovalError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/episodes/{episode_id}/publish", response_model=Episode)
+def publish_episode_endpoint(episode_id: str, session: Session = Depends(get_session)) -> Episode:
+    try:
+        return publish_episode_limited(session, episode_id=episode_id)
+    except EpisodeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except EpisodePublishError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 

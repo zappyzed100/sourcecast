@@ -78,8 +78,8 @@
 - `apps/admin/src/pages/Candidates.test.tsx` — Candidates.test.tsx — Phase 11タスク1・3 DoD: 採用・除外(理由必須)の審査UIを固定する
 - `apps/admin/src/pages/Candidates.tsx` — Candidates.tsx — 候補一覧・審査(仕様書§12.3「採用／除外／再生成」のうち採用・除外)。
 - `apps/admin/src/pages/Dashboard.tsx` — Dashboard.tsx — 管理画面ホーム(仕様書§12.1)。API停止・タイムアウト・壊れた応答を安全に表示する。
-- `apps/admin/src/pages/Episodes.test.tsx` — Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態のエピソードだけ承認できる
-- `apps/admin/src/pages/Episodes.tsx` — Episodes.tsx — エピソード一覧・承認(仕様書§12.4「公開承認／差し戻し」のうち承認)。
+- `apps/admin/src/pages/Episodes.test.tsx` — Episodes.test.tsx — Phase 11タスク1 DoD: publish_ready状態だけ承認でき、
+- `apps/admin/src/pages/Episodes.tsx` — Episodes.tsx — エピソード一覧・承認・限定公開(仕様書§12.4「公開承認／差し戻し」)。
 - `apps/admin/src/pages/Jobs.tsx` — Jobs.tsx — ジョブ管理(仕様書§12.1・§14)。API停止・タイムアウト・空データ・壊れた応答を安全に表示する。
 - `apps/admin/src/test-setup.ts` — test-setup.ts — Vitestのjsdom環境に@testing-library/jest-domのマッチャーを追加する。
 - `apps/admin/tsconfig.app.json`
@@ -248,6 +248,7 @@
 - `services/pipeline/src/history_radio/publish/episode_approval.py`
 - `services/pipeline/src/history_radio/publish/episode_page.py`
 - `services/pipeline/src/history_radio/publish/episode_publisher.py`
+- `services/pipeline/src/history_radio/publish/episode_publishing.py`
 - `services/pipeline/src/history_radio/publish/publish_gate.py`
 - `services/pipeline/src/history_radio/py.typed`
 - `services/pipeline/src/history_radio/readings/__init__.py`
@@ -286,6 +287,7 @@
 - `services/pipeline/src/history_radio/store/config_loader.py`
 - `services/pipeline/src/history_radio/store/config_schemas.py`
 - `services/pipeline/src/history_radio/store/db.py`
+- `services/pipeline/src/history_radio/store/distribution_records.py`
 - `services/pipeline/src/history_radio/store/documents.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
 - `services/pipeline/src/history_radio/store/gate_results.py`
@@ -329,6 +331,7 @@
 - `services/pipeline/tests/publish/test_episode_approval.py`
 - `services/pipeline/tests/publish/test_episode_page.py`
 - `services/pipeline/tests/publish/test_episode_publisher.py`
+- `services/pipeline/tests/publish/test_episode_publishing.py`
 - `services/pipeline/tests/publish/test_publish_gate.py`
 - `services/pipeline/tests/readings/__init__.py`
 - `services/pipeline/tests/readings/test_address_registry.py`
@@ -362,6 +365,7 @@
 - `services/pipeline/tests/store/test_candidate_decisions.py`
 - `services/pipeline/tests/store/test_candidates.py`
 - `services/pipeline/tests/store/test_config_loader.py`
+- `services/pipeline/tests/store/test_distribution_records.py`
 - `services/pipeline/tests/store/test_documents.py`
 - `services/pipeline/tests/store/test_episodes.py`
 - `services/pipeline/tests/store/test_gate_results.py`
@@ -432,6 +436,7 @@
 - function getCandidateDecisions
 - function getEpisodes
 - function approveEpisode
+- function publishEpisode
 - function getJobs
 
 ### `apps/admin/src/lib/useAsync.ts`
@@ -717,6 +722,7 @@
 - def review_candidate_endpoint
 - def get_episodes
 - def approve_episode_endpoint
+- def publish_episode_endpoint
 - def get_jobs
 
 ### `services/pipeline/src/history_radio/api/schemas.py`
@@ -891,6 +897,10 @@
 - class PublishResult
 - def publish_episode
 
+### `services/pipeline/src/history_radio/publish/episode_publishing.py`
+- class EpisodePublishError
+- def publish_episode_limited
+
 ### `services/pipeline/src/history_radio/publish/publish_gate.py`
 - class GateCheckResult
 - class PublishGateResult
@@ -1052,6 +1062,11 @@
 - def create_sqlite_engine
 - def session_factory
 
+### `services/pipeline/src/history_radio/store/distribution_records.py`
+- def get_distribution_record
+- def save_distribution_record
+- class DbDistributionLedger
+
 ### `services/pipeline/src/history_radio/store/documents.py`
 - def save_document
 - def save_terms_snapshot
@@ -1085,6 +1100,7 @@
 - class PublishGateResultRow
 - class CandidateRow
 - class CandidateDecisionRow
+- class DistributionRecordRow
 
 ### `services/pipeline/src/history_radio/store/rights.py`
 - def save_rights_decision
@@ -1110,6 +1126,10 @@
 - def test_approve_episode_rejected_when_gate_failed
 - def test_approve_episode_rejected_when_not_publish_ready
 - def test_approve_unknown_episode_returns_404
+- def test_publish_episode_succeeds_when_approved
+- def test_publish_episode_rejected_when_not_approved
+- def test_publish_unknown_episode_returns_404
+- def test_publish_episode_is_rejected_on_second_call
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1401,6 +1421,12 @@
 - def test_publishing_same_revision_number_after_current_exists_is_rejected
 - def test_invalid_episode_data_is_rejected_before_writing_anything
 
+### `services/pipeline/tests/publish/test_episode_publishing.py`
+- def engine
+- def test_publish_succeeds_when_approved
+- def test_publish_rejects_episode_not_approved
+- def test_publish_again_after_already_published_is_rejected_by_the_state_machine
+
 ### `services/pipeline/tests/publish/test_publish_gate.py`
 - def test_all_checks_pass_and_publish_ready_is_true
 - def test_artifact_hash_is_computed_even_when_gate_fails
@@ -1645,6 +1671,15 @@
 - def test_random_router_models_are_rejected
 - def test_model_without_structured_output_is_rejected
 - def test_regression_failed_model_is_rejected
+
+### `services/pipeline/tests/store/test_distribution_records.py`
+- def engine
+- def test_saved_record_can_be_retrieved
+- def test_missing_record_returns_none
+- def test_saving_again_overwrites_the_previous_record
+- def test_saving_a_record_appends_an_audit_event
+- def test_db_backed_ledger_survives_a_fresh_instance
+- def test_db_backed_ledger_rejects_states_before_approved
 
 ### `services/pipeline/tests/store/test_documents.py`
 - def session
