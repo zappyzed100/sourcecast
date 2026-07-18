@@ -58,3 +58,10 @@ def get_session_maker() -> sessionmaker[Session]:
     同じ遅延初期化エンジンを共有する。
     """
     return _get_session_maker()
+
+
+def get_db_path() -> Path:
+    """管理API・CLI（cli.py — Phase 11タスク4）が同じDBファイルを指すことを保証する
+    公開アクセサ。`HISTORY_RADIO_DB_PATH`環境変数を`_resolve_db_path()`と同じ規則で解決する。
+    """
+    return _resolve_db_path()

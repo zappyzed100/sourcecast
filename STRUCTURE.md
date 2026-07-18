@@ -219,6 +219,7 @@
 - `services/pipeline/src/history_radio/api/schemas.py`
 - `services/pipeline/src/history_radio/books/__init__.py`
 - `services/pipeline/src/history_radio/books/search.py`
+- `services/pipeline/src/history_radio/cli.py`
 - `services/pipeline/src/history_radio/distribute/__init__.py`
 - `services/pipeline/src/history_radio/domain/__init__.py`
 - `services/pipeline/src/history_radio/domain/base.py`
@@ -390,6 +391,7 @@
 - `services/pipeline/tests/store/test_gate_results.py`
 - `services/pipeline/tests/store/test_jobs.py`
 - `services/pipeline/tests/store/test_rights.py`
+- `services/pipeline/tests/test_cli.py`
 - `services/pipeline/tests/test_smoke.py`
 
 ## `tests/`
@@ -748,6 +750,7 @@
 ### `services/pipeline/src/history_radio/api/db.py`
 - def get_session
 - def get_session_maker
+- def get_db_path
 
 ### `services/pipeline/src/history_radio/api/fixtures.py`
 - def dashboard_summary
@@ -787,6 +790,12 @@
 - def has_confirmed_identifier
 - class RankedBook
 - def rank_books
+
+### `services/pipeline/src/history_radio/cli.py`
+- def status
+- def stop
+- def resume
+- def backup
 
 ### `services/pipeline/src/history_radio/domain/base.py`
 - class SchemaModel
@@ -1869,6 +1878,18 @@
 - def test_latest_decision_returns_the_most_recent_computation
 - def test_no_decision_returns_none
 - def test_saving_a_decision_also_appends_an_audit_event
+
+### `services/pipeline/tests/test_cli.py`
+- def isolated_db
+- def test_status_lists_jobs_and_episodes
+- def test_status_with_no_data_shows_zero_counts
+- def test_stop_cancels_a_running_job
+- def test_stop_unknown_job_exits_with_error
+- def test_resume_reexecutes_a_failed_job_to_completion
+- def test_resume_rejects_a_non_terminal_job
+- def test_resume_unknown_job_exits_with_error
+- def test_backup_creates_a_snapshot_file
+- def test_backup_errors_when_db_file_does_not_exist
 
 ### `services/pipeline/tests/test_smoke.py`
 - def test_package_imports
