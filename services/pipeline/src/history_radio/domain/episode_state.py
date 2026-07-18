@@ -31,7 +31,7 @@ EpisodeState = Literal[
 ALL_STATES: frozenset[EpisodeState] = frozenset(get_args(EpisodeState))
 
 # 前進辺のみ（順序固定・段階飛ばし禁止 — §6.1の状態機械そのもの）
-_FORWARD_SEQUENCE: tuple[EpisodeState, ...] = (
+FORWARD_SEQUENCE: tuple[EpisodeState, ...] = (
     "collected",
     "rights_passed",
     "topic_selected",
@@ -44,7 +44,7 @@ _FORWARD_SEQUENCE: tuple[EpisodeState, ...] = (
     "published",
 )
 ALLOWED_FORWARD: dict[EpisodeState, EpisodeState] = {
-    _FORWARD_SEQUENCE[i]: _FORWARD_SEQUENCE[i + 1] for i in range(len(_FORWARD_SEQUENCE) - 1)
+    FORWARD_SEQUENCE[i]: FORWARD_SEQUENCE[i + 1] for i in range(len(FORWARD_SEQUENCE) - 1)
 }
 
 TERMINAL_STATES: frozenset[EpisodeState] = frozenset({"published", "rejected", "blocked"})
@@ -75,3 +75,20 @@ def transition(current: EpisodeState, target: EpisodeState) -> EpisodeState:
     if ALLOWED_FORWARD.get(current) != target:
         raise InvalidTransitionError(current, target)
     return target
+
+
+def remaining_forward_states(
+    current: EpisodeState, *, upto: EpisodeState = "publish_ready"
+) -> tuple[EpisodeState, ...]:
+    """current から upto までの前進経路上の残り状態を順に返す（Phase 11タスク2:
+    生成ジョブが「工程単位で再実行」するために、どこから再開すべきかを1箇所で決める）。
+
+    current が rejected/blocked（終端の失敗状態）や FORWARD_SEQUENCE に無い値の場合は
+    空を返す——failureからの再開可否は呼び出し側（ジョブ実行側）の責務として判定させる。
+    current が upto に既に到達・通過済みの場合も空（何もしなくてよい）。
+    """
+    if current not in FORWARD_SEQUENCE:
+        return ()
+    start = FORWARD_SEQUENCE.index(current) + 1
+    end = FORWARD_SEQUENCE.index(upto) + 1
+    return FORWARD_SEQUENCE[start:end]

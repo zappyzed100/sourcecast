@@ -18,7 +18,8 @@ UseClass = Literal["A", "B", "C", "D"]
 SourceStatus = Literal["candidate", "approved", "suspended", "rejected"]
 RightsDecisionValue = Literal["allow_public_use", "internal_research_only", "manual_review", "deny"]
 ClaimQualification = Literal["断定", "資料帰属", "伝承", "推定"]
-JobStatus = Literal["queued", "running", "succeeded", "failed", "blocked"]
+JobStatus = Literal["queued", "running", "succeeded", "failed", "blocked", "cancelled"]
+JobLogLevel = Literal["info", "warning", "error"]
 
 
 class SourceRecord(SchemaModel):
@@ -111,16 +112,39 @@ class Episode(SchemaModel):
 
 
 class Job(SchemaModel):
-    """`jobs`（仕様書§13・§14）: 処理工程単位の実行状態とエラー。"""
+    """`jobs`（仕様書§13・§14・Phase 11タスク2）: 処理工程単位の実行状態とエラー。
+
+    `retry_of`は再実行元のjob_id（仕様書§14「工程単位で再実行」——失敗したジョブの行は
+    書き換えず、新しいjob_idで再実行することで実行履歴を保つ。エピソードの状態遷移自体は
+    domain/episode_state.pyのtransition()が保証するため、再実行は現在の状態から続きを
+    行うだけでよい）。
+    """
 
     schema_version: Literal[1] = 1
     job_id: str = Field(min_length=1)
     episode_id: str | None = None
     kind: str = Field(min_length=1)
     status: JobStatus
+    progress: float = Field(default=0.0, ge=0.0, le=1.0)
+    cancel_requested: bool = False
+    retry_of: str | None = None
     error: str | None = None
+    created_at: datetime
     started_at: datetime | None = None
     finished_at: datetime | None = None
+
+
+class JobLogEntry(SchemaModel):
+    """ジョブ1件分の実行ログ1行（Phase 11タスク2「ログ追跡」）。`seq`はジョブ内で1始まりの
+    連番——SSE配信時に「前回まで受信済みのseq以降だけ」を再接続後に取りこぼしなく送れる。
+    """
+
+    schema_version: Literal[1] = 1
+    job_id: str = Field(min_length=1)
+    seq: int = Field(ge=1)
+    level: JobLogLevel
+    message: str = Field(min_length=1)
+    occurred_at: datetime
 
 
 class AuditEvent(SchemaModel):

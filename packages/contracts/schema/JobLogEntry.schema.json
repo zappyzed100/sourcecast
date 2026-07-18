@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "ジョブ1件分の実行ログ1行（Phase 11タスク2「ログ追跡」）。`seq`はジョブ内で1始まりの\n連番——SSE配信時に「前回まで受信済みのseq以降だけ」を再接続後に取りこぼしなく送れる。",
+  "properties": {
+    "job_id": {
+      "minLength": 1,
+      "title": "Job Id",
+      "type": "string"
+    },
+    "level": {
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ],
+      "title": "Level",
+      "type": "string"
+    },
+    "message": {
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "seq": {
+      "minimum": 1,
+      "title": "Seq",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "job_id",
+    "seq",
+    "level",
+    "message",
+    "occurred_at"
+  ],
+  "title": "JobLogEntry",
+  "type": "object"
+}

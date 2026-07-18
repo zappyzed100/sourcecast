@@ -50,3 +50,11 @@ def get_session() -> Iterator[Session]:
         yield session
     finally:
         session.close()
+
+
+def get_session_maker() -> sessionmaker[Session]:
+    """バックグラウンドスレッド（jobs/runner.py — Phase 11タスク2）がリクエストの
+    スコープを超えて自前のセッションを作るための公開アクセサ。`get_session()`と
+    同じ遅延初期化エンジンを共有する。
+    """
+    return _get_session_maker()

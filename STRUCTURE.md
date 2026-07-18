@@ -172,6 +172,7 @@
 - `packages/contracts/schema/Claim.schema.json`
 - `packages/contracts/schema/Episode.schema.json`
 - `packages/contracts/schema/Job.schema.json`
+- `packages/contracts/schema/JobLogEntry.schema.json`
 - `packages/contracts/schema/RightsDecision.schema.json`
 - `packages/contracts/schema/SourceRecord.schema.json`
 - `packages/contracts/scripts/generate-types.ts` — generate-types.ts — packages/contracts/schema/*.schema.json からTypeScript型を生成する
@@ -232,6 +233,8 @@
 - `services/pipeline/src/history_radio/ingest/collector.py`
 - `services/pipeline/src/history_radio/ingest/crawl_control.py`
 - `services/pipeline/src/history_radio/ingest/schema.py`
+- `services/pipeline/src/history_radio/jobs/__init__.py`
+- `services/pipeline/src/history_radio/jobs/runner.py`
 - `services/pipeline/src/history_radio/llm/__init__.py`
 - `services/pipeline/src/history_radio/llm/cache.py`
 - `services/pipeline/src/history_radio/llm/extraction.py`
@@ -294,6 +297,7 @@
 - `services/pipeline/src/history_radio/store/documents.py`
 - `services/pipeline/src/history_radio/store/episodes.py`
 - `services/pipeline/src/history_radio/store/gate_results.py`
+- `services/pipeline/src/history_radio/store/jobs.py`
 - `services/pipeline/src/history_radio/store/orm.py`
 - `services/pipeline/src/history_radio/store/rights.py`
 - `services/pipeline/tests/__init__.py`
@@ -314,6 +318,8 @@
 - `services/pipeline/tests/ingest/test_collector.py`
 - `services/pipeline/tests/ingest/test_crawl_control.py`
 - `services/pipeline/tests/ingest/test_schema.py`
+- `services/pipeline/tests/jobs/__init__.py`
+- `services/pipeline/tests/jobs/test_runner.py`
 - `services/pipeline/tests/llm/__init__.py`
 - `services/pipeline/tests/llm/test_cache.py`
 - `services/pipeline/tests/llm/test_extraction.py`
@@ -372,6 +378,7 @@
 - `services/pipeline/tests/store/test_documents.py`
 - `services/pipeline/tests/store/test_episodes.py`
 - `services/pipeline/tests/store/test_gate_results.py`
+- `services/pipeline/tests/store/test_jobs.py`
 - `services/pipeline/tests/store/test_rights.py`
 - `services/pipeline/tests/test_smoke.py`
 
@@ -718,11 +725,11 @@
 
 ### `services/pipeline/src/history_radio/api/db.py`
 - def get_session
+- def get_session_maker
 
 ### `services/pipeline/src/history_radio/api/fixtures.py`
 - def dashboard_summary
 - def candidates
-- def jobs
 
 ### `services/pipeline/src/history_radio/api/main.py`
 - def get_dashboard
@@ -732,7 +739,12 @@
 - def get_episodes
 - def approve_episode_endpoint
 - def publish_episode_endpoint
+- def start_episode_generation_endpoint
 - def get_jobs
+- def get_job_endpoint
+- def get_job_logs_endpoint
+- def cancel_job_endpoint
+- def retry_job_endpoint
 
 ### `services/pipeline/src/history_radio/api/schemas.py`
 - class DashboardSummary
@@ -755,6 +767,7 @@
 ### `services/pipeline/src/history_radio/domain/episode_state.py`
 - class InvalidTransitionError
 - def transition
+- def remaining_forward_states
 
 ### `services/pipeline/src/history_radio/domain/models.py`
 - class SourceRecord
@@ -764,6 +777,7 @@
 - class Claim
 - class Episode
 - class Job
+- class JobLogEntry
 - class AuditEvent
 
 ### `services/pipeline/src/history_radio/ingest/adapter.py`
@@ -802,6 +816,9 @@
 - class RightsEvidence
 - class FetchResponseInfo
 - class FetchedDocument
+
+### `services/pipeline/src/history_radio/jobs/runner.py`
+- def run_episode_generation_job
 
 ### `services/pipeline/src/history_radio/llm/cache.py`
 - class LlmResult
@@ -1096,10 +1113,27 @@
 - def latest_gate_result_for_revision
 - def latest_gate_result_for_episode
 
+### `services/pipeline/src/history_radio/store/jobs.py`
+- class JobNotFoundError
+- class JobAlreadyTerminalError
+- def create_job
+- def get_job
+- def list_jobs
+- def mark_running
+- def mark_succeeded
+- def mark_failed
+- def mark_cancelled
+- def update_progress
+- def request_cancel
+- def is_cancel_requested
+- def append_job_log
+- def list_job_logs
+
 ### `services/pipeline/src/history_radio/store/orm.py`
 - class Base
 - class EpisodeRow
 - class JobRow
+- class JobLogRow
 - class AuditEventRow
 - class RightsDecisionRow
 - class DocumentRow
@@ -1142,6 +1176,20 @@
 - def test_publish_episode_rejected_when_not_approved
 - def test_publish_unknown_episode_returns_404
 - def test_publish_episode_is_rejected_on_second_call
+- def test_start_episode_generation_returns_queued_job_immediately
+- def test_start_episode_generation_returns_404_for_unknown_episode
+- def test_start_episode_generation_rejected_when_episode_already_failed
+- def test_get_jobs_returns_seeded_data
+- def test_get_job_endpoint_returns_single_job
+- def test_get_job_endpoint_returns_404_for_unknown_job
+- def test_get_job_logs_endpoint_returns_seeded_logs
+- def test_get_job_logs_endpoint_returns_404_for_unknown_job
+- def test_cancel_job_endpoint_sets_cancel_requested_on_running_job
+- def test_cancel_job_endpoint_returns_404_for_unknown_job
+- def test_cancel_job_endpoint_rejected_for_terminal_job
+- def test_retry_job_endpoint_creates_new_job_linked_to_original
+- def test_retry_job_endpoint_returns_404_for_unknown_job
+- def test_retry_job_endpoint_rejected_for_non_terminal_failure_job
 
 ### `services/pipeline/tests/books/test_search.py`
 - def test_relevance_formula_matches_spec_example
@@ -1244,6 +1292,14 @@
 - def test_storage_and_publication_permissions_are_independent
 - def test_locator_rejects_reversed_offsets
 - def test_response_info_rejects_out_of_range_http_status
+
+### `services/pipeline/tests/jobs/test_runner.py`
+- def engine
+- def test_job_advances_episode_to_publish_ready_and_succeeds
+- def test_job_resumes_from_the_episodes_current_state
+- def test_job_fails_when_episode_is_in_a_terminal_failure_state
+- def test_job_fails_visibly_when_episode_does_not_exist
+- def test_cancel_requested_mid_run_stops_the_job_and_preserves_partial_progress
 
 ### `services/pipeline/tests/llm/test_cache.py`
 - def session
@@ -1716,6 +1772,20 @@
 - def test_checks_with_reasons_round_trip_through_json
 - def test_latest_gate_result_for_episode_ignores_revision_and_returns_most_recent
 - def test_latest_gate_result_for_episode_returns_none_when_nothing_saved
+
+### `services/pipeline/tests/store/test_jobs.py`
+- def engine
+- def test_create_job_starts_queued_with_zero_progress
+- def test_get_unknown_job_raises
+- def test_mark_running_then_succeeded_updates_status_and_progress
+- def test_mark_failed_records_error
+- def test_request_cancel_sets_flag_on_running_job
+- def test_request_cancel_on_terminal_job_is_rejected
+- def test_mark_cancelled_sets_terminal_status
+- def test_list_jobs_returns_newest_first
+- def test_create_job_with_retry_of_links_to_original
+- def test_append_job_log_assigns_incrementing_seq
+- def test_list_job_logs_filters_by_since_seq
 
 ### `services/pipeline/tests/store/test_rights.py`
 - def engine

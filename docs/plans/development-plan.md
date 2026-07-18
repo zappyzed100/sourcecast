@@ -744,6 +744,57 @@ MVP対象はWikipedia、Wikimedia Commons、NDLデジタルコレクションの
   Playwright 32件（site 31・admin 1）。
 * [ ] 長時間ジョブのSSE進捗、キャンセル、再実行、ログ追跡を実装する。
   検証: ブラウザ再読込後も正しいジョブ状態へ復帰する。
+  進捗（バックエンドのジョブ実行基盤まで実装済み。残るはSSE配信と管理画面UI・
+  DoD本体のブラウザ再読込検証）:
+  `store/jobs.py`を新設し`jobs`テーブルを実際に読み書きするようにした
+  （`GET /api/v1/jobs`はfixtureから実DBへ切替。Job行は`job_id`単位で1行を持ち
+  status/progress/errorをその場で更新する——append-onlyではない。ログだけは
+  別テーブル`job_log_entries`へ追記のみ）。`domain/models.py`の`Job`へ
+  `progress`・`cancel_requested`・`retry_of`・`created_at`を追加し、
+  新設`JobLogEntry`をcontractsへ追加した。`JobStatus`へ`cancelled`を追加。
+
+  実行するジョブの中身は「エピソード生成ジョブ」1種類:
+  `jobs/runner.py`の`run_episode_generation_job()`がエピソードを現在の状態から
+  `publish_ready`まで工程単位で進める——`domain/episode_state.py`へ追加した
+  `remaining_forward_states()`（`FORWARD_SEQUENCE`を公開化して導出）で
+  「どこから再開すべきか」を1箇所に決め、各段階は`store/episodes.py`の
+  `update_episode_state()`（本物の永続化・楽観ロック）を呼ぶ——段階飛ばし・逆行の
+  防止を再実装しない。**実際のLLM台本生成・VOICEVOX音声合成・FFmpeg動画生成・
+  自動検査ゲート評価（Phase 6〜10）はまだこのジョブへ接続していない**——
+  各工程の重い生成処理そのものは各段階を実際に接続する後続フェーズの仕事で、
+  本ジョブは状態遷移の実行とキャンセル・進捗・ログの枠組みを提供するだけ
+  （publish_readyに達しても偽のゲート合格結果は作らない——e2e専用シード
+  スクリプトとは違い、本物の管理APIが嘘の合格を記録しないようにする）。
+
+  実行はFastAPIのイベントループと独立した`threading.Thread`（daemon）——
+  `POST /api/v1/episodes/{id}/generate`がジョブ行を作りスレッドを起動して
+  即座に返す（`202`・返すJobは常にスレッド起動前のqueuedスナップショット）。
+  キャンセルは共有メモリのフラグではなく`jobs.cancel_requested`列で行う
+  ——`POST /api/v1/jobs/{id}/cancel`がフラグを立てるだけで、実行側が各工程の
+  直前に確認して自ら停止する（プロセス内状態を持ち回らない設計——ブラウザ
+  再読込やサーバー内の別リクエストからでも同じ行を見て判定できる。DoD本体の
+  「再読込後も正しい状態へ復帰する」を裏で支える）。再実行
+  （`POST /api/v1/jobs/{id}/retry`）は失敗/blocked/cancelledのジョブに対してのみ
+  新しいjob_idで別行を作り（`retry_of`で元のjob_idを辿れる）、エピソードの
+  現在の状態から続きを行う（仕様書§14「工程単位で再実行」）。
+
+  キャンセル中断のテスト（`tests/jobs/test_runner.py`）はtime.sleep等の実待機を
+  使わず、`on_before_step`フック+`threading.Event`でジョブ実行スレッドと決定的に
+  同期する。API層のテスト（`tests/api/test_main.py`）は`get_session_maker`も
+  FastAPIの依存性注入にしてdependency_overridesで差し替え可能にし
+  （バックグラウンドスレッドが本番既定DBへ触れないように）、
+  `HISTORY_RADIO_JOB_STEP_DELAY_SECONDS=0`環境変数でテスト実行を高速化した
+  （本番既定値は1秒/工程）。
+
+  **未着手**: SSE配信エンドポイント（`GET /api/v1/jobs/{id}/events`）、
+  管理画面のJobs.tsxからのジョブ開始・進捗購読・キャンセル/再実行ボタン・
+  ログ表示、およびDoD本体の「ブラウザ再読込後も正しいジョブ状態へ復帰する」
+  ことを検証するPlaywright E2E——後続コミットで着手する
+  （バックエンドはDBが正本のため、SSEは単にDBを配信するだけでよいはずだが、
+  実装・検証はまだ行っていない）。
+  本コミットでの追加分: Python単体テスト26件
+  （store/jobs 11件・jobs/runner 5件・api/main(ジョブ関連) 10件）。
+  累計: Python 620件。
 * [ ] 破壊的操作は確認、理由入力、監査ログを必須にする。
   検証: 理由なしの却下、削除、公開取消をAPIが拒否する。
   進捗（却下のみ実装済み。削除・公開取消は対応するAPI自体が未実装）:
