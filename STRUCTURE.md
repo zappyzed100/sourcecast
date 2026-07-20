@@ -209,6 +209,7 @@
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
+- `scripts/youtube_oauth_setup.py` — youtube_oauth_setup.py — YouTube Data APIのOAuth認可を1回だけ実行しリフレッシュトークンを取得する
 
 ## `services/`
 
@@ -748,6 +749,10 @@
 ### `scripts/revendor_uipro.py`
 - def read_raw
 - def render_skill_md
+- def main
+
+### `scripts/youtube_oauth_setup.py`
+- def load_env
 - def main
 
 ### `services/pipeline/src/history_radio/api/db.py`
