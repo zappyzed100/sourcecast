@@ -40,13 +40,15 @@
   再生成して修正（PR #2でCIの`e2e`ジョブが緑になることを確認済み）。
   人間側の作業は無い。
 
-## 今すぐやること: GitHubブランチ保護（ruleset）に3つの必須チェックを登録する
+## GitHubブランチ保護（ruleset）（完了: 2026-07-19。以下は経緯の記録）
 
 `.guardrails/GUARDRAILS.md` Step 9④の要求（CIワークフロー自体は導入済みだが、
 「PRをマージ不可にする必須チェック」としての登録はGitHub側のリポジトリ設定でしか
-できない）。`gh api repos/zappyzed100/sourcecast/rulesets` で確認した限り現状 `[]`
-（未登録）。このリポジトリは public（`gh api repos/.../--jq .private` → `false`）
-なので、rulesets機能は無料プランでそのまま使える。
+できない）。**`gh api repos/zappyzed100/sourcecast/rulesets`で確認済み——
+8つの必須チェック（`checks`・`red-first`・`commit-msg-history`・
+`workflow-integrity`・`python-test`・`ts-test`・`contracts`・`e2e`）・
+PR必須・削除禁止・force push禁止がすべて`active`で登録されている。
+人間側の追加作業は無い。**
 
 ### これは「ブランチ」のrulesetか「タグ」のrulesetか
 
