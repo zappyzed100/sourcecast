@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">いつわわ YouTubeプロフィール画像</title>
+  <desc id="desc">生成り色の円に、同じ大きさで少しずつ傾けた「いつわわ」を濃紺と朱色で配置した文字ロゴ</desc>
+  <rect width="1024" height="1024" fill="#ffffff"/>
+  <circle cx="512" cy="512" r="480" fill="#fff3d6"/>
+  <circle cx="512" cy="512" r="468" fill="none" stroke="#17233c" stroke-width="12"/>
+  <g
+    font-family="'BIZ UDPGothic', 'Yu Gothic UI', 'Yu Gothic', sans-serif"
+    font-size="250"
+    font-weight="700"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >
+    <text x="210" y="520" fill="#17233c" transform="rotate(-7 210 520)">い</text>
+    <text x="410" y="490" fill="#d43f2f" transform="rotate(5 410 490)">つ</text>
+    <text x="610" y="528" fill="#17233c" transform="rotate(-4 610 528)">わ</text>
+    <text x="810" y="496" fill="#d43f2f" transform="rotate(6 810 496)">わ</text>
+  </g>
+</svg>

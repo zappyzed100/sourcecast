@@ -41,6 +41,10 @@ artifacts/
 .env.local
 .env.*.local
 
+# .claude/skills/ の自動ミラー（用途未確定のローカル生成物——.claude/skills/自体はAGENTS.md §6の
+# ベンダー領域として別途扱われる。こちらは重複コピーなので追跡しない）
+.agents/
+
 # >>> guardrails-kit >>>（この区画はキットの正本。既存 .gitignore がある場合、
 # install_kit.py はこの区画ごと末尾へ追記する——区画外は各プロジェクトの自由領域）
 __pycache__/
