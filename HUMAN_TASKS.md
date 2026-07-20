@@ -323,9 +323,10 @@ ruleset登録を終えれば人間側の作業は無い。**
 その時点で改めて必要な認証情報を具体的に依頼する。早めにアカウント作成・
 審査申請だけ進めておくと、実クライアント実装時の待ち時間を短縮できる。
 
-1. **YouTubeチャンネルを作成する**（未作成なら）。Google アカウントで
-   `https://www.youtube.com/` → 右上のアカウントアイコン →
-   **チャンネルを作成**。
+1. **YouTubeチャンネルを作成する**（完了: 2026-07-19）。チャンネル名
+   「いつわわ」・ハンドル`@itsuwawa_story`で確定（`@itsuwawa`は使用不可のため
+   サフィックス付きで確保）。アイコンは`design-system/brand/itsuwawa-youtube-icon.svg`
+   （二重の輪案・800x800px版は同ディレクトリの`itsuwawa-youtube-icon-800.png`）を採用。
 2. **Podcast配信先（RSSホスティング）を決める**: Spotify for
    Podcasters・Apple Podcasts Connect等、RSSフィードを受け付ける配信先を選ぶ。
    審査に数日かかることがあるので、Phase 9着手前でも早めにアカウント作成・
