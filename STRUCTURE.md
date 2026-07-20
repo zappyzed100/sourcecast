@@ -98,6 +98,7 @@
 - `apps/site/public/audio/2026-07-16-can-opener.mp3`
 - `apps/site/public/favicon.ico`
 - `apps/site/public/favicon.svg`
+- `apps/site/public/podcast-cover.png`
 - `apps/site/public/scripts/pagefind-bridge.js`
 - `apps/site/scripts/check-bundle-budget.ts` — check-bundle-budget.ts — 初期JavaScript予算(gzip後60KB以下 — plan.md §3.3)をビルド済みdistで検査する。
 - `apps/site/src/components/AudioPlayer.astro`

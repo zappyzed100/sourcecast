@@ -21,8 +21,13 @@ export const GET: APIRoute = async (context) => {
 			episode.data.audioLengthBytes !== undefined,
 	);
 
+	const podcastCoverUrl = new URL(
+		"/podcast-cover.png",
+		context.site ?? "https://example.invalid",
+	).toString();
+
 	return rss({
-		title: "歴史スライドラジオ（仮）",
+		title: "いつわわ",
 		description: "史実の意外な一面を、出典明記で毎回お届けするPodcast。",
 		site: context.site ?? "https://example.invalid",
 		xmlns: { itunes: "http://www.itunes.com/dtds/podcast-1.0.dtd" },
@@ -45,6 +50,14 @@ export const GET: APIRoute = async (context) => {
 				},
 				customData: `<itunes:author>VOICEVOX:ずんだもん</itunes:author>`,
 			})),
-		customData: `<language>ja</language>`,
+		customData: `<language>ja</language>
+			<itunes:author>いつわわ</itunes:author>
+			<itunes:owner>
+				<itunes:name>いつわわ</itunes:name>
+				<itunes:email>itsuwawa.admin@gmail.com</itunes:email>
+			</itunes:owner>
+			<itunes:image href="${podcastCoverUrl}" />
+			<itunes:category text="Society &amp; Culture" />
+			<itunes:explicit>false</itunes:explicit>`,
 	});
 };

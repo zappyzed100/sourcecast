@@ -31,9 +31,12 @@ interface ParsedFeed {
 
 // GUIDは過去に生成された値のまま固定する(development-plan.md Phase 9タスク1 DoD:
 // 過去GUIDの変化0件)。link生成ロジックが変わってこの値とずれたら、このテストで検出する。
+// ドメインはastro.config.mjsのsite設定に追従する(2026-07-20: siteが未設定で
+// https://example.invalid/のまま本番公開されていた不具合を修正——このテストの
+// 期待値もその誤ったドメインを固定してしまっていたため、実際の本番ドメインへ直す)。
 const EXPECTED_GUIDS = [
-	"https://example.invalid/episodes/2026-07-16-can-opener/",
-	"https://example.invalid/episodes/2026-07-15-first-railway/",
+	"https://itsuwawa.com/episodes/2026-07-16-can-opener/",
+	"https://itsuwawa.com/episodes/2026-07-15-first-railway/",
 ];
 
 const RFC822_PUBDATE_PATTERN =
