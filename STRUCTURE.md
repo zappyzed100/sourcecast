@@ -118,6 +118,7 @@
 - `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts` — script.md.ts — 過去バージョンの原稿本文Markdownダウンロード用静的エンドポイント(仕様書§10B)
 - `apps/site/src/pages/feed.xml.ts` — feed.xml.ts — Podcast RSS 2.0フィード生成(仕様書§10D・development-plan.md Phase 9タスク1)。
 - `apps/site/src/pages/index.astro`
+- `apps/site/src/pages/privacy.astro`
 - `apps/site/tsconfig.json`
 - `apps/site/vitest.config.ts` — <reference types="vitest/config" />
 
@@ -210,6 +211,7 @@
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
 - `scripts/youtube_oauth_setup.py` — youtube_oauth_setup.py — YouTube Data APIのOAuth認可を1回だけ実行しリフレッシュトークンを取得する
+- `scripts/youtube_test_upload.py` — youtube_test_upload.py — YouTube Data API経由で動画を1本アップロードする動作確認用CLI
 
 ## `services/`
 
@@ -753,6 +755,11 @@
 
 ### `scripts/youtube_oauth_setup.py`
 - def load_env
+- def main
+
+### `scripts/youtube_test_upload.py`
+- def load_env
+- def build_credentials
 - def main
 
 ### `services/pipeline/src/history_radio/api/db.py`

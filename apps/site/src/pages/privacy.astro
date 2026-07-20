@@ -1,0 +1,39 @@
+---
+// privacy.astro — プライバシーポリシー(Google OAuth審査に必要な実在URLとして提供)。
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+	title="プライバシーポリシー — いつわわ"
+	description="いつわわ(itsuwawa.com)のプライバシーポリシー。当サイトでの個人情報の取り扱い、および運営が使用するGoogle APIアクセスについて説明します。"
+	canonicalPath="/privacy/"
+>
+	<h1>プライバシーポリシー</h1>
+	<p>最終更新日: 2026年7月20日</p>
+
+	<h2>このサイトについて</h2>
+	<p>
+		「いつわわ」(itsuwawa.com)は、公開されている歴史・逸話の資料をもとに、日本語の台本と音声で紹介する個人運営のウェブサイト・YouTubeチャンネルです。
+	</p>
+
+	<h2>訪問者の個人情報について</h2>
+	<p>
+		当サイトは静的なページのみで構成されており、Cookie・アクセス解析ツール・広告トラッキングなどは一切使用していません。訪問者から氏名・メールアドレス等の個人情報を収集することはありません。
+	</p>
+
+	<h2>運営がGoogle API経由で行うこと</h2>
+	<p>
+		当チャンネルの運営者は、YouTube Data
+		APIを利用して、運営者自身が管理するYouTubeチャンネルへ動画を自動的にアップロードするために、Google
+		アカウントの認証(OAuth)を使用します。
+	</p>
+	<ul>
+		<li>アクセスするのは運営者自身のGoogleアカウント・YouTubeチャンネルのみで、第三者のアカウントやデータにはアクセスしません。</li>
+		<li>取得する権限は動画のアップロード(<code>youtube.upload</code>)と、アップロード状況の確認(<code>youtube.readonly</code>)に限定しています。</li>
+		<li>取得した認証情報(トークン)は運営者のローカル環境にのみ保管し、第三者へ共有・販売することはありません。</li>
+		<li>本アプリケーションは運営者個人の利用のみを目的としており、他のユーザーへの提供・公開は行っていません。</li>
+	</ul>
+
+	<h2>お問い合わせ</h2>
+	<p>本ポリシーに関するお問い合わせは、YouTubeチャンネル「いつわわ」(<a href="https://www.youtube.com/@itsuwawa_story">@itsuwawa_story</a>)の概要欄記載の連絡先までお願いします。</p>
+</BaseLayout>
