@@ -327,6 +327,16 @@ ruleset登録を終えれば人間側の作業は無い。**
    「いつわわ」・ハンドル`@itsuwawa_story`で確定（`@itsuwawa`は使用不可のため
    サフィックス付きで確保）。アイコンは`design-system/brand/itsuwawa-youtube-icon.svg`
    （二重の輪案・800x800px版は同ディレクトリの`itsuwawa-youtube-icon-800.png`）を採用。
+   **OAuth疎通確認・テストアップロードまで完了**（Client ID/Secret・Refresh Tokenは
+   `.env`保管、`scripts/youtube_oauth_setup.py`・`scripts/youtube_test_upload.py`で
+   動作確認済み）。**本番(Production)公開審査は後回しにする方針で確定**
+   （2026-07-20決定 — PLAN.md参照）。プライバシーポリシーページ
+   （`apps/site/src/pages/privacy.astro`）は審査に備えて先に用意済みだが、
+   審査申請自体・Google Search Consoleでのドメイン確認・審査用デモ動画の撮影は
+   実アップロードクライアントの実装に着手するタイミングまで保留する。それまでは
+   OAuth同意画面が「テスト」ステータスのままのため、**リフレッシュトークンは
+   約7日で失効する**（再認可が必要になったら`scripts/youtube_oauth_setup.py`を
+   再実行する）。
 2. **Podcast配信先（RSSホスティング）を決める**: Spotify for
    Podcasters・Apple Podcasts Connect等、RSSフィードを受け付ける配信先を選ぶ。
    審査に数日かかることがあるので、Phase 9着手前でも早めにアカウント作成・
