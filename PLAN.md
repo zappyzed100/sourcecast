@@ -92,15 +92,27 @@ AGENTS.md §5 と `.guardrails/GUARDRAILS.md` が正本。
 - [x] 読み辞書の構築（人名・地名・元号・官職 — development-plan.md §8。7ソース・解決器・
   手動修正辞書まで完了。VOICEVOXへの読み注入はPhase 7で同時着手）
 - [x] Phase 7 — 音声・スライド動画・関連書籍
-- [x] Phase 8 — 公開ページ統合・Cloudflare（タスク5・6のCloudflareダッシュボード側の
-  仕上げ〔独自ドメイン接続・Pagesプロジェクト作成・実クレデンシャルでの動作確認〕は
-  HUMAN_TASKS.mdで依頼中——実装・テストは完了）
+- [x] Phase 8 — 公開ページ統合・Cloudflare（Cloudflareダッシュボード側の仕上げ
+  〔独自ドメイン接続・Pagesプロジェクト作成・APIトークン発行〕は2026-07-24に完了確認済み
+  ——`itsuwawa.com`がHTTP 200で稼働中。残る配線は下の2タスクへ切り出した）
+- [ ] R2アップロード/Pagesロールバックのクライアントを実クレデンシャルへ配線する
+  （`media/r2_upload.py`・`publish/cloudflare_pages.py`は現在テストからしか呼ばれておらず、
+  `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_R2_BUCKET`/`CLOUDFLARE_PAGES_PROJECT`を読むコードが
+  リポジトリに存在しない。設定読み込みの追加＋実APIでの疎通確認1回。R2へ音声・画像を
+  実際に上げる工程を動かす時が着手時期） `backlog`
+- [ ] Phase 8タスク5 DoDの後半をライブHTTP応答で検証する（リンク切れ・mixed content・
+  ヘッダー欠落が0件。現状は`_headers`ファイルの静的検証のみ——本番稼働中の今なら実施可能） `backlog`
 - [x] Phase 9 — RSS・配信先（実配信は各配信先の実クライアント未実装——実装したのは
   RSS生成・配信先ごとのメタデータ生成・approvedゲート・二重投稿防止台帳。
   実クレデンシャルでの動作確認はHUMAN_TASKSで依頼中。YouTube側はOAuth疎通確認・
   テストアップロードまで完了したが、本番(Production)公開審査は後回しにする方針
   ——2026-07-20決定。テストモード〔7日ごとの手動再認可が必要〕のまま運用し、
-  実アップロードクライアントの実装に着手するタイミングで改めて審査を検討する）
+  実アップロードクライアントの実装に着手するタイミングで改めて審査を検討する。
+  2026-07-24: YouTubeチャンネルを作り直す方針をユーザーが表明——作り直し後は
+  OAuthクライアント設定・リフレッシュトークンも取り直しになる）
+- [ ] 配信先の実アップロードクライアントを実装する（YouTube・Podcast×2・Amazon系。
+  `distribution_ledger.py`の`dispatch()`へ渡す`publish_fn`が現状テストのフェイクのみ。
+  各チャンネルの開設はHUMAN_TASKS.md Phase 9で依頼中——開設完了が着手の前提） `blocked`
 - [x] Phase 10 — 自動検査ゲート（管理画面からゲート結果を追跡するUI配線はPhase 11で
   実DB接続と併せて行う——永続化・参照関数は実装・テスト済み）
 - [x] Phase 11 — 管理画面の実運用化（候補→審査→承認→限定公開・ジョブのSSE進捗/
