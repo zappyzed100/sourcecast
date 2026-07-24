@@ -353,6 +353,10 @@ import しているのはテストファイルだけで（`httpx.MockTransport` 
   リフレッシュトークンは取り直しになる（Google Cloud側のプロジェクト・Client IDは流用可）
 - アイコン: 共通マーク（二重の輪）へ小さく `JP` / `EN` を添えた2種を作成済み——
   `design-system/brand/itsuwawa-youtube-icon-{jp,en}.svg` と同 `-800.png`
+- サイトURL: `itsuwawa.com/ja/`・`itsuwawa.com/en/` のパス分割（Pagesプロジェクト・
+  ドメインは1つのまま。Podcast RSSのURLもこれに従う）
+- 英語TTS: **Kokoro TTS**（Apache-2.0・ローカル）。VOICEVOXは日本語専用で流用できない
+  ——実装側のタスクはPLAN.md「二言語（JP / EN）展開」を参照
 
 ### 開設するチャンネル
 
