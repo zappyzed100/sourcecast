@@ -352,7 +352,13 @@ import しているのはテストファイルだけで（`httpx.MockTransport` 
 - 既存チャンネル「いつわわ」`@itsuwawa_story` は作り直す。作り直すとOAuthの
   リフレッシュトークンは取り直しになる（Google Cloud側のプロジェクト・Client IDは流用可）
 - アイコン: 共通マーク（二重の輪）へ小さく `JP` / `EN` を添えた2種を作成済み——
-  `design-system/brand/itsuwawa-youtube-icon-{jp,en}.svg` と同 `-800.png`
+  `design-system/brand/itsuwawa-youtube-icon-{jp,en}.svg` と同 `-800.png`。
+  文字は左下の余白へ生成り色（`#e6ded0`）で置く案を採用（2026-07-24決定）。
+  **既知の制約**: 2つの輪が画版の x21–81 / y23–79 を占めるため、干渉せずに置ける
+  余白は左下・左上の三日月のみで、字は11単位が上限——YouTubeの一覧に並ぶ32px表示では
+  約3.5pxとなり読めない。バッジを輪へ重ねる案・輪を82%に縮めて下部へ大きく置く案とも
+  比較した上で、**小サイズでの判読よりマークの純度を優先**して現案を採用した。
+  小サイズでのJP/ENの区別はチャンネル名が担う前提。
 - サイトURL: `itsuwawa.com/ja/`・`itsuwawa.com/en/` のパス分割（Pagesプロジェクト・
   ドメインは1つのまま。Podcast RSSのURLもこれに従う）
 - 英語TTS: **Kokoro TTS**（Apache-2.0・ローカル）。VOICEVOXは日本語専用で流用できない
