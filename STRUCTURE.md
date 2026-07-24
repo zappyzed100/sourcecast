@@ -98,6 +98,7 @@
 - `apps/site/public/audio/2026-07-16-can-opener.mp3`
 - `apps/site/public/favicon.ico`
 - `apps/site/public/favicon.svg`
+- `apps/site/public/podcast-cover.png`
 - `apps/site/public/scripts/pagefind-bridge.js`
 - `apps/site/scripts/check-bundle-budget.ts` — check-bundle-budget.ts — 初期JavaScript予算(gzip後60KB以下 — plan.md §3.3)をビルド済みdistで検査する。
 - `apps/site/src/components/AudioPlayer.astro`
@@ -118,6 +119,7 @@
 - `apps/site/src/pages/episodes/[id]/versions/[revision]/script.md.ts` — script.md.ts — 過去バージョンの原稿本文Markdownダウンロード用静的エンドポイント(仕様書§10B)
 - `apps/site/src/pages/feed.xml.ts` — feed.xml.ts — Podcast RSS 2.0フィード生成(仕様書§10D・development-plan.md Phase 9タスク1)。
 - `apps/site/src/pages/index.astro`
+- `apps/site/src/pages/privacy.astro`
 - `apps/site/tsconfig.json`
 - `apps/site/vitest.config.ts` — <reference types="vitest/config" />
 
@@ -127,6 +129,7 @@
 
 ## `config/`
 
+- `config/external_tools.yaml`
 - `config/license_rules.yaml`
 - `config/model_registry.yaml`
 - `config/readings/README.md`
@@ -208,6 +211,8 @@
 - `scripts/repo_scan.py` — repo_scan.py — 共通走査モジュール: ファイル列挙・読み込み・シンボル/import抽出（契約: .guardrails/GUARDRAILS.md §7.3）
 - `scripts/revendor_uipro.py` — revendor_uipro.py — ui-ux-pro-max を GitHub main から .claude/skills/ へ再ベンダーする
 - `scripts/setup-upstreams.ps1`
+- `scripts/youtube_oauth_setup.py` — youtube_oauth_setup.py — YouTube Data APIのOAuth認可を1回だけ実行しリフレッシュトークンを取得する
+- `scripts/youtube_test_upload.py` — youtube_test_upload.py — YouTube Data API経由で動画を1本アップロードする動作確認用CLI
 
 ## `services/`
 
@@ -747,6 +752,15 @@
 ### `scripts/revendor_uipro.py`
 - def read_raw
 - def render_skill_md
+- def main
+
+### `scripts/youtube_oauth_setup.py`
+- def load_env
+- def main
+
+### `scripts/youtube_test_upload.py`
+- def load_env
+- def build_credentials
 - def main
 
 ### `services/pipeline/src/history_radio/api/db.py`

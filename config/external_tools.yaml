@@ -1,0 +1,21 @@
+# external_tools.yaml — ローカル導入する外部バイナリの取得元・バージョン・SHA-256記録
+#
+# Phase 7（音声・スライド動画）で導入するVOICEVOXエンジン・FFmpegの取得元検証記録
+# （HUMAN_TASKS.md「Phase 7までに準備するもの」）。改ざん検知・再現性のための
+# 台帳であり、アプリケーションが起動時に読み込む設定ファイルではない
+# （model_registry.yaml・source_registry.yamlとは異なりconfig_loader.pyの
+# 検証対象外）。
+tools:
+  - name: voicevox_engine
+    version: "0.25.2"
+    file_name: "VOICEVOX.Web.Setup.0.25.2.exe"
+    source_url: "https://voicevox.hiroshiba.jp/"
+    sha256: "BA878313B4F0368BE3C51F8D1F910C77DA066360ADAA6D79601E8E570D074FCD"
+    verified_at: 2026-07-19
+
+  - name: ffmpeg
+    version: "master-latest (BtbN win64-gpl-shared)"
+    file_name: "ffmpeg-master-latest-win64-gpl-shared.zip"
+    source_url: "https://github.com/BtbN/FFmpeg-Builds/releases"
+    sha256: "fa1136f197dcbac85f8233b055426a9a15cab6805f2ba0038c2c0b2de3516392"
+    verified_at: 2026-07-19

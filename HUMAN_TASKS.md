@@ -4,8 +4,14 @@
 このリポジトリの実装（コード・テスト・plan更新）はエージェントが進められるが、
 以下は **人間本人のアカウント・鍵・リポジトリ設定の操作** が必要で、エージェントが
 代行すべきではない（資格情報の取り扱い・外部サービス契約・GitHub設定変更にあたるため）。
-2026-07-16時点、Phase 0〜3実装済み・Phase 4「収集」着手前の整理。各項目はできる限り
-クリック単位まで具体化してある——迷ったらこのファイルの手順どおりに進めれば良い。
+各項目はできる限りクリック単位まで具体化してある——迷ったらこのファイルの手順どおりに
+進めれば良い。
+
+**現状（2026-07-24 実測で棚卸し）**: Phase 0〜11の実装は完了、残るは Phase 12
+（バックアップ・障害対応）と Phase 13（受入検証）。**人間側の未了作業は
+「配信先チャンネルの開設」だけ**——GitHub設定・Cloudflare・VOICEVOX/FFmpeg・
+OpenRouterはすべて完了済み（下記各節の「完了」表記は実測で確認したもので、
+推測ではない）。
 
 ## 状況更新（この整理の過程で分かったこと）
 
@@ -40,13 +46,15 @@
   再生成して修正（PR #2でCIの`e2e`ジョブが緑になることを確認済み）。
   人間側の作業は無い。
 
-## 今すぐやること: GitHubブランチ保護（ruleset）に3つの必須チェックを登録する
+## GitHubブランチ保護（ruleset）（完了: 2026-07-19。以下は経緯の記録）
 
 `.guardrails/GUARDRAILS.md` Step 9④の要求（CIワークフロー自体は導入済みだが、
 「PRをマージ不可にする必須チェック」としての登録はGitHub側のリポジトリ設定でしか
-できない）。`gh api repos/zappyzed100/sourcecast/rulesets` で確認した限り現状 `[]`
-（未登録）。このリポジトリは public（`gh api repos/.../--jq .private` → `false`）
-なので、rulesets機能は無料プランでそのまま使える。
+できない）。**`gh api repos/zappyzed100/sourcecast/rulesets`で確認済み——
+8つの必須チェック（`checks`・`red-first`・`commit-msg-history`・
+`workflow-integrity`・`python-test`・`ts-test`・`contracts`・`e2e`）・
+PR必須・削除禁止・force push禁止がすべて`active`で登録されている。
+人間側の追加作業は無い。**
 
 ### これは「ブランチ」のrulesetか「タグ」のrulesetか
 
@@ -110,23 +118,36 @@
   ここまでのワークフローとズレがある——今後PRベースに切り替えるかどうかは
   相談したい）。
 
-## キット更新（Phase 50→53・2026-07-16）で増えたGitHub側の設定作業
+## キット更新（Phase 50→53）で増えたGitHub側の設定作業（完了: 2026-07-24確認）
 
 ガードレールキットv2.51相当への更新で、required checksの期待構成が変わった
-（`.guardrails/GUARDRAILS.md` Phase 51〜53）。既存rulesetの編集は
+（`.guardrails/GUARDRAILS.md` Phase 51〜53）。**下記1〜3はすべて登録済みであることを
+実測で確認した（2026-07-24）——人間側の追加作業は無い。** 4はスキップ方針で確定。
+
+```bash
+# 確認コマンド（実行済み・出力を下に転記）
+gh api repos/zappyzed100/sourcecast/rulesets --jq '.[].name'
+#=> main-required-checks
+gh api repos/zappyzed100/sourcecast/rulesets/<id> --jq '[.rules[].type]'
+#=> ["deletion","non_fast_forward","required_status_checks","pull_request"]
+```
+
+必須チェックは8つ（`checks`・`red-first`・`commit-msg-history`・`workflow-integrity`・
+`python-test`・`ts-test`・`contracts`・`e2e`）が登録済み。以下は経緯の記録。
+既存rulesetの編集が必要になった場合は
 `https://github.com/zappyzed100/sourcecast/settings/rules` → 作成済みの
 `main-required-checks` をクリック → 該当欄を変更 → **Save changes**。
 
-1. **必須ステータスチェックに `workflow-integrity` を追加する**（Phase 52:
+1. **必須ステータスチェックに `workflow-integrity` を追加する**（完了。Phase 52:
    required contextsは4コア＝`checks`・`red-first`・`commit-msg-history`・
    `workflow-integrity`）。rulesetの「Require status checks to pass」の
    チェック一覧に、検索欄から `workflow-integrity` を足すだけ。
    ※このコンテキストは今回のPRで初めてCIに現れるため、検索候補に出ない場合は
    PRのチェックが一度走った後に再度試す。
-2. **言語別ジョブも必須チェックへ追加する**（Phase 52「採用した全言語別job」）:
+2. **言語別ジョブも必須チェックへ追加する**（完了。Phase 52「採用した全言語別job」）:
    `python-test`・`ts-test`・`contracts`・`e2e`。
    ※`e2e`はフィクスチャ修正済みで現在安定して緑（PR #2）。
-3. **「Require a pull request before merging」を有効化する**（Phase 51:
+3. **「Require a pull request before merging」を有効化する**（完了。Phase 51:
    全トピック1コミット=1ブランチ=1PRへ統一。現rulesetはstatus checksのみで、
    PR自体の必須化が入っていない——直接pushはstrict checksで実質防がれているが、
    Phase 51の監査はPR必須設定そのものを確認する）。
@@ -167,7 +188,7 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 ## Phase 7（音声・スライド動画）までに準備するもの
 
-1. **VOICEVOXエンジンをローカル導入する**: `https://voicevox.hiroshiba.jp/` から
+1. **VOICEVOXエンジンをローカル導入する**（完了: 2026-07-19）: `https://voicevox.hiroshiba.jp/` から
    OS（Windows/macOS/Linux）に合ったエンジンをダウンロードする。GPU版/CPU版の
    選択肢があるので、使用するマシンのGPU有無に応じて選ぶ。
 2. **使用する話者のクレジット表記条件を確認する**: 使う予定の話者（例:
@@ -209,16 +230,13 @@ ruleset登録を終えれば人間側の作業は無い。**
 
    本プロジェクトの計画（個人運営・YouTube広告での収益化・立ち絵をそのまま
    または軽微な加工で使用）は、上記のいずれの許可範囲にも収まる。
-3. **バージョン・取得元URL・SHA-256を控えておく**: ダウンロードしたインストーラー
-   のファイルに対して次を実行し、結果を控える（記録先は実装側と相談——
-   `config/`か`README`かはPhase 7着手時に決める）。
-   ```bash
-   # Windowsの場合(PowerShell)
-   Get-FileHash .\VOICEVOX-Installer.exe -Algorithm SHA256
-   ```
-4. **FFmpegをローカル導入する**: `https://ffmpeg.org/download.html` から
+3. **バージョン・取得元URL・SHA-256を控えておく**（完了: 2026-07-19。
+   `config/external_tools.yaml`に記録済み——`config/`側を採用。
+   アプリケーションが起動時に読み込む設定ファイルではなく、改ざん検知・
+   再現性のための人間向け台帳）。
+4. **FFmpegをローカル導入する**（完了: 2026-07-19）: `https://ffmpeg.org/download.html` から
    ビルド済みバイナリを取得する（Windowsは`gyan.dev`や`BtbN`のビルドが一般的）。
-   同様にバージョン・取得元URL・SHA-256を控える。
+   同様にバージョン・取得元URL・SHA-256を控える（`config/external_tools.yaml`に記録済み）。
 5. 読み辞書（development-plan.md §8・§8.4）で使う外部データソースのうち、
    **アカウント登録が要るものは無い**（SudachiDict/JMnedict/Wikidata/Web NDL
    Authorities/デジタル庁アドレス・ベース・レジストリはいずれも登録不要の
@@ -230,19 +248,30 @@ ruleset登録を終えれば人間側の作業は無い。**
      （§8.1・§8.4）。手動修正辞書へ個別の読みを追加する際の**確認資料**として
      参照するだけなので、追加のライセンス手続きは不要。
 
-## Phase 8着手中（2026-07-16〜）: R2アップロード・Pages公開/ロールバックで今すぐ必要になったもの
+## Phase 8（Cloudflare）— 人間側は完了（2026-07-24 実測で確認）
 
-タスク4「R2へハッシュ付きキーでmediaをアップロード」のクライアント
-（`services/pipeline/src/history_radio/media/r2_upload.py`）と、タスク6
-「Pages/R2からGit上の直前版へ戻す手順」のクライアント
-（`services/pipeline/src/history_radio/publish/cloudflare_pages.py`）は
-実装・単体テスト済みだが、**どちらも実クレデンシャルでの動作確認はまだ行っていない**
-（Cloudflare API v4のR2オブジェクト/Pagesデプロイ関連エンドポイントの存在・認証
-ヘッダ形式は`api.cloudflare.com`への実プローブで確認済みだが、成功応答の形は未確認）。
-下記の項目がまだなら、このタイミングで進めてもらえると実クレデンシャルでの検証ができる:
+**このセクションの人間側作業はすべて完了している。** 2026-07-24に実測で棚卸しした結果:
 
-1. 上記「Phase 8までに決めること」の1〜4（ドメイン・Cloudflareアカウント・
-   R2バケット作成・公開URL方針）が未了なら先に進める。
+| 項目 | 実測結果 |
+|---|---|
+| `https://itsuwawa.com/` | HTTP 200 — 公開稼働中 |
+| `https://itsuwawa.com/feed.xml` | HTTP 200 — RSS配信中 |
+| `https://media.itsuwawa.com/` | HTTP 404（R2カスタムドメイン接続済み・ルートにオブジェクトが無いだけ） |
+| `.env` | `CLOUDFLARE_API_TOKEN` 保管済み |
+| Account ID / Pages / R2バケット | `04d4a83…` / `itsuwawa` / `itsuwawa-bucket`（2026-07-19確定） |
+
+**ただし実装側に残っている作業がある**（人間側ではないので PLAN.md 側のタスク）:
+公開サイトのデプロイは Pages の GitHub 連携ビルドが行っていて、リポジトリの
+クライアントコードは関与していない。`r2_upload.py`・`cloudflare_pages.py` を
+import しているのはテストファイルだけで（`httpx.MockTransport` のみ）、
+`CLOUDFLARE_ACCOUNT_ID`・`CLOUDFLARE_R2_BUCKET`・`CLOUDFLARE_PAGES_PROJECT` を
+**読むコードがリポジトリ内に存在しない**。すなわち残りは資格情報の準備ではなく
+「クライアントへ識別子を渡す設定配線＋実APIでの1回の疎通確認」——R2へ音声・画像を
+実際に上げる工程を動かすときに実装側で行う。
+
+以下は経緯の記録。
+
+1. ドメイン・Cloudflareアカウント・R2バケット作成・公開URL方針（下節の1〜4）はすべて完了。
 2. **Cloudflare Pagesプロジェクトは`itsuwawa`という名前ですでに作成・GitHub連携
    済み**（判明: 2026-07-19。GitHub PRのステータスチェック一覧に
    `Cloudflare Pages`という項目が既に現れ、push毎に自動ビルドが走っている。
@@ -255,10 +284,11 @@ ruleset登録を終えれば人間側の作業は無い。**
      問題（Cloudflareのビルド環境がNode 22系でtype strippingがデフォルト無効
      なため）があったが、`--experimental-strip-types`フラグ付与で実装側で
      修正済み（`apps/site/package.json`）。
-3. **独自ドメインをPagesプロジェクトへ接続する**（上記1でドメインが決まっていれば）:
+3. **独自ドメインをPagesプロジェクトへ接続する**（完了: `itsuwawa.com`がHTTP 200で稼働中）:
    Pagesプロジェクトの **Custom domains** タブ → **Set up a custom domain**。
    HTTPS証明書はCloudflareが自動発行する（追加操作は基本不要）。
-4. **Cloudflare API トークンを発行する**: Cloudflareダッシュボード →
+4. **Cloudflare API トークンを発行する**（完了: `.env`に`CLOUDFLARE_API_TOKEN`保管済み）:
+   Cloudflareダッシュボード →
    右上のプロフィールアイコン → **My Profile** → **API Tokens** →
    **Create Token** → **Custom token**。権限は最低限
    「**Account** → **Workers R2 Storage** → **Edit**」（R2オブジェクトの
@@ -267,24 +297,19 @@ ruleset登録を終えれば人間側の作業は無い。**
    トークン文字列は**このチャットに貼らず**、環境変数
    `CLOUDFLARE_API_TOKEN`として渡してほしい（渡し方はOpenRouterのAPIキーの
    時と同じ——ローカルなら`.env`等、CIならGitHub Actions repository secrets）。
-5. **アカウントIDを控える**: Cloudflareダッシュボードの右サイドバー
+5. **アカウントIDを控える**（完了: `04d4a8389cfb08c9ae5a3886a1257da7`）:
+   Cloudflareダッシュボードの右サイドバー
    （どのドメイン/サービスのページでも表示される）に「Account ID」という
    32文字の16進数文字列がある。これも環境変数
    `CLOUDFLARE_ACCOUNT_ID`として渡してほしい（秘密情報ではないので
    チャットに直接書いても問題ない）。
-6. **R2バケット名を教えてほしい**（上記「決めること」3で決めた名前、
-   例: `history-radio-media`）——これは`CLOUDFLARE_R2_BUCKET`として渡す
-   か、チャットで直接教えてもらえればよい。
+6. **R2バケット名**（完了: `itsuwawa-bucket`。公開ドメインは`media.itsuwawa.com`）。
 
-これらが揃うまでは、R2アップロード・Pagesロールバックの両機能はモック
-（`httpx.MockTransport`）による単体テストのみで検証された状態で先へ進める
-（OpenRouter・VOICEVOXの時と同じ「実クレデンシャルが無くてもテスト可能な
-クライアント抽象を先に作る」方針）。Pagesプロジェクトが実在してから、
-「プレビューと本番でリンク切れ・mixed content・ヘッダー欠落が0件」という
+残る「プレビューと本番でリンク切れ・mixed content・ヘッダー欠落が0件」という
 タスク5のDoDの後半（ライブHTTP応答での検証——現状は`_headers`ファイル自体の
-静的検証のみ）にも着手できる。
+静的検証のみ）は、本番サイトが稼働している今なら実施できる（実装側の作業）。
 
-## Phase 8（公開ページ統合・Cloudflare）までに決めること
+## Phase 8（公開ページ統合・Cloudflare）までに決めること（すべて決定済み）
 
 1. **独自ドメイン名を決める**: 使いたいドメインを決め、未取得なら取得する
    （Cloudflare Registrar経由でもよいし、他のレジストラで取得して
@@ -295,24 +320,63 @@ ruleset登録を終えれば人間側の作業は無い。**
    意図的な選定（「歴史」という語を含めない）。取得はCloudflare Registrar
    （`.com`は上乗せ手数料なしの卸価格・年$10前後で購入可能——調査済み。
    `.jp`はCloudflare Registrar非対応のため今回は不採用）。
-2. **Cloudflareアカウントを作成する**: `https://dash.cloudflare.com/sign-up`。
+2. **Cloudflareアカウントを作成する**（完了）: `https://dash.cloudflare.com/sign-up`。
    ドメインをアカウントに追加し、ネームサーバーの向き先を確認する。
-3. **Cloudflare R2バケットを作成する**: Cloudflareダッシュボード →
+3. **Cloudflare R2バケットを作成する**（完了: `itsuwawa-bucket`）: Cloudflareダッシュボード →
    **R2 Object Storage** → **Create bucket**。バケット名を決める
    （例: `history-radio-media`）。
-4. **公開URLの方針を決める**: 次のどちらかを選ぶ。
+4. **公開URLの方針を決める**（決定: 独自ドメイン`media.itsuwawa.com`を採用・
+   `*.r2.dev`は不採用）: 次のどちらかを選ぶ。
    - R2バケットの**Public Development URL**（`*.r2.dev`）をそのまま使う
      （手軽だが本番運用には非推奨とCloudflareが案内している）。
    - 独自ドメインのサブドメイン（例: `media.example.com`）をR2バケットに
      カスタムドメインとして紐づける（Cloudflareダッシュボードの
      バケット設定 → **Custom Domains** → **Connect Domain**）。
-5. **CI/CDからのデプロイに使う認証情報は今は不要**——Phase 8着手時に
-   Cloudflare API トークン（Pages編集権限・R2編集権限）とアカウントIDを
-   発行し、`https://github.com/zappyzed100/sourcecast/settings/secrets/actions`
-   でGitHub Actionsのrepository secretsとして登録する（このタイミングで
-   実装側から声をかける）。
+5. **GitHub Actions の repository secrets 登録は現時点で不要**（`gh secret list`が
+   空であることを2026-07-24に確認）。公開サイトのデプロイは Pages の GitHub 連携
+   ビルドが行っており、GitHub Actions からCloudflare APIを叩く経路がまだ無いため。
+   パイプラインをCIから走らせる段階になったら、
+   `https://github.com/zappyzed100/sourcecast/settings/secrets/actions`
+   で登録する（そのタイミングで実装側から声をかける）。
 
-## Phase 9（RSS・配信先）までに決めること
+## Phase 9（RSS・配信先）までに決めること ← **人間側の未了作業はここだけ**
+
+**2026-07-24時点で人間側に残っているのは、このセクションの配信先チャンネル開設のみ**。
+
+### 二言語（JP / EN）展開の決定（2026-07-24）
+
+チャンネルを日本語版・英語版へ分割する。「二言語にしても手間が大して変わらない」という
+判断に基づく（ただし後述の**英語TTSだけは既存資産が流用できない**——要判断）。
+
+- ハンドル: `@itsuwawa_jp`（日本語）/ `@itsuwawa_en`（英語）
+- 既存チャンネル「いつわわ」`@itsuwawa_story` は作り直す。作り直すとOAuthの
+  リフレッシュトークンは取り直しになる（Google Cloud側のプロジェクト・Client IDは流用可）
+- アイコン: 共通マーク（二重の輪）へ小さく `JP` / `EN` を添えた2種を作成済み——
+  `design-system/brand/itsuwawa-youtube-icon-{jp,en}.svg` と同 `-800.png`。
+  文字は左下の余白へ生成り色（`#e6ded0`）で置く案を採用（2026-07-24決定）。
+  **地は円ではなく正方形の全面塗り**——YouTubeは正方形を受け取って円形にクロップして
+  表示するため、円で作る必要が無い。既存の`itsuwawa-podcast-cover-3000.png`も
+  全面塗りの正方形で、こちらが揃った形。円で作っていた版は角が白く残っており、
+  正方形表示される場所（Podcastカバー等）で白い角が出る不具合があった。
+  **既知の制約**: 2つの輪が画版の x21–81 / y23–79 を占めるため、干渉せずに置ける
+  余白は左下・左上の三日月のみで、字は11単位が上限——YouTubeの一覧に並ぶ32px表示では
+  約3.5pxとなり読めない。バッジを輪へ重ねる案・輪を82%に縮めて下部へ大きく置く案とも
+  比較した上で、**小サイズでの判読よりマークの純度を優先**して現案を採用した。
+  小サイズでのJP/ENの区別はチャンネル名が担う前提。
+- サイトURL: `itsuwawa.com/ja/`・`itsuwawa.com/en/` のパス分割（Pagesプロジェクト・
+  ドメインは1つのまま。Podcast RSSのURLもこれに従う）
+- 英語TTS: **Kokoro TTS**（Apache-2.0・ローカル）。VOICEVOXは日本語専用で流用できない
+  ——実装側のタスクはPLAN.md「二言語（JP / EN）展開」を参照
+
+### 開設するチャンネル
+
+- [ ] YouTube 日本語版 `@itsuwawa_jp`（既存`@itsuwawa_story`を作り直す）
+- [ ] YouTube 英語版 `@itsuwawa_en`
+- [ ] Podcast 2つ（言語別。配信先の選定は下記2を参照）
+- [ ] Amazon系 2つ（言語別。下記3を参照）
+
+**開設前に確認**: `@itsuwawa`本体が取れず`@itsuwawa_story`になった経緯があるため、
+`@itsuwawa_jp`・`@itsuwawa_en`が空いているかを作成画面で先に確かめる。
 
 **現状（2026-07-19）**: タスク1（RSSフィード生成）・タスク2（配信先ごとの
 メタデータ生成）・タスク3（approved以降だけ配信操作を許可するゲート）・
@@ -326,9 +390,20 @@ ruleset登録を終えれば人間側の作業は無い。**
 その時点で改めて必要な認証情報を具体的に依頼する。早めにアカウント作成・
 審査申請だけ進めておくと、実クライアント実装時の待ち時間を短縮できる。
 
-1. **YouTubeチャンネルを作成する**（未作成なら）。Google アカウントで
-   `https://www.youtube.com/` → 右上のアカウントアイコン →
-   **チャンネルを作成**。
+1. **YouTubeチャンネルを作成する**（完了: 2026-07-19）。チャンネル名
+   「いつわわ」・ハンドル`@itsuwawa_story`で確定（`@itsuwawa`は使用不可のため
+   サフィックス付きで確保）。アイコンは`design-system/brand/itsuwawa-youtube-icon.svg`
+   （二重の輪案・800x800px版は同ディレクトリの`itsuwawa-youtube-icon-800.png`）を採用。
+   **OAuth疎通確認・テストアップロードまで完了**（Client ID/Secret・Refresh Tokenは
+   `.env`保管、`scripts/youtube_oauth_setup.py`・`scripts/youtube_test_upload.py`で
+   動作確認済み）。**本番(Production)公開審査は後回しにする方針で確定**
+   （2026-07-20決定 — PLAN.md参照）。プライバシーポリシーページ
+   （`apps/site/src/pages/privacy.astro`）は審査に備えて先に用意済みだが、
+   審査申請自体・Google Search Consoleでのドメイン確認・審査用デモ動画の撮影は
+   実アップロードクライアントの実装に着手するタイミングまで保留する。それまでは
+   OAuth同意画面が「テスト」ステータスのままのため、**リフレッシュトークンは
+   約7日で失効する**（再認可が必要になったら`scripts/youtube_oauth_setup.py`を
+   再実行する）。
 2. **Podcast配信先（RSSホスティング）を決める**: Spotify for
    Podcasters・Apple Podcasts Connect等、RSSフィードを受け付ける配信先を選ぶ。
    審査に数日かかることがあるので、Phase 9着手前でも早めにアカウント作成・
@@ -338,9 +413,7 @@ ruleset登録を終えれば人間側の作業は無い。**
 
 ## Phase 12（バックアップ・障害対応）までに決めること
 
-1. **バックアップ保存先を決める**: Google DriveかNAS（自宅サーバー等）かを
-   決める。Google Driveの場合はバックアップ専用のフォルダとアカウントを
-   用意しておくと、他の個人データと混ざらない。
+1. **バックアップ保存先を決める**（決定: 2026-07-19。**NAS**を採用）。
 2. **容量の見積もり**: SQLite・設定・公開データ・必要なartifactsの合計サイズを
    Phase 12着手時に実測してから、無料枠で足りるか判断する
    （development-plan.md §7・運用節）。
